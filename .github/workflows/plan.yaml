@@ -1,9 +1,6 @@
 name: Plan infrastructure changes
 
 on:
-  push:
-    branches:
-      - plan
   workflow_call:
     inputs:
       environment:
@@ -16,10 +13,13 @@ on:
         description: The plan output from the tofu plan command.
         value: ${{ jobs.plan.outputs.plan }}
     secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
+      AWS_BUTTER:
+      AWS_REGION:
+      AWS_ROLE_ARN:
+      TF_VAR_PROGRAM:
+      TF_VAR_VPC_CIDR:
+      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
+      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
   workflow_dispatch:
     inputs:
       environment:
