@@ -10,6 +10,8 @@ permissions:
 jobs:
   plan:
     uses: ./.github/workflows/plan.yaml
+    permissions:
+      id-token: write
     with:
       environment: development
     secrets:
