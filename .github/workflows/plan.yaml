@@ -75,4 +75,4 @@ jobs:
       - name: Plan changes
         id: plan
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu plan -concise ${{ inputs.color || '-no-color' }}
+        run: tofu plan -concise ${{ inputs.color && '' || '-no-color' }}
