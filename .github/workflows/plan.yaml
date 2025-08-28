@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 env:
   CONFIG_PATH: ./tofu/config/development
