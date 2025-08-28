@@ -1,0 +1,61 @@
+name: Pull request checks
+
+on:
+  pull_request:
+
+jobs:
+  plan:
+    uses: ./.github/workflows/plan.yaml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: development
+    secrets:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
+      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
+      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
+
+  comment:
+    runs-on: ubuntu-latest
+    needs: plan
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Retrieve existing bot comments for the pull request.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('## Plan output')
+            })
+
+            // Prepare the format of the comment.
+            const output = `## Plan output\n\n\`\`\`\n${{ needs.plan.outputs.plan }}\n\`\`\``
+
+            // If we have a comment, update it. Otherwise, create a new one.
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }

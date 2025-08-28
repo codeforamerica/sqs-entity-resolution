@@ -1,0 +1,78 @@
+name: Plan infrastructure changes
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment to plan on.
+        default: development
+        required: true
+        type: string
+      color:
+        description: Enable color in output.
+        default: false
+        required: false
+        type: boolean
+    outputs:
+      plan:
+        description: The plan output from the tofu plan command.
+        value: ${{ jobs.plan.outputs.plan }}
+    secrets:
+      AWS_REGION:
+      AWS_ROLE_ARN:
+      TF_VAR_PROGRAM:
+      TF_VAR_VPC_CIDR:
+      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
+      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to plan on.
+        default: development
+        required: true
+        type: environment
+      color:
+        description: Enable color in output.
+        default: true
+        required: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  CONFIG_PATH: ./tofu/config/development
+
+jobs:
+  plan:
+    name: Plan changes to ${{ inputs.environment || 'development' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'development' }}
+    env:
+      TF_VAR_program: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
+      TF_VAR_vpc_private_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
+      TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
+    outputs:
+      plan: ${{ steps.plan.outputs.stdout }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION || 'us-west-1' }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+      - name: Display OpenTofu version
+        run: tofu version
+      - name: Initialize OpenTofu
+        working-directory: ${{ env.CONFIG_PATH }}
+        run: tofu init
+      - name: Plan changes
+        id: plan
+        working-directory: ${{ env.CONFIG_PATH }}
+        run: tofu plan -concise ${{ inputs.color && ' ' || '-no-color' }}
