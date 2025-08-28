@@ -20,6 +20,10 @@ on:
     secrets:
       AWS_REGION:
       AWS_ROLE_ARN:
+      TF_VAR_EXPORT_EXPIRATION:
+        required: false
+      TF_VAR_KEY_RECOVERY_PERIOD:
+        required: false
       TF_VAR_PROGRAM:
       TF_VAR_VPC_CIDR:
       TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
