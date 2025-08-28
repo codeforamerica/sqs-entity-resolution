@@ -13,7 +13,6 @@ on:
         description: The plan output from the tofu plan command.
         value: ${{ jobs.plan.outputs.plan }}
     secrets:
-      AWS_BUTTER:
       AWS_REGION:
       AWS_ROLE_ARN:
       TF_VAR_PROGRAM:
