@@ -14,6 +14,8 @@ jobs:
     secrets:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+      TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
       TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
       TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
       TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}

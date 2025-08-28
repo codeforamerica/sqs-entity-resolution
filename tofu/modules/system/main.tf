@@ -61,7 +61,7 @@ module "s3" {
       ]
 
       # Expire current versions. Objects will be deleted after the expiration,
-      # baed on the non-current expiration.
+      # based on the non-current expiration.
       expiration = [
         {
           days = var.export_expiration
