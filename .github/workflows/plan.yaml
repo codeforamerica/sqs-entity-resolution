@@ -3,7 +3,7 @@ name: Plan infrastructure changes
 on:
   push:
     branches:
-      - ci
+      - plan
   workflow_call:
     inputs:
       environment:
@@ -36,9 +36,9 @@ env:
 
 jobs:
   plan:
-    name: Plan on ${{ inputs.environment }}
+    name: Plan changes to ${{ inputs.environment || 'development' }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'development' }}
     env:
       TF_VAR_program: ${{ secrets.TF_VAR_PROGRAM }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
