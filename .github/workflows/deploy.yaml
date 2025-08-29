@@ -86,4 +86,4 @@ jobs:
         run: tofu init
       - name: Deploy changes
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu apply -auto-approve tfplan
+        run: tofu apply tfplan
