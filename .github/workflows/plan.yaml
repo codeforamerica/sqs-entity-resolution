@@ -8,11 +8,6 @@ on:
         default: development
         required: true
         type: string
-      color:
-        description: Enable color in output.
-        default: false
-        required: false
-        type: boolean
     outputs:
       plan:
         description: The plan output from the tofu plan command.
@@ -36,11 +31,6 @@ on:
         default: development
         required: true
         type: environment
-      color:
-        description: Enable color in output.
-        default: true
-        required: false
-        type: boolean
 
 permissions:
   contents: read
@@ -97,7 +87,7 @@ jobs:
         run: tofu init
       - name: Plan changes
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu plan -concise ${{ inputs.color && ' ' || '-no-color' }} -out tfplan > plan.txt
+        run: tofu plan -concise -no-color -out tfplan > plan.txt
       - name: Display plan
         working-directory: ${{ env.CONFIG_PATH }}
         run: tofu show -plan tfplan
