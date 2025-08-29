@@ -96,6 +96,16 @@ jobs:
         working-directory: ${{ env.CONFIG_PATH }}
         run: tofu init
       - name: Plan changes
-        id: plan
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu plan -concise ${{ inputs.color && ' ' || '-no-color' }}
+        run: tofu plan -concise ${{ inputs.color && ' ' || '-no-color' }} -out tfplan > plan.txt
+      - name: Display plan
+        working-directory: ${{ env.CONFIG_PATH }}
+        run: tofu show -plan tfplan
+      - name: Upload plan file
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: |
+            ${{ env.CONFIG_PATH }}/plan.txt
+            ${{ env.CONFIG_PATH }}/tfplan
+          retention-days: 5

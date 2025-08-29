@@ -27,7 +27,13 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      CONFIG_PATH: ./tofu/config/development
     steps:
+      - name: Download plan file
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
       - uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -42,8 +48,12 @@ jobs:
               return comment.user.type === 'Bot' && comment.body.includes('## Plan output')
             })
 
+            // Read the contents of the plan.
+            const fs = require('fs');
+            const plan = fs.readFileSync('./plan.txt', 'utf8');
+
             // Prepare the format of the comment.
-            const output = `## Plan output\n\n\`\`\`\n${{ needs.plan.outputs.plan }}\n\`\`\``
+            const output = `## Plan output\n\n\`\`\`\n${plan}\n\`\`\``
 
             // If we have a comment, update it. Otherwise, create a new one.
             if (botComment) {
