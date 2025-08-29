@@ -2,19 +2,18 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.opentofu.org/hashicorp/aws" {
-  version     = "5.100.0"
-  constraints = ">= 5.44.0, ~> 5.44"
+  version     = "6.10.0"
+  constraints = ">= 4.15.1, >= 5.44.0, >= 5.79.0, >= 5.83.0, >= 6.0.0, ~> 6.0"
   hashes = [
-    "h1:BrNG7eFOdRrRRbHdvrTjMJ8X8Oh/tiegURiKf7J2db8=",
-    "zh:1a41f3ee26720fee7a9a0a361890632a1701b5dc1cf5355dc651ddbe115682ff",
-    "zh:30457f36690c19307921885cc5e72b9dbeba369445815903acd5c39ac0e41e7a",
-    "zh:42c22674d5f23f6309eaf3ac3a4f1f8b66b566c1efe1dcb0dd2fb30c17ce1f78",
-    "zh:4cc271c795ff8ce6479ec2d11a8ba65a0a9ed6331def6693f4b9dccb6e662838",
-    "zh:60932aa376bb8c87cd1971240063d9d38ba6a55502c867fdbb9f5361dc93d003",
-    "zh:864e42784bde77b18393ebfcc0104cea9123da5f4392e8a059789e296952eefa",
-    "zh:9750423138bb01ecaa5cec1a6691664f7783d301fb1628d3b64a231b6b564e0e",
-    "zh:e5d30c4dec271ef9d6fe09f48237ec6cfea1036848f835b4e47f274b48bda5a7",
-    "zh:e62bd314ae97b43d782e0841b13e68a3f8ec85cc762004f973ce5ce7b6cdbfd0",
-    "zh:ea851a3c072528a4445ac6236ba2ce58ffc99ec466019b0bd0e4adde63a248e4",
+    "h1:tbG3QH6TnvE52ymGsYdbfoKe2pVGehC0IHykuCqc0+M=",
+    "zh:0d635cec278c42dcfdb303493b074e5cd879ee037ed4a9a234144655bea51c08",
+    "zh:14cf6c1c4e20e0847885042dbd42130e4ebef6cfd49ebae2464b93753a4623f5",
+    "zh:24cd679f56ed4367875f2036adf95997479b750ac9c8799816be0955660bfd8b",
+    "zh:2bd558c78c73cbbc0b4e130278e4f062dd3273e34a84f0cb9b3ea8bc255db0eb",
+    "zh:316c213dd47e5f7de083d69c950ba41fe687153b304ccee722131a0792ef5bab",
+    "zh:9b4b1a37be3b17d23a4a1c5ec80b27dc97faa7332302d8b4acc900287427256c",
+    "zh:b91f6c681099693dbcbb6672f47899841db75885af44c907a7e88a0a868a7656",
+    "zh:f93709e3e4cd05ebe7285ac718a0ba9c7d6712204c455141bcec8709647aff0d",
+    "zh:fb691a3b8d37ce1e45f339feeb1981a75d604649012414a5a53cd63c9bae84af",
   ]
 }

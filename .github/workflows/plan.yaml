@@ -8,11 +8,6 @@ on:
         default: development
         required: true
         type: string
-      color:
-        description: Enable color in output.
-        default: false
-        required: false
-        type: boolean
     outputs:
       plan:
         description: The plan output from the tofu plan command.
@@ -20,7 +15,12 @@ on:
     secrets:
       AWS_REGION:
       AWS_ROLE_ARN:
+      TF_VAR_EXPORT_EXPIRATION:
+        required: false
+      TF_VAR_KEY_RECOVERY_PERIOD:
+        required: false
       TF_VAR_PROGRAM:
+        required: false
       TF_VAR_VPC_CIDR:
       TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
       TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
@@ -31,11 +31,6 @@ on:
         default: development
         required: true
         type: environment
-      color:
-        description: Enable color in output.
-        default: true
-        required: false
-        type: boolean
 
 permissions:
   contents: read
@@ -50,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'development' }}
     env:
-      TF_VAR_program: ${{ secrets.TF_VAR_PROGRAM }}
+      # Set required variables.
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
       TF_VAR_vpc_private_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
       TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
@@ -69,10 +64,38 @@ jobs:
         uses: opentofu/setup-opentofu@v1
       - name: Display OpenTofu version
         run: tofu version
+      - name: Set optional variables
+        env:
+          # For any of these that have a value, the corresponding TF_VAR_*
+          # environment variable will be set.
+          EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+          KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
+          PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+        run: |
+          variables=("export_expiration" "key_recovery_period" "program")
+          for var in ${variables[@]}; do
+            name="$(echo $var | tr '[:lower:]' '[:upper:]')"
+            if [ -n "${!name}" ]; then
+              echo "Setting TF_VAR_$var"
+              echo "TF_VAR_$var=${!name}" >> $GITHUB_ENV
+            else
+              echo "$name is not set"
+            fi
+          done
       - name: Initialize OpenTofu
         working-directory: ${{ env.CONFIG_PATH }}
         run: tofu init
       - name: Plan changes
-        id: plan
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu plan -concise ${{ inputs.color && ' ' || '-no-color' }}
+        run: tofu plan -concise -no-color -out tfplan > plan.txt
+      - name: Display plan
+        working-directory: ${{ env.CONFIG_PATH }}
+        run: tofu show -plan tfplan
+      - name: Upload plan file
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: |
+            ${{ env.CONFIG_PATH }}/plan.txt
+            ${{ env.CONFIG_PATH }}/tfplan
+          retention-days: 5

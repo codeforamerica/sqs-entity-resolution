@@ -1,0 +1,74 @@
+resource "aws_kms_key" "this" {
+  description             = "Encryption key for ${var.project} ${var.environment}"
+  deletion_window_in_days = var.key_recovery_period
+  enable_key_rotation     = true
+  policy = jsonencode(yamldecode(templatefile("${path.module}/templates/key-policy.yaml.tftpl", {
+    account_id : data.aws_caller_identity.identity.account_id,
+    partition : data.aws_partition.current.partition
+  })))
+
+  tags = var.tags
+}
+
+resource "aws_kms_alias" "this" {
+  name          = "alias/${var.project}/${var.environment}"
+  target_key_id = aws_kms_key.this.id
+}
+
+# TODO: Define a dead-letter queue.
+module "sqs" {
+  source  = "terraform-aws-modules/sqs/aws"
+  version = "~> 5.0"
+
+  name = "${var.project}-${var.environment}-queue"
+
+  kms_master_key_id                 = aws_kms_key.this.id
+  kms_data_key_reuse_period_seconds = 3600
+
+  tags = var.tags
+}
+
+module "s3" {
+  source  = "boldlink/s3/aws"
+  version = "~> 2.6"
+
+  bucket            = "${var.project}-${var.environment}-exports"
+  versioning_status = "Enabled"
+
+  sse_bucket_key_enabled = true
+  sse_kms_master_key_arn = aws_kms_key.this.arn
+  sse_sse_algorithm      = "aws:kms"
+
+  bucket_policy = jsonencode(yamldecode(templatefile("${path.module}/templates/bucket-policy.yaml.tftpl", {
+    bucket_arn : module.s3.arn
+  })))
+
+  lifecycle_configuration = [
+    {
+      id     = "exports"
+      status = "Enabled"
+
+      abort_incomplete_multipart_upload_days = 7
+
+      # Apply this configuration to all objects in the bucket.
+      filter = { prefix = "" }
+
+      # Expire non-current versions.
+      noncurrent_version_expiration = [
+        {
+          days = 30
+        }
+      ]
+
+      # Expire current versions. Objects will be deleted after the expiration,
+      # based on the non-current expiration.
+      expiration = [
+        {
+          days = var.export_expiration
+        }
+      ]
+    }
+  ]
+
+  tags = var.tags
+}

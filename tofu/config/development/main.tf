@@ -48,3 +48,12 @@ module "vpc" {
 
   tags = resource.aws_servicecatalogappregistry_application.application.application_tag
 }
+
+module "system" {
+  source = "../../modules/system"
+
+  environment         = var.environment
+  project             = var.project
+  export_expiration   = var.export_expiration
+  key_recovery_period = var.key_recovery_period
+}
