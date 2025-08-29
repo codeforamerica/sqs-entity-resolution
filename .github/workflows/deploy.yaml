@@ -1,29 +1,10 @@
-name: Plan infrastructure changes
+name: Deploy infrastructure changes
 
 on:
-  workflow_call:
-    inputs:
-      environment:
-        description: Environment to plan on.
-        default: development
-        required: true
-        type: string
-    secrets:
-      AWS_REGION:
-      AWS_ROLE_ARN:
-      TF_VAR_EXPORT_EXPIRATION:
-        required: false
-      TF_VAR_KEY_RECOVERY_PERIOD:
-        required: false
-      TF_VAR_PROGRAM:
-        required: false
-      TF_VAR_VPC_CIDR:
-      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
-      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
   workflow_dispatch:
     inputs:
       environment:
-        description: Environment to plan on.
+        description: Environment to deploy to.
         default: development
         required: true
         type: environment
@@ -35,10 +16,29 @@ permissions:
 env:
   CONFIG_PATH: ./tofu/config/development
 
+# TODO: Add an approval step between plan and deploy.
 jobs:
   plan:
-    name: Plan changes to ${{ inputs.environment || 'development' }}
+    uses: ./.github/workflows/plan.yaml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: ${{ inputs.environment || 'development' }}
+    secrets:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+      TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
+      TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
+      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
+      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
+
+  deploy:
+    name: Deploy changes to ${{ inputs.environment || 'development' }}
     runs-on: ubuntu-latest
+    needs: plan
     environment: ${{ inputs.environment || 'development' }}
     env:
       # Set required variables.
@@ -76,20 +76,14 @@ jobs:
               echo "$name is not set"
             fi
           done
+      - name: Download plan file
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ env.CONFIG_PATH }}
       - name: Initialize OpenTofu
         working-directory: ${{ env.CONFIG_PATH }}
         run: tofu init
-      - name: Plan changes
+      - name: Deploy changes
         working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu plan -concise -no-color -out tfplan > plan.txt
-      - name: Display plan
-        working-directory: ${{ env.CONFIG_PATH }}
-        run: tofu show -plan tfplan
-      - name: Upload plan file
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: |
-            ${{ env.CONFIG_PATH }}/plan.txt
-            ${{ env.CONFIG_PATH }}/tfplan
-          retention-days: 5
+        run: tofu apply -auto-approve tfplan
