@@ -15,7 +15,6 @@ resource "aws_kms_alias" "this" {
   target_key_id = aws_kms_key.this.id
 }
 
-# TODO: Define a dead-letter queue.
 module "sqs" {
   source  = "terraform-aws-modules/sqs/aws"
   version = "~> 5.0"
@@ -24,6 +23,7 @@ module "sqs" {
 
   kms_master_key_id                 = aws_kms_key.this.id
   kms_data_key_reuse_period_seconds = 3600
+  create_dlq = true
 
   tags = var.tags
 }
