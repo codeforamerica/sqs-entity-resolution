@@ -1,0 +1,5 @@
+misconfigurations:
+  # The tools Dockerfile doesn't need a healthcheck.
+  - id: AVD-DS-0026
+    paths:
+      - Dockerfile.tools

@@ -54,7 +54,9 @@ services:
       - ./docker/localstack-setup.sh:/etc/localstack/init/ready.d/script.sh
 
   tools:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.tools
     depends_on:
       - db
     environment:
