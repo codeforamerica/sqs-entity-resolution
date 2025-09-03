@@ -1,0 +1,78 @@
+services:
+  db:
+    image: bitnami/postgresql:17.6.0
+    environment:
+      # See https://github.com/bitnami/bitnami-docker-postgresql#configuration
+      POSTGRESQL_DATABASE: ${POSTGRES_DB:-G2}
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-senzing}
+      POSTGRESQL_POSTGRES_PASSWORD: ${POSTGRESQL_POSTGRES_PASSWORD:-postgres}
+      POSTGRESQL_USERNAME: ${POSTGRES_USERNAME:-senzing}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-senzing}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+    user: "${SENZING_UID:-504}:0"
+    restart: always
+    volumes:
+      - postgres:/bitnami/postgresql
+
+  init-db:
+    image: senzing/init-database:latest
+    depends_on:
+      - db
+    environment:
+      SENZING_TOOLS_DATASOURCES: PEOPLE
+      SENZING_TOOLS_ENGINE_CONFIGURATION_JSON: >-
+        {
+          "PIPELINE": {
+            "CONFIGPATH": "/etc/opt/senzing",
+            "LICENSESTRINGBASE64": "${SENZING_LICENSE_BASE64_ENCODED}",
+            "RESOURCEPATH": "/opt/senzing/er/resources",
+            "SUPPORTPATH": "/opt/senzing/data"
+          },
+          "SQL": {
+            "BACKEND": "SQL",
+            "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
+          }
+        }
+    read_only: true
+    restart: on-failure
+
+  localstack:
+    image: localstack/localstack:4.7.0
+    ports:
+      - "4566:4566"
+    environment:
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - DEBUG=${DEBUG:-0}
+      - SERVICES=s3,sqs
+    volumes:
+      - localstack:/var/lib/localstack
+      - ./docker/localstack-setup.sh:/etc/localstack/init/ready.d/script.sh
+
+  tools:
+    build: .
+    depends_on:
+      - db
+    environment:
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SENZING_ENGINE_CONFIGURATION_JSON: >-
+        {
+          "PIPELINE": {
+            "CONFIGPATH": "/etc/opt/senzing",
+            "LICENSESTRINGBASE64": "${SENZING_LICENSE_BASE64_ENCODED}",
+            "RESOURCEPATH": "/opt/senzing/er/resources",
+            "SUPPORTPATH": "/opt/senzing/data"
+          },
+          "SQL": {
+            "BACKEND": "SQL",
+            "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
+          }
+        }
+
+volumes:
+  localstack:
+  postgres:
