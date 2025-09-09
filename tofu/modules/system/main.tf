@@ -77,3 +77,17 @@ module "s3" {
 
   tags = var.tags
 }
+
+resource "aws_s3_bucket_object_lock_configuration" "export" {
+  for_each = var.export_lock_mode != "DISABLED" ? toset(["this"]) : toset([])
+
+  bucket = module.s3.bucket
+
+  rule {
+    default_retention {
+      mode  = var.export_lock_mode
+      days  = var.export_lock_period == "days" ? var.export_lock_age : null
+      years = var.export_lock_period == "years" ? var.export_lock_age : null
+    }
+  }
+}
