@@ -43,6 +43,11 @@ module "s3" {
     bucket_arn : module.s3.arn
   })))
 
+  s3_logging = {
+    target_bucket = var.logging_bucket
+    target_prefix = "/"
+  }
+
   lifecycle_configuration = [
     {
       id     = "exports"
