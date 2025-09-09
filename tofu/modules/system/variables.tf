@@ -10,6 +10,34 @@ variable "export_expiration" {
   description = "Number of days before export files expire."
 }
 
+variable "export_lock_age" {
+  type        = number
+  description = "Age (based on the lock period) of an object before the lock is removed."
+  default     = 30
+}
+
+variable "export_lock_mode" {
+  type        = string
+  description = "Object lock mode for the export bucket."
+  default     = "GOVERNANCE"
+
+  validation {
+    condition     = contains(["COMPLIANCE", "GOVERNANCE", "DISABLED"], var.export_lock_mode)
+    error_message = "Valid object lock modes are: COMPLIANCE, GOVERNANCE, or DISABLED."
+  }
+}
+
+variable "export_lock_period" {
+  type        = string
+  description = "Period for which objects are locked. Valid values are days or years."
+  default     = "days"
+
+  validation {
+    condition     = contains(["days", "years"], var.export_lock_period)
+    error_message = "Valid object lock periods are: days, years."
+  }
+}
+
 variable "key_recovery_period" {
   type        = number
   default     = 30
