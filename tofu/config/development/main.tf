@@ -22,7 +22,7 @@ module "backend" {
 }
 
 module "logging" {
-  source = "github.com/codeforamerica/tofu-modules-aws-logging?ref=2.1.0"
+  source = "github.com/codeforamerica/tofu-modules-aws-logging?ref=2.1.1"
 
   project                  = var.project
   environment              = var.environment
@@ -56,4 +56,5 @@ module "system" {
   project             = var.project
   export_expiration   = var.export_expiration
   key_recovery_period = var.key_recovery_period
+  logging_bucket      = module.logging.bucket
 }

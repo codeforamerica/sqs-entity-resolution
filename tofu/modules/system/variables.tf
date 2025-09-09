@@ -21,6 +21,11 @@ variable "key_recovery_period" {
   }
 }
 
+variable "logging_bucket" {
+  type        = string
+  description = "S3 bucket to use for log collection."
+}
+
 variable "project" {
   type        = string
   description = "Project that these resources are supporting."
