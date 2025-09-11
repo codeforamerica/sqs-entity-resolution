@@ -23,7 +23,7 @@ module "sqs" {
 
   kms_master_key_id                 = aws_kms_key.this.id
   kms_data_key_reuse_period_seconds = 3600
-  create_dlq = true
+  create_dlq                        = true
 
   tags = var.tags
 }

@@ -4,13 +4,61 @@ on:
   pull_request:
 
 jobs:
+  configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Find all configs
+        id: find
+        uses: bendrucker/find-terraform-modules@v1
+        with:
+          working-directory: tofu/config
+      - name: Show all matching configs
+        shell: bash
+        run: |
+          mods=(${{ join(fromJSON(steps.find.outputs.modules), ' ') }})
+          printf "%s\n" "${mods[@]}"
+      - name: Find all changed files
+        id: diff
+        uses: technote-space/get-diff-action@v6
+        with:
+          FORMAT: json
+      - name: Show changed files
+        run: |
+          echo "${{ steps.diff.outputs.diff }}"
+      - name: Get the modified configs
+        id: modified
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const configs = ${{ steps.find.outputs.modules }}
+            const diff = ${{ steps.diff.outputs.diff }}
+            const modifiedConfigs = configs.filter(
+              (config) => {
+                return !!diff.find(file => new RegExp(`^${config}/.+`).test(file))
+              }
+            ).map(config => config.replace(/^tofu\/config\//, ''))
+
+            core.setOutput('configs', modifiedConfigs)
+      - name: Show modified configs
+        run: |
+          echo "${{ steps.modified.outputs.configs }}"
+    outputs:
+      configs: ${{ steps.modified.outputs.configs }}
+
   plan:
     uses: ./.github/workflows/plan.yaml
+    needs: configs
     permissions:
       contents: read
       id-token: write
+    strategy:
+      matrix:
+        config: ${{ fromJson(needs.configs.outputs.configs) }}
     with:
       environment: development
+      config: ${{ matrix.config }}
     secrets:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
@@ -23,17 +71,20 @@ jobs:
 
   comment:
     runs-on: ubuntu-latest
-    needs: plan
+    needs:
+      - configs
+      - plan
     permissions:
       contents: read
       pull-requests: write
-    env:
-      CONFIG_PATH: ./tofu/config/development
+    strategy:
+      matrix:
+        config: ${{ fromJson(needs.configs.outputs.configs) }}
     steps:
       - name: Download plan file
         uses: actions/download-artifact@v4
         with:
-          name: tfplan
+          name: ${{ matrix.config }}-tfplan
       - uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +96,7 @@ jobs:
               issue_number: context.issue.number,
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('## Plan output')
+              return comment.user.type === 'Bot' && comment.body.includes('## Plan output for ${{ matrix.config }} config')
             })
 
             // Read the contents of the plan.
@@ -53,7 +104,7 @@ jobs:
             const plan = fs.readFileSync('./plan.txt', 'utf8');
 
             // Prepare the format of the comment.
-            const output = `## Plan output\n\n\`\`\`\n${plan}\n\`\`\``
+            const output = `## Plan output for ${{ matrix.config }} config\n\n\`\`\`\n${plan}\n\`\`\``
 
             // If we have a comment, update it. Otherwise, create a new one.
             if (botComment) {
