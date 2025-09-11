@@ -1,4 +1,4 @@
-FROM senzing/senzingsdk-runtime:latest
+FROM senzing/senzingsdk-runtime:4.0.0
 
 USER root
 

@@ -15,7 +15,6 @@ except Exception as e:
     
 # TODO add DLQ logic (needs jira ticket probably).
 
-AWS_PROFILE_NAME = os.environ['AWS_PROFILE_NAME']
 Q_URL = os.environ['Q_URL']
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
@@ -25,7 +24,11 @@ HIDE_MESSAGE_SECONDS = 600          # SQS visibility timeout
 #-------------------------------------------------------------------------------
 
 def _make_boto_session(fpath=None):
-    '''fpath is path to json file with keys:
+    '''
+    If `AWS_PROFILE` environment variable is set, then `Session()` can be
+    called with no arguments.
+
+    fpath is path to json file with keys:
         - aws_access_key_id
         - aws_secret_access_key
         - aws_session_token
@@ -35,7 +38,7 @@ def _make_boto_session(fpath=None):
     if fpath:
         return boto3.Session(**json.load(open(fpath)))
     else:
-        return boto3.Session(profile_name=AWS_PROFILE_NAME)
+        return boto3.Session()
 
 def _make_sqs_client(boto_session):
     return boto_session.client('sqs')
@@ -87,15 +90,6 @@ def go():
     try:
         sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
 
-        # Init data source list.
-        # TODO data source registry logic should be set up as a one-time task
-        # outside of this app somewhere else.
-        sz_config_mgr = sz_factory.create_configmanager()
-        sz_config = sz_config_mgr.create_config_from_config_id(
-            sz_config_mgr.get_default_config_id())
-        sz_config.register_data_source("CUSTOMERS")
-        sz_config_mgr.set_default_config(sz_config.export(), 'default')
-
         # Init senzing engine object.
         # Senzing engine object cannot be passed around between functions,
         # else it will be eagerly cleaned up / destroyed and no longer usable. 
@@ -108,7 +102,11 @@ def go():
     # TODO log ReceiptHandle, other *generic* debug-facing information as appropriate.
     while 1:
         print('Starting primary loop iteration . . .')
+
+        # Get next message.
         msg = next(msgs)
+
+        # Process and send to Senzing.
         receipt_handle, body = msg['ReceiptHandle'], msg['Body']
         rcd = json.loads(body)
         try:
@@ -121,6 +119,8 @@ def go():
         except sz.SzError as err:
             # TODO log / handle
             print(err)
+
+        # Delete msg from queue.
         del_msg(sqs, Q_URL, receipt_handle)
 
 def main():

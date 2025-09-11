@@ -60,7 +60,9 @@ and run the consumer service on our local machine. This setup includes:
 1. Spinning up a consumer service:
 
    ```bash
-   docker compose run --env AWS_PROFILE_NAME="some-profile-name" --env Q_URL="https://some-sqs-queue-url" consumer
+   docker compose run --env AWS_PROFILE_NAME="some-profile-name" --env \
+   Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
+   consumer
    ```
 
 ### Using the services
