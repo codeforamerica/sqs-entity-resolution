@@ -3,6 +3,15 @@ name: Deploy infrastructure changes
 on:
   workflow_dispatch:
     inputs:
+      config:
+        description: OpenTofu configuration to deploy.
+        default: service
+        required: true
+        type: choice
+        options:
+          - foundation
+          - networking
+          - service
       environment:
         description: Environment to deploy to.
         default: development
@@ -12,9 +21,6 @@ on:
 permissions:
   contents: read
   id-token: write
-
-env:
-  CONFIG_PATH: ./tofu/config/development
 
 # TODO: Add an approval step between plan and deploy.
 jobs:
@@ -80,10 +86,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.CONFIG_PATH }}
+          path: ./tofu/config/${{ inputs.config }}
       - name: Initialize OpenTofu
-        working-directory: ${{ env.CONFIG_PATH }}
+        working-directory: ./tofu/config/${{ inputs.config }}
         run: tofu init
       - name: Deploy changes
-        working-directory: ${{ env.CONFIG_PATH }}
+        working-directory: ./tofu/config/${{ inputs.config }}
         run: tofu apply tfplan

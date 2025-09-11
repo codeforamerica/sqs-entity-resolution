@@ -3,6 +3,11 @@ name: Plan infrastructure changes
 on:
   workflow_call:
     inputs:
+      config:
+        description: OpenTofu configuration to plan.
+        default: service
+        required: true
+        type: string
       environment:
         description: Environment to plan on.
         default: development
@@ -22,6 +27,15 @@ on:
       TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
   workflow_dispatch:
     inputs:
+      config:
+        description: OpenTofu configuration to plan.
+        default: service
+        required: true
+        type: choice
+        options:
+          - foundation
+          - networking
+          - service
       environment:
         description: Environment to plan on.
         default: development
@@ -31,9 +45,6 @@ on:
 permissions:
   contents: read
   id-token: write
-
-env:
-  CONFIG_PATH: ./tofu/config/development
 
 jobs:
   plan:
@@ -77,19 +88,19 @@ jobs:
             fi
           done
       - name: Initialize OpenTofu
-        working-directory: ${{ env.CONFIG_PATH }}
+        working-directory: ./tofu/config/${{ inputs.config }}
         run: tofu init
       - name: Plan changes
-        working-directory: ${{ env.CONFIG_PATH }}
+        working-directory: ./tofu/config/${{ inputs.config }}
         run: tofu plan -concise -no-color -out tfplan > plan.txt
       - name: Display plan
-        working-directory: ${{ env.CONFIG_PATH }}
+        working-directory: ./tofu/config/${{ inputs.config }}
         run: tofu show -plan tfplan
       - name: Upload plan file
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: |
-            ${{ env.CONFIG_PATH }}/plan.txt
-            ${{ env.CONFIG_PATH }}/tfplan
+            ./tofu/config/${{ inputs.config }}/plan.txt
+            ./tofu/config/${{ inputs.config }}/tfplan
           retention-days: 5
