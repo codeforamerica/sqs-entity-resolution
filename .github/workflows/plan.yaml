@@ -48,7 +48,7 @@ permissions:
 
 jobs:
   plan:
-    name: Plan changes to ${{ inputs.environment || 'development' }}
+    name: Plan changes to ${{ inputs.config }} in ${{ inputs.environment || 'development' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'development' }}
     env:
@@ -99,7 +99,7 @@ jobs:
       - name: Upload plan file
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan
+          name: ${{ inputs.config }}-tfplan
           path: |
             ./tofu/config/${{ inputs.config }}/plan.txt
             ./tofu/config/${{ inputs.config }}/tfplan
