@@ -12,7 +12,7 @@ module "inputs" {
 
   prefix = "/${var.project}/${var.environment}"
 
-  inputs = ["application/arn", "logging/bucket", "vpc/id", "vpc/private_subnets"]
+  inputs = ["application/tag", "logging/bucket", "vpc/id", "vpc/private_subnets"]
 }
 
 module "system" {
@@ -25,5 +25,5 @@ module "system" {
   logging_bucket      = module.inputs.values["logging/bucket"]
   vpc_id              = module.inputs.values["vpc/id"]
   database_subnets    = split(",", module.inputs.values["vpc/private_subnets"])
-  tags                = merge({ awsApplication : module.inputs.values["application/arn"] }, var.tags)
+  tags                = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
 }

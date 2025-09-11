@@ -37,7 +37,7 @@ module "outputs" {
   prefix = "/${var.project}/${var.environment}"
 
   outputs = {
-    "application/arn" = aws_servicecatalogappregistry_application.application.arn
+    "application/tag" = aws_servicecatalogappregistry_application.application.application_tag["awsApplication"]
     "logging/bucket"  = module.logging.bucket
     "logging/key"     = module.logging.kms_key_arn
   }

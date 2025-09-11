@@ -12,7 +12,7 @@ module "inputs" {
 
   prefix = "/${var.project}/${var.environment}"
 
-  inputs = ["application/arn", "logging/key"]
+  inputs = ["application/tag", "logging/key"]
 }
 
 # TODO: Air gap this VPC from the internet.
@@ -29,7 +29,7 @@ module "vpc" {
   public_subnets     = var.vpc_public_subnet_cidrs
   single_nat_gateway = true
 
-  tags = merge({ awsApplication : module.inputs.values["application/arn"] }, var.tags)
+  tags = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
 }
 
 module "outputs" {
