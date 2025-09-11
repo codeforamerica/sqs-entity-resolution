@@ -1,3 +1,8 @@
+variable "database_subnets" {
+  description = "Subnets to place the database instances in."
+  type        = list(string)
+}
+
 variable "environment" {
   type        = string
   description = "Environment for the deployment."
@@ -64,4 +69,9 @@ variable "tags" {
   type        = map(string)
   description = "Tags to apply to resources."
   default     = {}
+}
+
+variable "vpc_id" {
+  description = "The ID of the VPC in which the resources should be deployed."
+  type        = string
 }
