@@ -30,3 +30,15 @@ module "logging" {
 
   tags = resource.aws_servicecatalogappregistry_application.application.application_tag
 }
+
+module "outputs" {
+  source = "../../modules/outputs"
+
+  prefix = "/${var.project}/${var.environment}"
+
+  outputs = {
+    "application/arn" = aws_servicecatalogappregistry_application.application.arn
+    "logging/bucket"  = module.logging.bucket
+    "logging/key"     = module.logging.kms_key_arn
+  }
+}

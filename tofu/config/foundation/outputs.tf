@@ -1,6 +1,6 @@
-output "application_tags" {
-  description = "The tags for the Service Catalog App Registry application."
-  value       = aws_servicecatalogappregistry_application.application.application_tag
+output "application_arn" {
+  description = "ARN of the Service Catalog App Registry application."
+  value       = aws_servicecatalogappregistry_application.application.arn
 }
 
 output "logging_bucket" {

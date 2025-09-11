@@ -21,11 +21,6 @@ variable "key_recovery_period" {
   }
 }
 
-variable "logging_bucket" {
-  type        = string
-  description = "The name of the S3 bucket for logging."
-}
-
 variable "program" {
   type        = string
   description = "Program the application belongs to."
@@ -48,19 +43,4 @@ variable "tags" {
   type        = map(string)
   description = "Tags to apply to all resources."
   default     = {}
-}
-
-variable "vpc_id" {
-  type        = string
-  description = "ID of the VPC to deploy resources into."
-}
-
-variable "database_subnet_ids" {
-  type        = list(string)
-  description = "The IDs of the subnets to use for the database."
-}
-
-variable "container_subnet_ids" {
-  type        = list(string)
-  description = "The IDs of the subnets to use for container resources."
 }
