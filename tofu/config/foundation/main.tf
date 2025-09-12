@@ -31,6 +31,16 @@ module "logging" {
   tags = resource.aws_servicecatalogappregistry_application.application.application_tag
 }
 
+module "deployment_auth" {
+  source = "../../modules/deployment_auth"
+
+  environment = var.environment
+  oidc_arn    = var.repo_oidc_arn
+  project     = var.project
+  repository  = var.repository
+  tags        = resource.aws_servicecatalogappregistry_application.application.application_tag
+}
+
 module "outputs" {
   source = "../../modules/outputs"
 
