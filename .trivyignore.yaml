@@ -2,4 +2,5 @@ misconfigurations:
   # The tools Dockerfile doesn't need a healthcheck.
   - id: AVD-DS-0026
     paths:
+      - Dockerfile.consumer # Jira -67
       - Dockerfile.tools

@@ -33,7 +33,7 @@ and run the consumer service on our local machine. This setup includes:
   - An SQS queue named `sqs-senzing-local-redo`
 - A local PostgreSQL database
 - A database initialization container to set up the Senzing schema
-- ~~The Senzing consumer service~~ (in development)
+- The Senzing consumer service
 - A `tools` container with the [Senzing v4 SDK][senzing-sdk] and
   [`awslocal`][awslocal] wrapper for interacting with LocalStack services
 
@@ -55,6 +55,14 @@ and run the consumer service on our local machine. This setup includes:
 
    ```bash
    docker compose run tools /bin/bash
+   ```
+
+1. Spinning up a consumer service:
+
+   ```bash
+   docker compose run --env AWS_PROFILE_NAME="some-profile-name" --env \
+   Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
+   consumer
    ```
 
 ### Using the services
