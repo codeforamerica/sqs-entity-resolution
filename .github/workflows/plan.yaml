@@ -67,6 +67,8 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
       - name: Display OpenTofu version
         run: tofu version
       - name: Set optional variables
