@@ -3,6 +3,11 @@ output "application_arn" {
   value       = aws_servicecatalogappregistry_application.application.arn
 }
 
+output "deployment_role_arn" {
+  value       = module.deployment.role_arn
+  description = "The ARN of the deployment role for system components."
+}
+
 output "logging_bucket" {
   value       = module.logging.bucket
   description = "The name of the S3 bucket for logging."
