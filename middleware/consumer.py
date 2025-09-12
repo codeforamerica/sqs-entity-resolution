@@ -4,16 +4,20 @@ import time
 import sys
 import boto3
 import senzing as sz
+
+from loglib import *
+log = retrieve_logger()
+
 try:
-    print('Importing senzing_core library . . .')
+    log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
-    print('Imported senzing_core successfully.')
+    log.info('Imported senzing_core successfully.')
 except Exception as e:
-    print('Importing senzing_core library failed.')
-    print(e)
+    log.error('Importing senzing_core library failed.')
+    log.error(e)
     sys.exit(1)
-    
-# TODO add DLQ logic (needs jira ticket probably).
+
+# TODO add DLQ logic (see DLG_TAG logging)
 
 Q_URL = os.environ['Q_URL']
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
@@ -43,16 +47,17 @@ def _make_boto_session(fpath=None):
 def _make_sqs_client(boto_session):
     return boto_session.client('sqs')
 
-# TODO add try/except code
-# TODO add logging
 def init():
     '''Returns sqs client object'''
-    sess = _make_boto_session()
-    sqs = sess.client('sqs')
-    return sqs
+    try:
+        sess = _make_boto_session()
+        sqs = sess.client('sqs')
+        log.info(AWS_TAG + 'SQS client object instantiated.')
+        return sqs
+    except Exception as e:
+        log.error(AWS_TAG + str(e))
+        sys.exit(1)
 
-# TODO add try/except code
-# TODO add logging
 def get_msgs(sqs, q_url):
     '''Generator function; returns a single SQS msg at a time.
     Pertinent keys in an SQS message include:
@@ -62,20 +67,24 @@ def get_msgs(sqs, q_url):
     '''
     while 1:
         print('waiting for msg')
-        resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
-                                   WaitTimeSeconds=POLL_SECONDS)
-        if 'Messages' in resp and len(resp['Messages']) == 1:
-            yield resp['Messages'][0]
+        try:
+            log.info(AWS_TAG + 'Polling SQS for the next message')
+            resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
+                                       WaitTimeSeconds=POLL_SECONDS)
+            if 'Messages' in resp and len(resp['Messages']) == 1:
+                yield resp['Messages'][0]
+        except Exception as e:
+            log.error(AWS_TAG + str(e))
    
-# TODO add try/except code
-# TODO add logging
 def del_msg(sqs, q_url, receipt_handle):
-    return sqs.delete_message(QueueUrl=q_url, ReceiptHandle=receipt_handle)
+    try:
+        return sqs.delete_message(QueueUrl=q_url, ReceiptHandle=receipt_handle)
+    except Exception as e:
+        log.error(AWS_TAG + DLQ_TAG + 'SQS delete failure for ReceiptHandle: ' +
+                  ReceiptHandle + ' Additional info: ' + str(e))
 
 #-------------------------------------------------------------------------------
 
-# TODO add more try/except code as needed
-# TODO add logging
 def go():
     '''Starts the Consumer process; runs indefinitely.'''
 
@@ -83,6 +92,7 @@ def go():
     sqs = init()
 
     # Spin up msgs generator
+    log.info('Spinning up messages generator')
     msgs = get_msgs(sqs, Q_URL)
 
     # Senzing init tasks.
@@ -94,40 +104,44 @@ def go():
         # Senzing engine object cannot be passed around between functions,
         # else it will be eagerly cleaned up / destroyed and no longer usable. 
         sz_eng = sz_factory.create_engine()
-    except sz.SzError as err:
-        # TODO log error
-        print(err)
+        log.info(SZ_TAG + 'Senzing engine object instantiated.')
+    except sz.SzError as sz_err:
+        log.error(SZ_TAG + str(sz_err))
+        sys.exit(1)
+    except Exception as e:
+        log.error(str(e))
         sys.exit(1)
 
-    # TODO log ReceiptHandle, other *generic* debug-facing information as appropriate.
     while 1:
-        print('Starting primary loop iteration . . .')
-
-        # Get next message.
-        msg = next(msgs)
-
-        # Process and send to Senzing.
-        receipt_handle, body = msg['ReceiptHandle'], msg['Body']
-        rcd = json.loads(body)
         try:
-            # TODO add logging
-            # TODO Use signal lib to handle stalled records (i.e., still 
-            #      processing >5 minutes)
+            # Get next message.
+            msg = next(msgs)
+            receipt_handle, body = msg['ReceiptHandle'], msg['Body']
+            log.info('SQS message retrieved, having ReceiptHandle: '
+                     + receipt_handle)
+            rcd = json.loads(body)
+
+            # Process and send to Senzing.
             resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
                                      sz.SzEngineFlags.SZ_WITH_INFO)
-            print(resp)
-        except sz.SzError as err:
-            # TODO log / handle
-            print(err)
+            log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+                     + receipt_handle)
 
-        # Delete msg from queue.
-        del_msg(sqs, Q_URL, receipt_handle)
+            # Delete msg from queue.
+            del_msg(sqs, Q_URL, receipt_handle)
+        except sz.SzError as sz_err:
+            log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+        except Exception as e:
+            log.error(str(e))
+            sys.exit(1)
+
+#-------------------------------------------------------------------------------
 
 def main():
-    print('====================')
-    print('     CONSUMER')
-    print('     STARTED')
-    print('====================')
+    log.info('====================')
+    log.info('     CONSUMER')
+    log.info('     STARTED')
+    log.info('====================')
     go()
 
 if __name__ == '__main__': main()
