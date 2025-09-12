@@ -16,11 +16,18 @@ on:
     secrets:
       AWS_REGION:
       AWS_ROLE_ARN:
+      TF_VAR_ENVIRONMENT:
+        required: false
       TF_VAR_EXPORT_EXPIRATION:
         required: false
       TF_VAR_KEY_RECOVERY_PERIOD:
         required: false
       TF_VAR_PROGRAM:
+        required: false
+      TF_VAR_PROJECT:
+        required: false
+      TF_VAR_REPO_OIDC_ARN:
+      TF_VAR_REPOSITORY:
         required: false
       TF_VAR_VPC_CIDR:
       TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
@@ -53,6 +60,7 @@ jobs:
     environment: ${{ inputs.environment || 'development' }}
     env:
       # Set required variables.
+      TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
       TF_VAR_vpc_private_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
       TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
@@ -75,11 +83,17 @@ jobs:
         env:
           # For any of these that have a value, the corresponding TF_VAR_*
           # environment variable will be set.
+          ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
           PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+          PROJECT: ${{ secrets.TF_VAR_PROJECT }}
+          REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
         run: |
-          variables=("export_expiration" "key_recovery_period" "program")
+          variables=(
+            "environment" "export_expiration" "key_recovery_period" "program"
+            "project" "repository"
+          )
           for var in ${variables[@]}; do
             name="$(echo $var | tr '[:lower:]' '[:upper:]')"
             if [ -n "${!name}" ]; then
