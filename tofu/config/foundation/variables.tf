@@ -32,3 +32,14 @@ variable "region" {
   description = "AWS region where resources should be deployed."
   default     = "us-west-1"
 }
+
+variable "repository" {
+  type        = string
+  description = "GitHub repository in the format 'owner/repo'."
+  default     = "codeforamerica/sqs-entity-resolution"
+}
+
+variable "repo_oidc_arn" {
+  type        = string
+  description = "ARN of the OpenID Connect provider for the GitHub repository."
+}
