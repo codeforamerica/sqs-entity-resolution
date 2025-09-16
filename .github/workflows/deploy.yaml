@@ -31,6 +31,7 @@ jobs:
       id-token: write
     with:
       environment: ${{ inputs.environment || 'development' }}
+      config: ${{ inputs.config }}
     secrets:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
