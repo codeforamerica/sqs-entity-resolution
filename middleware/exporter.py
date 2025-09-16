@@ -76,7 +76,7 @@ def go():
     log.info(SZ_TAG + 'Starting export from Senzing.')
     try:
         export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
-        log.debug(SZ_TAG + 'Obtained export_json_entity_report handle.')
+        log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
         buff.write('['.encode('utf-8'))
         while 1:
             log.debug(SZ_TAG + 'Fetching chunk...')
