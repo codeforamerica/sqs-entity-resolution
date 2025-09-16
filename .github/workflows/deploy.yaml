@@ -34,9 +34,13 @@ jobs:
     secrets:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      TF_VAR_ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
       TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
       TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
       TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
+      TF_VAR_REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
       TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
       TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
       TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
@@ -48,6 +52,7 @@ jobs:
     environment: ${{ inputs.environment || 'development' }}
     env:
       # Set required variables.
+      TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
       TF_VAR_vpc_private_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
       TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
@@ -62,17 +67,25 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
       - name: Display OpenTofu version
         run: tofu version
       - name: Set optional variables
         env:
           # For any of these that have a value, the corresponding TF_VAR_*
           # environment variable will be set.
+          ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
           PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+          PROJECT: ${{ secrets.TF_VAR_PROJECT }}
+          REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
         run: |
-          variables=("export_expiration" "key_recovery_period" "program")
+          variables=(
+            "environment" "export_expiration" "key_recovery_period" "program"
+            "project" "repository"
+          )
           for var in ${variables[@]}; do
             name="$(echo $var | tr '[:lower:]' '[:upper:]')"
             if [ -n "${!name}" ]; then
