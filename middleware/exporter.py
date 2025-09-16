@@ -20,8 +20,6 @@ except Exception as e:
 
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 S3_BUCKET = 'sqs-senzing-local-export'
-
-# TODO which flags do we need?
 EXPORT_FLAGS =  sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
 #-------------------------------------------------------------------------------
@@ -31,11 +29,15 @@ def ts():
     return str(int(round(time.time() * 1000)))
 
 def make_s3_client():
-    sess = boto3.Session()
-    if 'AWS_ENDPOINT_URL'in os.environ:
-        return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
-    else:
-        return sess.client('s3')
+    try:
+        sess = boto3.Session()
+        if 'AWS_ENDPOINT_URL'in os.environ:
+            return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+        else:
+            return sess.client('s3')
+    except Exception as e:
+        log.error(AWS_TAG + str(e))
+        sys.exit(1)
 
 def go():
     '''
@@ -71,30 +73,41 @@ def go():
     # Retrieve output from sz into buff
     # sz will export JSONL lines; we add the chars necessary to make
     # the output as a whole be a single JSON blob.
+    log.info(SZ_TAG + 'Starting export from Senzing.')
     try:
         export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
+        log.debug(SZ_TAG + 'Obtained export_json_entity_report handle.')
         buff.write('['.encode('utf-8'))
         while 1:
+            log.debug(SZ_TAG + 'Fetching chunk...')
             chunk = sz_eng.fetch_next(export_handle)
             if not chunk:
                 break
             buff.write(chunk.encode('utf-8'))
+            log.debug('Wrote chunk to buffer.')
             buff.write(','.encode('utf-8'))
         sz_eng.close_export_report(export_handle)
+        log.info(SZ_TAG + 'Closed export handle.')
         buff.seek(-1, os.SEEK_CUR) # toss out last comma
         buff.write(']'.encode('utf-8'))
+        log.info('Total bytes exported/buffered: ' + str(buff.getbuffer().nbytes))
     except sz.SzError as err:
-        print(err)
+        log.error(SZ_TAG + str(err))
+    except Exception as e:
+        log.error(str(e))
 
     # rewind buffer
     buff.seek(0)
+    buff.flush()
 
     # write buff to S3 using upload_fileobj
     fname = 'output-' + ts() + '.json'
-    resp = s3.upload_fileobj(buff, S3_BUCKET, fname)
-
-    print(resp)
-    return resp
+    log.info(AWS_TAG + 'About to upload JSON file ' + fname + ' to S3 ...')
+    try:
+        s3.upload_fileobj(buff, S3_BUCKET, fname)
+        log.info(AWS_TAG + 'Successfully upload file.')
+    except Exception as e:
+        log.error(AWS_TAG + str(e))
 
 #-------------------------------------------------------------------------------
 
@@ -108,26 +121,22 @@ def main():
 if __name__ == '__main__': main()
 
 #-------------------------------------------------------------------------------
-# test funcs (to maybe relocate)
+# test funcs
 
-def upload_test_file():
-    print("Start test upload to S3 ...")
+def upload_test_file_to_s3():
+    print("Starting test upload to S3 ...")
     s3 = make_s3_client()
     print(s3)
     fname = 'hemingway.txt'
     resp = s3.upload_file(fname, S3_BUCKET, fname)
     print(resp) 
-    print("SUCCESSFUL")
+    print('Upload successful.')
 
-def get_file():
-    key = 'output-1758036760013.json'
+def get_file_from_s3(key):
+    '''Get from from S3 and write to /tmp (use docker-compose to map this
+    to desired directory on host machine).'''
     print('Grabbing file...') 
     s3 = make_s3_client()
     resp = s3.download_file(S3_BUCKET, key, '/tmp/'+key)
     print(resp)
-    print('done grabbing file.')
-    #f = open('/tmp/'+key)
-    #print(f.readlines())
-
-#upload_test_file()
-#get_file()
+    print('Done.')
