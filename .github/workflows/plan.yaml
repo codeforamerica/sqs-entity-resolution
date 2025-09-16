@@ -55,7 +55,7 @@ permissions:
 
 jobs:
   plan:
-    name: Plan changes to ${{ inputs.config }} in ${{ inputs.environment || 'development' }}
+    name: Plan changes to ${{ inputs.config }} in ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'development' }}
     env:
