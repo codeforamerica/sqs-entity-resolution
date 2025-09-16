@@ -68,15 +68,21 @@ def go():
     # init buffer
     buff = io.BytesIO()
     
-    # retrieve output from sz into buff
+    # Retrieve output from sz into buff
+    # sz will export JSONL lines; we add the chars necessary to make
+    # the output as a whole be a single JSON blob.
     try:
         export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
+        buff.write('['.encode('utf-8'))
         while 1:
             chunk = sz_eng.fetch_next(export_handle)
             if not chunk:
                 break
             buff.write(chunk.encode('utf-8'))
+            buff.write(','.encode('utf-8'))
         sz_eng.close_export_report(export_handle)
+        buff.seek(-1, os.SEEK_CUR) # toss out last comma
+        buff.write(']'.encode('utf-8'))
     except sz.SzError as err:
         print(err)
 
@@ -114,7 +120,7 @@ def upload_test_file():
     print("SUCCESSFUL")
 
 def get_file():
-    key = 'output-1757986924786.json'
+    key = 'output-1758036760013.json'
     print('Grabbing file...') 
     s3 = make_s3_client()
     resp = s3.download_file(S3_BUCKET, key, '/tmp/'+key)
@@ -122,3 +128,6 @@ def get_file():
     print('done grabbing file.')
     #f = open('/tmp/'+key)
     #print(f.readlines())
+
+#upload_test_file()
+#get_file()
