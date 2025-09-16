@@ -1,0 +1,24 @@
+import logging
+import sys
+
+AWS_TAG =   '[AWS] '
+SZ_TAG =    '[SZ] '
+DLQ_TAG =   '[DLQ] '
+
+_instantiated_loggers = {}
+
+def retrieve_logger(tag='default'):
+    global _instantiated_loggers
+    if tag in _instantiated_loggers:
+        return _instantiated_loggers[tag]
+    else:
+        x = logging.getLogger(tag)
+        x.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        fmt = logging.Formatter(
+            '[%(asctime)s] [%(levelname)s] ' \
+            '[%(filename)s:%(lineno)s] %(message)s')
+        handler.setFormatter(fmt)
+        x.addHandler(handler)
+        _instantiated_loggers[tag] = x
+        return x
