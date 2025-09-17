@@ -18,8 +18,16 @@ except Exception as e:
     log.error(e)
     sys.exit(1)
 
+if 'SENZING_ENGINE_CONFIGURATION_JSON' not in os.environ:
+    log.error('SENZING_ENGINE_CONFIGURATION_JSON environment variable required.')
+    sys.exit(1)
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
-S3_BUCKET = 'sqs-senzing-local-export'
+
+if 'S3_BUCKET_NAME' not in os.environ:
+    log.error('S3_BUCKET_NAME environment variable required.')
+    sys.exit(1)
+S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+
 EXPORT_FLAGS =  sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
 #-------------------------------------------------------------------------------
@@ -31,7 +39,7 @@ def ts():
 def make_s3_client():
     try:
         sess = boto3.Session()
-        if 'AWS_ENDPOINT_URL'in os.environ:
+        if 'AWS_ENDPOINT_URL' in os.environ:
             return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
         else:
             return sess.client('s3')
@@ -104,8 +112,8 @@ def go():
     fname = 'output-' + ts() + '.json'
     log.info(AWS_TAG + 'About to upload JSON file ' + fname + ' to S3 ...')
     try:
-        s3.upload_fileobj(buff, S3_BUCKET, fname)
-        log.info(AWS_TAG + 'Successfully upload file.')
+        s3.upload_fileobj(buff, S3_BUCKET_NAME, fname)
+        log.info(AWS_TAG + 'Successfully uploaded file.')
     except Exception as e:
         log.error(AWS_TAG + str(e))
 
@@ -121,22 +129,22 @@ def main():
 if __name__ == '__main__': main()
 
 #-------------------------------------------------------------------------------
-# test funcs
+# ad-hoc test funcs - might move later
 
-def upload_test_file_to_s3():
+def _upload_test_file_to_s3():
     print("Starting test upload to S3 ...")
     s3 = make_s3_client()
     print(s3)
     fname = 'hemingway.txt'
-    resp = s3.upload_file(fname, S3_BUCKET, fname)
+    resp = s3.upload_file(fname, S3_BUCKET_NAME, fname)
     print(resp) 
     print('Upload successful.')
 
-def get_file_from_s3(key):
-    '''Get from from S3 and write to /tmp (use docker-compose to map this
+def _get_file_from_s3(key):
+    '''Get file from S3 and write to /tmp (use docker-compose to map this
     to desired directory on host machine).'''
     print('Grabbing file...') 
     s3 = make_s3_client()
-    resp = s3.download_file(S3_BUCKET, key, '/tmp/'+key)
+    resp = s3.download_file(S3_BUCKET_NAME, key, '/tmp/'+key)
     print(resp)
     print('Done.')

@@ -75,7 +75,7 @@ Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
 
   ```bash
-  docker compose run --env AWS_PROFILE=localstack exporter
+  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export exporter
   ```
 
 You can view information about files in the Localstack S3 bucket by visiting
