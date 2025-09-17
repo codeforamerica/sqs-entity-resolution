@@ -1,8 +1,8 @@
-resource "aws_kms_key" "this" {
+resource "aws_kms_key" "queue" {
   description             = "Encryption key for ${var.project} ${var.environment}"
   deletion_window_in_days = var.key_recovery_period
   enable_key_rotation     = true
-  policy = jsonencode(yamldecode(templatefile("${path.module}/templates/key-policy.yaml.tftpl", {
+  policy = jsonencode(yamldecode(templatefile("${path.module}/templates/queue-key-policy.yaml.tftpl", {
     account_id : data.aws_caller_identity.identity.account_id,
     partition : data.aws_partition.current.partition
   })))
@@ -10,18 +10,18 @@ resource "aws_kms_key" "this" {
   tags = var.tags
 }
 
-resource "aws_kms_alias" "this" {
+resource "aws_kms_alias" "queue" {
   name          = "alias/${var.project}/${var.environment}"
-  target_key_id = aws_kms_key.this.id
+  target_key_id = aws_kms_key.queue.id
 }
 
 module "sqs" {
   source  = "terraform-aws-modules/sqs/aws"
   version = "~> 5.0"
 
-  name = "${var.project}-${var.environment}-queue"
+  name = "${local.prefix}-queue"
 
-  kms_master_key_id                 = aws_kms_key.this.id
+  kms_master_key_id                 = aws_kms_key.queue.id
   kms_data_key_reuse_period_seconds = 3600
   create_dlq                        = true
 
@@ -32,11 +32,11 @@ module "s3" {
   source  = "boldlink/s3/aws"
   version = "~> 2.6"
 
-  bucket            = "${var.project}-${var.environment}-exports"
+  bucket            = "${local.prefix}-exports"
   versioning_status = "Enabled"
 
   sse_bucket_key_enabled = true
-  sse_kms_master_key_arn = aws_kms_key.this.arn
+  sse_kms_master_key_arn = aws_kms_key.queue.arn
   sse_sse_algorithm      = "aws:kms"
 
   bucket_policy = jsonencode(yamldecode(templatefile("${path.module}/templates/bucket-policy.yaml.tftpl", {
