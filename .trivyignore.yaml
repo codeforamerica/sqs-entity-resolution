@@ -3,4 +3,5 @@ misconfigurations:
   - id: AVD-DS-0026
     paths:
       - Dockerfile.consumer # Jira -67
+      - Dockerfile.exporter # ephemeral container, healthcheck not necessary
       - Dockerfile.tools
