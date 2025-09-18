@@ -12,7 +12,7 @@ module "inputs" {
 
   prefix = "/${var.project}/${var.environment}"
 
-  inputs = ["application/tag", "logging/bucket"]
+  inputs = ["application/tag", "logging/bucket", "logging/key", "vpc/id", "vpc/private_subnets"]
 }
 
 module "system" {
@@ -23,5 +23,13 @@ module "system" {
   export_expiration   = var.export_expiration
   key_recovery_period = var.key_recovery_period
   logging_bucket      = module.inputs.values["logging/bucket"]
+  logging_key_arn     = module.inputs.values["logging/key"]
   tags                = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
+  vpc_id              = module.inputs.values["vpc/id"]
+  database_subnets    = split(",", module.inputs.values["vpc/private_subnets"])
+  container_subnets   = split(",", module.inputs.values["vpc/private_subnets"])
+
+  apply_database_updates_immediately = var.apply_database_updates_immediately
+  database_skip_final_snapshot       = var.database_skip_final_snapshot
+  deletion_protection                = var.deletion_protection
 }
