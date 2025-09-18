@@ -1,3 +1,21 @@
+variable "apply_database_updates_immediately" {
+  type        = bool
+  description = "Whether to apply database updates immediately. May result in downtime."
+  default     = false
+}
+
+variable "database_skip_final_snapshot" {
+  type        = bool
+  description = "Whether to skip the final snapshot when the database cluster is deleted."
+  default     = false
+}
+
+variable "deletion_protection" {
+  type        = bool
+  description = "Whether to enable deletion protection on the database cluster. Must be disabled and applied before resources can be deleted."
+  default     = true
+}
+
 variable "environment" {
   type        = string
   description = "Environment for the deployment."

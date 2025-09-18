@@ -29,7 +29,7 @@ module "system" {
   database_subnets    = split(",", module.inputs.values["vpc/private_subnets"])
   container_subnets   = split(",", module.inputs.values["vpc/private_subnets"])
 
-  apply_database_updates_immediately = true
-  database_skip_final_snapshot       = true
-  deletion_protection                = false
+  apply_database_updates_immediately = var.apply_database_updates_immediately
+  database_skip_final_snapshot       = var.database_skip_final_snapshot
+  deletion_protection                = var.deletion_protection
 }

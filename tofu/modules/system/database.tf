@@ -59,7 +59,7 @@ module "database" {
   create_cloudwatch_log_group     = true
 
   cluster_performance_insights_enabled          = true
-  cluster_performance_insights_retention_period = 14
+  cluster_performance_insights_retention_period = 31
   cluster_performance_insights_kms_key_id       = var.logging_key_arn
 
   tags = var.tags

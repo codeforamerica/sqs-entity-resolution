@@ -16,6 +16,12 @@ on:
     secrets:
       AWS_REGION:
       AWS_ROLE_ARN:
+      TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY:
+        required: false
+      TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT:
+        required: false
+      TF_VAR_DELETION_PROTECTION:
+        required: false
       TF_VAR_ENVIRONMENT:
         required: false
       TF_VAR_EXPORT_EXPIRATION:
@@ -83,6 +89,9 @@ jobs:
         env:
           # For any of these that have a value, the corresponding TF_VAR_*
           # environment variable will be set.
+          APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+          DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
+          DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
           ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
@@ -91,8 +100,9 @@ jobs:
           REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
         run: |
           variables=(
-            "environment" "export_expiration" "key_recovery_period" "program"
-            "project" "repository"
+            "apply_database_updates_immediately" "database_skip_final_snapshot"
+            "deletion_protection" "environment" "export_expiration"
+            "key_recovery_period" "program" "project" "repository"
           )
           for var in ${variables[@]}; do
             name="$(echo $var | tr '[:lower:]' '[:upper:]')"
