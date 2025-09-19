@@ -85,7 +85,8 @@ def del_msg(sqs, q_url, receipt_handle):
                   ReceiptHandle + ' Additional info: ' + str(e))
 
 def make_msg_visible(sqs, q_url, receipt_handle):
-    # TODO logging
+    '''Setting visibility timeout to 0 on an SQS message makes it visible again,
+    making it available (again) for consuming.'''
     try:
         log.debug(AWS_TAG + 'Restoring message visibility for ReceiptHandle: ' + receipt_handle)
         sqs.change_message_visibility(
