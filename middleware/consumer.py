@@ -172,6 +172,8 @@ def go():
                     register_data_source(rcd['DATA_SOURCE'])
                 else:
                     log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+
+            # Lastly, either delete msg (if processed) or else 'toss it back'.
             finally:
                 if toss_back:
                     make_msg_visible(sqs, Q_URL, receipt_handle)
