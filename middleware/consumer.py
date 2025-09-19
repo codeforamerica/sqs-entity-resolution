@@ -59,7 +59,7 @@ def init():
         sys.exit(1)
 
 def get_msgs(sqs, q_url):
-    '''Generator function; returns a single SQS msg at a time.
+    '''Generator function; emits a single SQS msg at a time.
     Pertinent keys in an SQS message include:
     - MessageId
     - ReceiptHandle -- you'll need this to delete the msg later
@@ -78,10 +78,43 @@ def get_msgs(sqs, q_url):
    
 def del_msg(sqs, q_url, receipt_handle):
     try:
+        log.debug(AWS_TAG + 'Deleting message having ReceiptHandle: ' + receipt_handle)
         return sqs.delete_message(QueueUrl=q_url, ReceiptHandle=receipt_handle)
     except Exception as e:
         log.error(AWS_TAG + DLQ_TAG + 'SQS delete failure for ReceiptHandle: ' +
                   ReceiptHandle + ' Additional info: ' + str(e))
+
+def make_msg_visible(sqs, q_url, receipt_handle):
+    # TODO logging
+    try:
+        log.debug(AWS_TAG + 'Restoring message visibility for ReceiptHandle: ' + receipt_handle)
+        sqs.change_message_visibility(
+            QueueUrl=q_url,
+            ReceiptHandle=receipt_handle,
+            VisibilityTimeout=0)
+    except Exception as e:
+        log.error(AWS_TAG + str(e))
+
+#-------------------------------------------------------------------------------
+
+def register_data_source(data_source_name):
+    '''References:
+        - https://github.com/senzing-garage/knowledge-base/blob/main/lists/environment-variables.md#senzing_tools_datasources
+        - https://github.com/senzing-garage/knowledge-base/blob/4c397efacdb0d2feecd89fa0f00ec10f99320d0c/proposals/working-with-config/mjd.md?plain=1#L98
+    '''
+    try:
+        log.info(SZ_TAG + 'Registering new data_source: ' + data_source_name)
+        sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
+        sz_config_mgr = sz_factory.create_configmanager()
+        default_config_id = sz_config_mgr.get_default_config_id()
+        sz_config = sz_config_mgr.create_config_from_config_id(default_config_id)
+        sz_config.register_data_source(data_source_name)
+        sz_config_mgr.set_default_config(sz_config.export(), 'default')
+        sz_factory.reinitialize(default_config_id)
+        log.info(SZ_TAG + 'Successfully registered data_source: ' + data_source_name)
+    except sz.SzError as err:
+        log.error(SZ_TAG + str(err))
+        sys.exit(1)
 
 #-------------------------------------------------------------------------------
 
@@ -121,16 +154,29 @@ def go():
                      + receipt_handle)
             rcd = json.loads(body)
 
-            # Process and send to Senzing.
-            resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
-                                     sz.SzEngineFlags.SZ_WITH_INFO)
-            log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
-                     + receipt_handle)
+            try:
+                toss_back = 0
 
-            # Delete msg from queue.
-            del_msg(sqs, Q_URL, receipt_handle)
-        except sz.SzError as sz_err:
-            log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+                # Process and send to Senzing.
+                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
+                                         sz.SzEngineFlags.SZ_WITH_INFO)
+                log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+                         + receipt_handle)
+
+            except sz.SzError as sz_err:
+                if 'SENZ2207' in str(sz_err): # SzUnknownDataSourceError
+                    # Ref: https://github.com/senzing-garage/sz-sdk-errors/blob/main/szerrors.json
+                    toss_back = 1
+                    log.info(SZ_TAG + str(sz_err))
+                    register_data_source(rcd['DATA_SOURCE'])
+                else:
+                    log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+            finally:
+                if toss_back:
+                    make_msg_visible(sqs, Q_URL, receipt_handle)
+                else:
+                    del_msg(sqs, Q_URL, receipt_handle)
+
         except Exception as e:
             log.error(str(e))
             sys.exit(1)
