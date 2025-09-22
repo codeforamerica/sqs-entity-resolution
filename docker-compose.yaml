@@ -24,7 +24,7 @@ services:
     depends_on:
       - db
     environment:
-      # SENZING_TOOLS_DATASOURCES: PEOPLE, CUSTOMERS
+      SENZING_TOOLS_DATASOURCES: PEOPLE
       SENZING_TOOLS_ENGINE_CONFIGURATION_JSON: >-
         {
           "PIPELINE": {

@@ -84,18 +84,6 @@ def del_msg(sqs, q_url, receipt_handle):
         log.error(AWS_TAG + DLQ_TAG + 'SQS delete failure for ReceiptHandle: ' +
                   ReceiptHandle + ' Additional info: ' + str(e))
 
-def make_msg_visible(sqs, q_url, receipt_handle):
-    '''Setting visibility timeout to 0 on an SQS message makes it visible again,
-    making it available (again) for consuming.'''
-    try:
-        log.debug(AWS_TAG + 'Restoring message visibility for ReceiptHandle: ' + receipt_handle)
-        sqs.change_message_visibility(
-            QueueUrl=q_url,
-            ReceiptHandle=receipt_handle,
-            VisibilityTimeout=0)
-    except Exception as e:
-        log.error(AWS_TAG + str(e))
-
 #-------------------------------------------------------------------------------
 
 def register_data_source(data_source_name):
@@ -103,8 +91,7 @@ def register_data_source(data_source_name):
         - https://github.com/senzing-garage/knowledge-base/blob/main/lists/environment-variables.md#senzing_tools_datasources
         - https://github.com/senzing-garage/knowledge-base/blob/4c397efacdb0d2feecd89fa0f00ec10f99320d0c/proposals/working-with-config/mjd.md?plain=1#L98
     '''
-    try:
-        log.info(SZ_TAG + 'Registering new data_source: ' + data_source_name)
+    def f():
         sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
         sz_config_mgr = sz_factory.create_configmanager()
         default_config_id = sz_config_mgr.get_default_config_id()
@@ -112,6 +99,13 @@ def register_data_source(data_source_name):
         sz_config.register_data_source(data_source_name)
         sz_config_mgr.set_default_config(sz_config.export(), 'default')
         sz_factory.reinitialize(default_config_id)
+    try:
+        log.info(SZ_TAG + 'Registering new data_source: ' + data_source_name)
+        # For reasons unknown to me, this has to be done 2x before
+        # it sticks.
+        # TODO figure out how to do this just once.
+        f()
+        f()
         log.info(SZ_TAG + 'Successfully registered data_source: ' + data_source_name)
     except sz.SzError as err:
         log.error(SZ_TAG + str(err))
@@ -156,29 +150,28 @@ def go():
             rcd = json.loads(body)
 
             try:
-                toss_back = 0
-
                 # Process and send to Senzing.
-                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
-                                         sz.SzEngineFlags.SZ_WITH_INFO)
+                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
-
-            except sz.SzError as sz_err:
-                if 'SENZ2207' in str(sz_err): # SzUnknownDataSourceError
-                    # Ref: https://github.com/senzing-garage/sz-sdk-errors/blob/main/szerrors.json
-                    toss_back = 1
-                    log.info(SZ_TAG + str(sz_err))
+            except sz.SzUnknownDataSourceError as sz_uds_err:
+                try:
+                    log.info(SZ_TAG + str(sz_uds_err))
+                    # Encountered a new data source name; register it.
                     register_data_source(rcd['DATA_SOURCE'])
-                else:
-                    log.error(SZ_TAG + DLQ_TAG + str(sz_err))
 
-            # Lastly, either delete msg (if processed) or else 'toss it back'.
+                    # Then try again: process and send to Senzing.
+                    resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
+                    log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+                             + receipt_handle)
+                except sz.SzError as sz_err:
+                    raise sz_err
+            except sz.SzError as sz_err:
+                log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+
+            # Lastly, delete msg.
             finally:
-                if toss_back:
-                    make_msg_visible(sqs, Q_URL, receipt_handle)
-                else:
-                    del_msg(sqs, Q_URL, receipt_handle)
+                del_msg(sqs, Q_URL, receipt_handle)
 
         except Exception as e:
             log.error(str(e))
