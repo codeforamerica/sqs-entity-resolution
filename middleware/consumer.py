@@ -101,9 +101,7 @@ def register_data_source(data_source_name):
         sz_factory.reinitialize(default_config_id)
     try:
         log.info(SZ_TAG + 'Registering new data_source: ' + data_source_name)
-        # For reasons unknown to me, this has to be done 2x before
-        # it sticks.
-        # TODO figure out how to do this just once.
+        # For reasons unknown to me, this has to be done 2x before it sticks.
         f()
         f()
         log.info(SZ_TAG + 'Successfully registered data_source: ' + data_source_name)
