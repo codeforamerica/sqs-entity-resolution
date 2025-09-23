@@ -16,9 +16,9 @@ senzing_engine_configuration_json = json.loads(os.environ['SENZING_ENGINE_CONFIG
 sz_factory = sz_core.SzAbstractFactoryCore("sz_factory_1", senzing_engine_configuration_json)
 sz_diagnostic = sz_factory.create_diagnostic()
 
-print('Are you sure you want to purge the repository? If so, type YES:')
+print('Are you sure you want to purge the database? If so, type YES:')
 ans = input('>')
 if ans == 'YES':
     sz_diagnostic.purge_repository()
 else:
-    print('Everything left as-is.')
+    print('Nothing was done. Everything was left as-is.')

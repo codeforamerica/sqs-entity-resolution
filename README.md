@@ -111,6 +111,24 @@ sz_command -C add_record \
   PEOPLE 1 '{"NAME_FULL":"Robert Smith", "DATE_OF_BIRTH":"7/4/1976", "PHONE_NUMBER":"555-555-2088"}'
 ```
 
+### Utilities
+
+Load a single record as a simple test:
+
+    docker compose run util util_load_record.py
+
+Purge the database:
+
+    docker compose run util util_purge_db.py
+
+Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be 
+sure this folder already exists):
+
+    docker compose run util util_s3_retrieve.py hemingway.txt
+
+Purge the LocalStack S3 bucket:
+
+    docker compose run util util_purge_s3.py
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
 [localstack]: https://www.localstack.cloud/

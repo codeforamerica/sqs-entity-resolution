@@ -125,6 +125,31 @@ services:
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.
 
+  util:
+    build:
+      context: .
+      dockerfile: Dockerfile.util
+    depends_on:
+      - db
+    environment:
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SENZING_ENGINE_CONFIGURATION_JSON: >-
+        {
+          "PIPELINE": {
+            "CONFIGPATH": "/etc/opt/senzing",
+            "LICENSESTRINGBASE64": "${SENZING_LICENSE_BASE64_ENCODED}",
+            "RESOURCEPATH": "/opt/senzing/er/resources",
+            "SUPPORTPATH": "/opt/senzing/data"
+          },
+          "SQL": {
+            "BACKEND": "SQL",
+            "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
+          }
+        }
+    volumes:
+      - ~/.aws:/home/senzing/.aws
+      - ~/tmp:/tmp # Should you wish to write files to host.
+
 volumes:
   localstack:
   postgres:

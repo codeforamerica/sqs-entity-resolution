@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import time
 import boto3
@@ -7,8 +8,9 @@ import boto3
 # sample-data/customers.jsonl into SQS.
 
 # For live AWS, can set these to other values.
-AWS_PROFILE_NAME = 'localstack'
+AWS_PROFILE = 'localstack'
 Q_URL = 'http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest'
+S3_BUCKET_NAME = 'sqs-senzing-local-export'
 
 #------------------------------------------------------------------------------
 
@@ -23,7 +25,9 @@ def make_boto_session(fpath=None):
     if fpath:
         return boto3.Session(**json.load(open(fpath)))
     else:
-        return boto3.Session(profile_name=AWS_PROFILE_NAME)
+        # Here we pass in profile_name explicitly since it's not necessarily an env
+        # var in this context.
+        return boto3.Session(profile_name=AWS_PROFILE)
 
 def make_sqs_client(boto_session):
     return boto_session.client('sqs')
@@ -71,3 +75,25 @@ def _get_1_msg(sqs, q_url):
     print(resp)
     return resp
 
+#-------------------------------------------------------------------------------
+
+def make_s3_client():
+    try:
+        # Here we pass in profile_name explicitly since it's not necessarily an env
+        # var in this context.
+        sess = boto3.Session(profile_name=AWS_PROFILE)
+        if 'AWS_ENDPOINT_URL' in os.environ:
+            return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+        else:
+            return sess.client('s3')
+    except Exception as e:
+        print(e)
+
+def upload_test_file_to_s3():
+    print("Starting test upload to S3 ...")
+    s3 = make_s3_client()
+    print(s3)
+    fname = 'sample-data/hemingway.txt'
+    resp = s3.upload_file(fname, S3_BUCKET_NAME, fname[fname.rfind('/')+1:])
+    print(resp) 
+    print('Upload successful.')
