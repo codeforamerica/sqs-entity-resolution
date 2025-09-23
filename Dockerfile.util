@@ -19,4 +19,8 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python3", "exporter.py"]
+ENV AWS_PROFILE=localstack
+ENV Q_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest
+ENV S3_BUCKET_NAME=sqs-senzing-local-export
+
+ENTRYPOINT ["python3"]
