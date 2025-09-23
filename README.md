@@ -63,7 +63,7 @@ needed):
    consumer
    ```
 
-#### Exporter
+### Exporter
 
 Spinning up the exporter middleware (this is intended to be an ephemeral
 container):

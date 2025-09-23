@@ -1,6 +1,6 @@
 services:
   db:
-    image: bitnami/postgresql:17.6.0
+    image: bitnamisecure/postgresql:latest
     environment:
       # See https://github.com/bitnami/bitnami-docker-postgresql#configuration
       POSTGRESQL_DATABASE: ${POSTGRES_DB:-G2}
