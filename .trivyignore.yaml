@@ -5,3 +5,4 @@ misconfigurations:
       - Dockerfile.consumer # Jira -67
       - Dockerfile.exporter # ephemeral container, healthcheck not necessary
       - Dockerfile.tools
+      - Dockerfile.util
