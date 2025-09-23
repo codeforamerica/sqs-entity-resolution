@@ -84,6 +84,18 @@ def del_msg(sqs, q_url, receipt_handle):
         log.error(AWS_TAG + DLQ_TAG + 'SQS delete failure for ReceiptHandle: ' +
                   ReceiptHandle + ' Additional info: ' + str(e))
 
+def make_msg_visible(sqs, q_url, receipt_handle):
+    '''Setting visibility timeout to 0 on an SQS message makes it visible again,
+    making it available (again) for consuming.'''
+    try:
+        log.debug(AWS_TAG + 'Restoring message visibility for ReceiptHandle: ' + receipt_handle)
+        sqs.change_message_visibility(
+            QueueUrl=q_url,
+            ReceiptHandle=receipt_handle,
+            VisibilityTimeout=0)
+    except Exception as e:
+        log.error(AWS_TAG + str(e))
+
 #-------------------------------------------------------------------------------
 
 def register_data_source(data_source_name):
@@ -166,9 +178,12 @@ def go():
                     raise sz_err
             except sz.SzError as sz_err:
                 log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+                # "Toss back" this message to be re-consumed; we rely on AWS
+                # config to move out-of-order messages into the DLQ at some point.
+                make_msg_visible(sqs, Q_URL, receipt_handle)
 
-            # Lastly, delete msg.
-            finally:
+            # Lastly, delete msg if no errors.
+            else:
                 del_msg(sqs, Q_URL, receipt_handle)
 
         except Exception as e:
