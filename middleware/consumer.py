@@ -51,7 +51,11 @@ def init():
     '''Returns sqs client object'''
     try:
         sess = _make_boto_session()
-        sqs = sess.client('sqs')
+        if 'AWS_ENDPOINT_URL' in os.environ:
+            return sess.client('sqs', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+        else:
+            return sess.client('sqs')
+
         log.info(AWS_TAG + 'SQS client object instantiated.')
         return sqs
     except Exception as e:
