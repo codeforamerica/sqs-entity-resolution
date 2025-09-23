@@ -6,9 +6,9 @@ import boto3
 # Primary function of interest here is load_dat(), which loads data from
 # sample-data/customers.jsonl into SQS.
 
-# Suggestion: set custom values for these in a REPL.
-AWS_PROFILE_NAME = None
-Q_URL = None
+# For live AWS, can set these to other values.
+AWS_PROFILE_NAME = 'localstack'
+Q_URL = 'http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest'
 
 #------------------------------------------------------------------------------
 
