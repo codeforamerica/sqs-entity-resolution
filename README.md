@@ -60,8 +60,10 @@ needed):
    ```bash
    docker compose run --env AWS_PROFILE=some-profile-name --env \
    Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
-   consumer
+   --env LOG_LEVEL=INFO consumer
    ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
 
 ### Exporter
 
@@ -69,8 +71,11 @@ Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
 
   ```bash
-  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export exporter
+  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
+  --env LOG_LEVEL=INFO exporter
   ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
 
 You can view information about files in the Localstack S3 bucket by visiting
 this URL:
