@@ -66,9 +66,8 @@ def get_msgs(sqs, q_url):
     - Body -- here, should be the JSONL record as a string
     '''
     while 1:
-        print('waiting for msg')
         try:
-            log.info(AWS_TAG + 'Polling SQS for the next message')
+            log.debug(AWS_TAG + 'Polling SQS for the next message')
             resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
                                        WaitTimeSeconds=POLL_SECONDS)
             if 'Messages' in resp and len(resp['Messages']) == 1:
@@ -117,14 +116,14 @@ def go():
             # Get next message.
             msg = next(msgs)
             receipt_handle, body = msg['ReceiptHandle'], msg['Body']
-            log.info('SQS message retrieved, having ReceiptHandle: '
+            log.debug('SQS message retrieved, having ReceiptHandle: '
                      + receipt_handle)
             rcd = json.loads(body)
 
             # Process and send to Senzing.
             resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
                                      sz.SzEngineFlags.SZ_WITH_INFO)
-            log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+            log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                      + receipt_handle)
 
             # Delete msg from queue.
