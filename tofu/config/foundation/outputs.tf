@@ -8,6 +8,11 @@ output "deployment_role_arn" {
   description = "The ARN of the deployment role for system components."
 }
 
+output "environment_deployment_roles" {
+  value       = { for env, mod in module.deployment_environments : env => mod.role_arn }
+  description = "The ARN of the deployment role for the dev-cdii environment."
+}
+
 output "logging_bucket" {
   value       = module.logging.bucket
   description = "The name of the S3 bucket for logging."

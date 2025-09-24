@@ -38,6 +38,7 @@ jobs:
       TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
       TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
       TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
+      TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
       TF_VAR_ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
       TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
       TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
@@ -82,6 +83,7 @@ jobs:
           APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
           DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
           DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
+          DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
           ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
@@ -91,8 +93,9 @@ jobs:
         run: |
           variables=(
             "apply_database_updates_immediately" "database_skip_final_snapshot"
-            "deletion_protection" "environment" "export_expiration"
-            "key_recovery_period" "program" "project" "repository"
+            "deletion_protection" "deployment_environments" "environment"
+            "export_expiration" "key_recovery_period" "program" "project"
+            "repository"
           )
           for var in ${variables[@]}; do
             name="$(echo $var | tr '[:lower:]' '[:upper:]')"
