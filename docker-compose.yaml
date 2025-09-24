@@ -1,12 +1,10 @@
 services:
   db:
-    image: bitnamisecure/postgresql:latest
+    image: postgres:17.6
     environment:
-      # See https://github.com/bitnami/bitnami-docker-postgresql#configuration
-      POSTGRESQL_DATABASE: ${POSTGRES_DB:-G2}
-      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-senzing}
-      POSTGRESQL_POSTGRES_PASSWORD: ${POSTGRESQL_POSTGRES_PASSWORD:-postgres}
-      POSTGRESQL_USERNAME: ${POSTGRES_USERNAME:-senzing}
+      # See https://hub.docker.com/_/postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-senzing}
+      POSTGRES_USER: ${POSTGRES_USERNAME:-senzing}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-senzing}" ]
       interval: 10s
@@ -14,10 +12,9 @@ services:
       retries: 5
     ports:
       - 5432:5432
-    user: "${SENZING_UID:-504}:0"
     restart: always
     volumes:
-      - postgres:/bitnami/postgresql
+      - postgres:/var/lib/postgresql/data
 
   init-db:
     image: senzing/init-database:latest
@@ -61,6 +58,10 @@ services:
       - db
     environment:
       AWS_ENDPOINT_URL: http://localstack:4566
+      PGHOST: db
+      PGUSER: ${POSTGRES_USERNAME:-senzing}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
+      SENZING_DATASOURCES: PEOPLE CUSTOMERS
       SENZING_ENGINE_CONFIGURATION_JSON: >-
         {
           "PIPELINE": {
