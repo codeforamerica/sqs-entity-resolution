@@ -175,8 +175,6 @@ Statement:
   - s3:PutLifecycleConfiguration
   Resource: arn:${partition}:s3:::*
 - Effect: Allow
-  Action: sqs:CreateQueue
-  Resource: arn:${partition}:sqs:${region}:${account_id}:*
-- Effect: Allow
   Action: ssm:GetParameter
-  Resource: arn:${partition}:ssm:${region}:${account_id}:parameter/${project}/${environment}/*
+  Resource:
+    - arn:${partition}:ssm:${region}:${account_id}:parameter/${project}/${system_environment}/*
