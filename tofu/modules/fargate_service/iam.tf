@@ -33,11 +33,8 @@ resource "aws_iam_role" "execution" {
 
 resource "aws_iam_role_policy_attachments_exclusive" "execution" {
   role_name = aws_iam_role.execution.name
-  # TODO: Create our own policy instead of using the managed ones.
   policy_arns = concat([
-    # aws_iam_policy.execution.arn
-    "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-    "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchAgentServerPolicy"
+    aws_iam_policy.execution.arn
   ], var.execution_policies)
 }
 
