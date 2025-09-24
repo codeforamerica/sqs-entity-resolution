@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Create the database and import the Senzing schema if it doesn't already exist.
 if psql -lqt | cut -d \| -f 1 | grep -qw G2; then
     echo "Database has already been initialized"
 else

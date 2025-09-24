@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Crearte data sources if SENZING_DATASOURCES environment variable is set.
 if [[ -n "${SENZING_DATASOURCES}" ]]; then
   echo "Creating data sources"
   > /home/senzing/data-sources.txt

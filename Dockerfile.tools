@@ -25,7 +25,8 @@ USER senzing
 ENV PATH="$PATH:/home/senzing/.local/bin"
 RUN pipx install awscli-local
 
-# Define volumes necessary to support a read-only root filesystem.
+# Define volumes necessary to support a read-only root filesystem on ECS
+# Fargate.
 VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
 
 WORKDIR /home/senzing
