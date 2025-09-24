@@ -95,14 +95,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: GHAS not enabled warning
-        if: ${{ !github.event.repository.security_and_analysis.advanced_security_enabled && github.event.repository.private }}
-        run: |
-          echo "Warning: GitHub Advanced Security is not enabled. Please enable it to upload SARIF results."
-      - name: GHAS enabled notice
-        if: ${{ github.event.repository.security_and_analysis.advanced_security_enabled || !github.event.repository.private }}
-        run: |
-          echo "GitHub Advanced Security is enabled. SARIF results will be uploaded to the Security tab on the main branch."
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.30.0
         with:

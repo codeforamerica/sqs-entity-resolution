@@ -4,6 +4,12 @@ variable "apply_database_updates_immediately" {
   default     = false
 }
 
+variable "consumer_container_count" {
+  type        = number
+  description = "Number of containers to run persistently for the consumer service."
+  default     = 1
+}
+
 variable "database_skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final snapshot when the database cluster is deleted."
@@ -26,6 +32,12 @@ variable "export_expiration" {
   type        = number
   default     = 365
   description = "Number of days before export files expire."
+}
+
+variable "image_tags_mutable" {
+  type        = bool
+  description = "Whether to allow image tags to be mutable."
+  default     = false
 }
 
 variable "key_recovery_period" {

@@ -4,6 +4,12 @@ variable "apply_database_updates_immediately" {
   default     = false
 }
 
+variable "consumer_container_count" {
+  type        = number
+  description = "Number of containers to run persistently for the consumer service."
+  default     = 1
+}
+
 variable "container_subnets" {
   description = "The IDs of the subnets in which the container resources should be deployed."
   type        = list(string)
@@ -81,6 +87,12 @@ variable "export_lock_period" {
     condition     = contains(["days", "years"], var.export_lock_period)
     error_message = "Valid object lock periods are: days, years."
   }
+}
+
+variable "image_tags_mutable" {
+  type        = bool
+  description = "Whether to allow image tags to be mutable."
+  default     = false
 }
 
 variable "key_recovery_period" {

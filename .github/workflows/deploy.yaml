@@ -36,11 +36,13 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+      TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
       TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
       TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
       TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
       TF_VAR_ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
       TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+      TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
       TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
       TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
       TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
@@ -81,20 +83,23 @@ jobs:
           # For any of these that have a value, the corresponding TF_VAR_*
           # environment variable will be set.
           APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+          CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
           DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
           DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
           DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
           ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+          IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
           PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
           PROJECT: ${{ secrets.TF_VAR_PROJECT }}
           REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
         run: |
           variables=(
-            "apply_database_updates_immediately" "database_skip_final_snapshot"
-            "deletion_protection" "deployment_environments" "environment"
-            "export_expiration" "key_recovery_period" "program" "project"
+            "apply_database_updates_immediately" "consumer_container_count"
+            "database_skip_final_snapshot" "deletion_protection"
+            "deployment_environments" "environment" "export_expiration"
+            "image_tags_mutable" "key_recovery_period" "program" "project"
             "repository"
           )
           for var in ${variables[@]}; do

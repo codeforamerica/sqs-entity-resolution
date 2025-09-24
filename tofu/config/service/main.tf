@@ -18,16 +18,18 @@ module "inputs" {
 module "system" {
   source = "../../modules/system"
 
-  environment         = var.environment
-  project             = var.project
-  export_expiration   = var.export_expiration
-  key_recovery_period = var.key_recovery_period
-  logging_bucket      = module.inputs.values["logging/bucket"]
-  logging_key_arn     = module.inputs.values["logging/key"]
-  tags                = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
-  vpc_id              = module.inputs.values["vpc/id"]
-  database_subnets    = split(",", module.inputs.values["vpc/private_subnets"])
-  container_subnets   = split(",", module.inputs.values["vpc/private_subnets"])
+  environment              = var.environment
+  project                  = var.project
+  export_expiration        = var.export_expiration
+  key_recovery_period      = var.key_recovery_period
+  logging_bucket           = module.inputs.values["logging/bucket"]
+  logging_key_arn          = module.inputs.values["logging/key"]
+  tags                     = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
+  vpc_id                   = module.inputs.values["vpc/id"]
+  database_subnets         = split(",", module.inputs.values["vpc/private_subnets"])
+  container_subnets        = split(",", module.inputs.values["vpc/private_subnets"])
+  consumer_container_count = var.consumer_container_count
+  image_tags_mutable       = var.image_tags_mutable
 
   apply_database_updates_immediately = var.apply_database_updates_immediately
   database_skip_final_snapshot       = var.database_skip_final_snapshot

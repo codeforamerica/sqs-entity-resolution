@@ -47,15 +47,14 @@ module "ecs" {
 }
 
 module "tools" {
-  source = "../ephemeral_service"
+  source     = "../ephemeral_service"
+  depends_on = [aws_iam_policy.secrets]
 
   environment        = var.environment
   project            = var.project
   service            = "tools"
   execution_policies = [aws_iam_policy.secrets.arn]
-
-  # Until we get the database initialized.
-  image_tags_mutable = true
+  image_tags_mutable = var.image_tags_mutable
 
   environment_variables = {
     PGHOST : module.database.cluster_endpoint
@@ -70,14 +69,15 @@ module "tools" {
     SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
   }
 
-  # TODO: Do we need these?
+  # TODO: Do we need this?
   logging_key_id = var.logging_key_arn
 
   tags = var.tags
 }
 
 module "consumer" {
-  source = "../fargate_service"
+  source     = "../fargate_service"
+  depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
 
   environment        = var.environment
   project            = var.project
@@ -88,10 +88,8 @@ module "consumer" {
   logging_key_id     = var.logging_key_arn
   cluster_arn        = module.ecs.arn
   security_groups    = [module.task_security_group.security_group_id]
-
-  # TODO: Until we get the database initialized.
-  desired_containers = 1
-  image_tags_mutable = true
+  desired_containers = var.consumer_container_count
+  image_tags_mutable = var.image_tags_mutable
 
   environment_variables = {
     Q_URL : module.sqs.queue_url
