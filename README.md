@@ -188,7 +188,8 @@ When running either the Tools or Util containers, the `/tmp` folder inside the
 container is mapped to a folder named `tmp` inside your home folder (on macOS,
 that would be `/Users/yourusername/tmp`).
 
-> [!NOTE] You will need to manually create `/Users/yourusername/tmp` if it
+> [!NOTE]
+> You will need to manually create `/Users/yourusername/tmp` if it
 > doesn't already exist.
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
