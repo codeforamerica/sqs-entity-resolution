@@ -51,12 +51,6 @@ and run the consumer service on our local machine. This setup includes:
    docker compose up -d
    ```
 
-1. Access the `tools` container to interact with the services:
-
-   ```bash
-   docker compose run tools /bin/bash
-   ```
-
 ### Consumer
 
 Spinning up a consumer service (intended to be a continually-running process; in
@@ -69,7 +63,7 @@ needed):
    consumer
    ```
 
-#### Exporter
+### Exporter
 
 Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
@@ -83,7 +77,13 @@ this URL:
 
   http://localhost:4566/sqs-senzing-local-export
 
-### Using the services
+### Using the services (Tools container)
+
+1. Access the `tools` container to interact with the services:
+
+   ```bash
+   docker compose run tools /bin/bash
+  ```
 
 The `tools` container should be configured with the necessary environment
 variables to interact with the SQS and S3 services in LocalStack, as well as the
@@ -98,6 +98,16 @@ awslocal sqs send-message \
   --message-body '{"NAME_FULL":"Robert Smith", "DATE_OF_BIRTH":"7/4/1976", "PHONE_NUMBER":"555-555-2088"}'
 ```
 
+View queues:
+
+    awslocal sqs list-queues
+
+View queue message count, etc.:
+
+    awslocal sqs get-queue-attributes --queue-url \
+    http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest \
+    --attribute-names All
+
 You can use the Senzing SDK's `sz_*` commands to interact with the Senzing
 database. For example, to add a new entity:
 
@@ -105,7 +115,6 @@ database. For example, to add a new entity:
 sz_command -C add_record \
   PEOPLE 1 '{"NAME_FULL":"Robert Smith", "DATE_OF_BIRTH":"7/4/1976", "PHONE_NUMBER":"555-555-2088"}'
 ```
-
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
 [localstack]: https://www.localstack.cloud/
