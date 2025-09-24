@@ -1,5 +1,5 @@
 resource "aws_iam_role" "deployment" {
-  name = "${var.project}-${var.environment}-deployment-role"
+  name = "${var.project}-${local.system_environment}-deployment-role"
   assume_role_policy = jsonencode(yamldecode(templatefile("${path.module}/templates/assume-policy.yaml.tftpl", {
     oidc_arn : var.oidc_arn
     repository : var.repository
@@ -9,7 +9,7 @@ resource "aws_iam_role" "deployment" {
 }
 
 resource "aws_iam_role_policy" "deployment" {
-  name = "${var.project}-${var.environment}-deployment-policy"
+  name = "${var.project}-${local.system_environment}-deployment-policy"
   role = aws_iam_role.deployment.name
 
   policy = jsonencode(yamldecode(templatefile("${path.module}/templates/iam-policy.yaml.tftpl", {
@@ -18,5 +18,6 @@ resource "aws_iam_role_policy" "deployment" {
     region : data.aws_region.current.region
     partition : data.aws_partition.current.partition
     project : var.project
+    system_environment : local.system_environment
   })))
 }

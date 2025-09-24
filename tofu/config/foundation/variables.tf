@@ -1,3 +1,9 @@
+variable "deployment_environments" {
+  type        = list(string)
+  description = "List of deployment environments to create permissions for. This is useful if you'll be deploying multiple service environments within the same infrastructure environment."
+  default     = []
+}
+
 variable "environment" {
   type        = string
   description = "Environment for the deployment."
