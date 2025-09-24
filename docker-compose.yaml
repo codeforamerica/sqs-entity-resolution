@@ -75,6 +75,7 @@ services:
             "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
           }
         }
+      - ~/tmp:/tmp
 
   consumer:
     build:
