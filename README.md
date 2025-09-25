@@ -51,72 +51,13 @@ and run the consumer service on our local machine. This setup includes:
    docker compose up -d
    ```
 
-### Configuring an AWS profile for LocalStack
+### Using the services (tools container)
 
-To use the middleware (Consumer, etc.) with LocalStack, an AWS profile specific
-to LocalStack will be needed.
+Access the `tools` container to interact with the services:
 
-Your `~/.aws/config` file should have something like:
-
-    [profile localstack]
-    region = us-east-1
-    output = json
-    ignore_configure_endpoint_urls = true
-    endpoint_url = http://localhost:4566
-
-Your `~/.aws/credentials` file should have:
-
-    [localstack]
-    aws_access_key_id=test
-    aws_secret_access_key=test
-
-Generally speaking, the `endpoint_url` argument will be needed when
-instantiating client objects for use with particular LocalStack services, e.g.:
-
-    sess = boto3.Session()
-    if 'AWS_ENDPOINT_URL' in os.environ:
-        return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
-    else:
-        return sess.client('s3')
-
-### Consumer
-
-Spinning up a consumer service (intended to be a continually-running process; in
-a production scenario, multiple instances could be running simultaneously as
-needed):
-
-   ```bash
-   docker compose run --env AWS_PROFILE=localstack --env \
-   Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
-   --env LOG_LEVEL=INFO consumer
-   ```
-
-`LOG_LEVEL` is optional; defaults to `INFO`.
-
-### Exporter
-
-Spinning up the exporter middleware (this is intended to be an ephemeral
-container):
-
-  ```bash
-  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
-  --env LOG_LEVEL=INFO exporter
-  ```
-
-`LOG_LEVEL` is optional; defaults to `INFO`.
-
-You can view information about files in the LocalStack S3 bucket by visiting
-this URL:
-
-  http://localhost:4566/sqs-senzing-local-export
-
-### Using the services (Tools container)
-
-1. Access the `tools` container to interact with the services:
-
-   ```bash
-   docker compose run tools /bin/bash
-  ```
+    ```bash
+    docker compose run tools /bin/bash
+    ```
 
 The `tools` container should be configured with the necessary environment
 variables to interact with the SQS and S3 services in LocalStack, as well as the
@@ -163,7 +104,7 @@ https://senzing.com/docs/quickstart/quickstart_docker/#add-the-data-source
         sz_file_loader -f reference.jsonl
         sz_file_loader -f watchlist.jsonl
 
-#### Utilities
+#### Additional utilities
 
 Load a single record as a simple test:
 
@@ -175,7 +116,7 @@ Purge the database:
 
 Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be 
 sure this folder already exists -- on macOS, that would be 
-`/Users/yourusername/tmp`).
+`/Users/yourusername/tmp`):
 
 > [!NOTE]
 > You will need to manually create `/Users/yourusername/tmp` if it
@@ -187,6 +128,73 @@ sure this folder already exists -- on macOS, that would be
 Purge the LocalStack S3 bucket:
 
     docker compose run tools python3 dev/s3_purge.py
+
+## Middleware
+
+There are three middleware applications:
+
+- consumer (continually-running service)
+- redoer (continually-running service)
+- exporter (ephemeral container)
+
+### Configuring an AWS profile for LocalStack
+
+To use the middleware (consumer, etc.) with LocalStack, an AWS profile specific
+to LocalStack will be needed.
+
+Your `~/.aws/config` file should have something like:
+
+    [profile localstack]
+    region = us-east-1
+    output = json
+    ignore_configure_endpoint_urls = true
+    endpoint_url = http://localhost:4566
+
+Your `~/.aws/credentials` file should have:
+
+    [localstack]
+    aws_access_key_id=test
+    aws_secret_access_key=test
+
+Generally speaking, the `endpoint_url` argument will be needed when
+instantiating client objects for use with particular LocalStack services, e.g.:
+
+    sess = boto3.Session()
+    if 'AWS_ENDPOINT_URL' in os.environ:
+        return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+    else:
+        return sess.client('s3')
+
+### Consumer
+
+Spinning up the consumer middleware (intended to be a continually-running 
+process; in a production scenario, multiple instances could be running 
+simultaneously as needed):
+
+   ```bash
+   docker compose run --env AWS_PROFILE=localstack --env \
+   Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
+   --env LOG_LEVEL=INFO consumer
+   ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
+
+### Exporter
+
+Spinning up the exporter middleware (this is intended to be an ephemeral
+container):
+
+  ```bash
+  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
+  --env LOG_LEVEL=INFO exporter
+  ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
+
+You can view information about files in the LocalStack S3 bucket by visiting
+this URL:
+
+  http://localhost:4566/sqs-senzing-local-export
 
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
