@@ -163,34 +163,31 @@ https://senzing.com/docs/quickstart/quickstart_docker/#add-the-data-source
         sz_file_loader -f reference.jsonl
         sz_file_loader -f watchlist.jsonl
 
-### Utilities
+#### Utilities
 
 Load a single record as a simple test:
 
-    docker compose run util util_load_record.py
+    docker compose run tools python dev/add_1_record.py
 
 Purge the database:
 
-    docker compose run util util_purge_db.py
+    docker compose run tools python dev/db_purge.py
 
 Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be 
-sure this folder already exists):
-
-    docker compose run util util_s3_retrieve.py hemingway.txt
-
-Purge the LocalStack S3 bucket:
-
-    docker compose run util util_purge_s3.py
-
-### Moving files between the container and your local computer
-
-When running either the Tools or Util containers, the `/tmp` folder inside the
-container is mapped to a folder named `tmp` inside your home folder (on macOS,
-that would be `/Users/yourusername/tmp`).
+sure this folder already exists -- on macOS, that would be 
+`/Users/yourusername/tmp`).
 
 > [!NOTE]
 > You will need to manually create `/Users/yourusername/tmp` if it
 > doesn't already exist.
+
+    # Here, `hemingway.txt` is the file you wish to retrieve from S3.
+    docker compose run tools python3 dev/s3_get.py hemingway.txt      
+
+Purge the LocalStack S3 bucket:
+
+    docker compose run tools python3 dev/s3_purge.py
+
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
 [localstack]: https://www.localstack.cloud/
