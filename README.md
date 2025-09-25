@@ -106,6 +106,8 @@ https://senzing.com/docs/quickstart/quickstart_docker/#add-the-data-source
 
 #### Additional utilities
 
+##### Senzing and the database
+
 Load a single record as a simple test:
 
     docker compose run tools python dev/add_1_record.py
@@ -113,6 +115,11 @@ Load a single record as a simple test:
 Purge the database:
 
     docker compose run tools python dev/db_purge.py
+
+##### S3
+
+You might need to configure an AWS profile before using these S3-related 
+utilities. See further down below for how to do that.
 
 Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be 
 sure this folder already exists -- on macOS, that would be 
