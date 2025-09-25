@@ -1,0 +1,26 @@
+Version: "2012-10-17"
+Statement:
+- Sid: SSMAccess
+  Effect: Allow
+  Action:
+  - ssm:GetParameters
+  - ssm:GetParameter
+  Resource: "arn:${partition}:ssm:${region}:${account_id}:parameter/${project}/${environment}/*"
+- Sid: CloudWatchAccess
+  Effect: Allow
+  Action:
+  - cloudwatch:PutMetricData
+  - ec2:DescribeTags
+  - ec2:DescribeVolumes
+  - logs:CreateLogGroup
+  - logs:CreateLogStream
+  - logs:DescribeLogGroups
+  - logs:DescribeLogStreams
+  - logs:PutLogEvents
+  - logs:PutRetentionPolicy
+  - xray:GetSamplingRules
+  - xray:GetSamplingStatisticSummaries
+  - xray:GetSamplingTargets
+  - xray:PutTelemetryRecords
+  - xray:PutTraceSegments
+  Resource: "*"

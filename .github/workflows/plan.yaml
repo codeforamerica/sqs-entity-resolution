@@ -13,6 +13,10 @@ on:
         default: development
         required: true
         type: string
+      image_tag:
+        description: (Optional) Image tag to use for the OpenTofu containers. Defaults to latest SHA.
+        required: false
+        type: string
     secrets:
       AWS_REGION:
       AWS_ROLE_ARN:
@@ -27,6 +31,8 @@ on:
       TF_VAR_ENVIRONMENT:
         required: false
       TF_VAR_EXPORT_EXPIRATION:
+        required: false
+      TF_VAR_IMAGE_TAGS_MUTABLE:
         required: false
       TF_VAR_KEY_RECOVERY_PERIOD:
         required: false
@@ -67,6 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'development' }}
     env:
+      TF_VAR_image_tag: ${{ inputs.image_tag || github.sha }}
       # Set required variables.
       TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
@@ -97,6 +104,7 @@ jobs:
           DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
           ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
           EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+          IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
           KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
           PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
           PROJECT: ${{ secrets.TF_VAR_PROJECT }}
@@ -105,8 +113,8 @@ jobs:
           variables=(
             "apply_database_updates_immediately" "database_skip_final_snapshot"
             "deletion_protection" "deployment_environments" "environment"
-            "export_expiration" "key_recovery_period" "program" "project"
-            "repository"
+            "export_expiration" "image_tags_mutable" "key_recovery_period"
+            "program" "project" "repository"
           )
           for var in ${variables[@]}; do
             name="$(echo $var | tr '[:lower:]' '[:upper:]')"

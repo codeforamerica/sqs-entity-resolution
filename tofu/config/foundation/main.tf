@@ -43,15 +43,15 @@ module "deployment" {
 
 # Create deployment resources for any deployment environments specified.
 module "deployment_environments" {
-  source = "../../modules/deployment"
+  source   = "../../modules/deployment"
   for_each = toset(var.deployment_environments)
 
-  environment = "development"
+  environment        = "development"
   system_environment = each.value
-  oidc_arn    = var.repo_oidc_arn
-  project     = var.project
-  repository  = var.repository
-  tags        = resource.aws_servicecatalogappregistry_application.application.application_tag
+  oidc_arn           = var.repo_oidc_arn
+  project            = var.project
+  repository         = var.repository
+  tags               = resource.aws_servicecatalogappregistry_application.application.application_tag
 }
 
 module "outputs" {

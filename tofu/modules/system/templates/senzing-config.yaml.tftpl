@@ -1,0 +1,8 @@
+PIPELINE:
+  CONFIGPATH: "/etc/opt/senzing"
+  LICENSESTRINGBASE64: "${senzing_license_base64}"
+  RESOURCEPATH: "/opt/senzing/er/resources"
+  SUPPORTPATH: "/opt/senzing/data"
+SQL:
+  BACKEND: SQL
+  CONNECTION: "postgresql://${database_username}:${database_password}@${database_host}:5432:G2"

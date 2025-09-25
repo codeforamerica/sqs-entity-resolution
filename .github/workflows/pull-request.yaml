@@ -61,6 +61,7 @@ jobs:
     with:
       environment: development
       config: ${{ matrix.config }}
+      image_tag: ${{ github.sha }}
     secrets:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
@@ -69,6 +70,7 @@ jobs:
       TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
       TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
       TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+      TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
       TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
       TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
       TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}

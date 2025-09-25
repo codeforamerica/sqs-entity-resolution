@@ -1,0 +1,48 @@
+Version: '2012-10-17'
+Id: Encryption key for Senzing containers.
+Statement:
+- Sid: Enable IAM User Permissions
+  Effect: Allow
+  Principal:
+    AWS: arn:${partition}:iam::${account_id}:root
+  Action: kms:*
+  Resource: "*"
+- Sid: Allow ECR to encrypt container images
+  Effect: Allow
+  Principal:
+    AWS: "*"
+  Action:
+  - kms:Decrypt
+  - kms:Encrypt
+  - kms:GenerateDataKey
+  - kms:ReEncrypt*
+  Resource: "*"
+  Condition:
+    StringLike:
+      kms:EncryptionContext:aws:ecr:arn: arn:${partition}:ecr:${region}:${account_id}:repository/${project}-${environment}-*
+    StringEquals:
+      kms:CallerAccount: "${account_id}"
+- Sid: Allow Fargate containers to encrypt objects
+  Effect: Allow
+  Resource: "*"
+  Principal:
+    Service: ecs.amazonaws.com
+  Action:
+  - kms:GenerateDataKey*
+- Sid: Allow access through SSM Pareameter Store
+  Effect: Allow
+  Principal:
+    AWS:
+    - "*"
+  Action:
+  - kms:Encrypt
+  - kms:Decrypt
+  - kms:ReEncrypt*
+  - kms:CreateGrant
+  - kms:DescribeKey
+  - kms:GenerateDataKey*
+  Resource: "*"
+  Condition:
+    StringEquals:
+      kms:CallerAccount: "${account_id}"
+      kms:ViaService: ssm.${region}.amazonaws.com
