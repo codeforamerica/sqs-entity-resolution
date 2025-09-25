@@ -5,7 +5,15 @@ Statement:
   Action:
   - ssm:GetParameters
   - ssm:GetParameter
-  Resource: "arn:${partition}:ssm:${region}:${account_id}:parameter/${project}/${environment}/*"
+  Resource: arn:${partition}:ssm:${region}:${account_id}:parameter/${project}/${environment}/*
+- Sid: EcsExecAccess
+  Effect: Allow
+  Action:
+  - ssmmessages:CreateControlChannel
+  - ssmmessages:CreateDataChannel
+  - ssmmessages:OpenControlChannel
+  - ssmmessages:OpenDataChannel
+  Resource: "*"
 - Sid: CloudWatchAccess
   Effect: Allow
   Action:
