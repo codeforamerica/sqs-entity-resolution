@@ -83,6 +83,18 @@ variable "export_lock_period" {
   }
 }
 
+variable "image_tag" {
+  type        = string
+  description = "Tag for the docker images, will be used for all images."
+  default     = "latest"
+}
+
+variable "image_tags_mutable" {
+  type        = bool
+  description = "Whether to allow image tags to be mutable."
+  default     = false
+}
+
 variable "key_recovery_period" {
   type        = number
   default     = 30
