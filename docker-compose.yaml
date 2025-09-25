@@ -77,7 +77,6 @@ services:
         }
       AWS_PROFILE: localstack
       S3_BUCKET_NAME: sqs-senzing-local-export
-      #PYTHONPATH: /opt/senzing/er/sdk/python:/home/senzing/dev
       PYTHONPATH: ${PYTHONPATH}:/opt/senzing/er/sdk/python:/home/senzing/dev:/usr/lib/python3/dist-packages
       PYTHONUNBUFFERED: 1 # Flush buffer - helps with print statements.
     volumes:
