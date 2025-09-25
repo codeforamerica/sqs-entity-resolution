@@ -17,8 +17,13 @@ RUN apt-get update && \
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/entrypoint.d /entrypoint.d
 
+# Create a banner for users executing an interactive bash shell.
+COPY docker/motd-banner.sh /etc/profile.d/motd-banner.sh
+RUN echo "/etc/profile.d/motd-banner.sh" >> /root/.bashrc
+
 # Add a new user and switch to it.
-RUN useradd -m -u 1001 senzing
+RUN useradd -m -u 1001 senzing && \
+    echo "/etc/profile.d/motd-banner.sh" >> /home/senzing/.bashrc
 USER senzing
 
 # Install awscli-local to interact with LocalStack.
