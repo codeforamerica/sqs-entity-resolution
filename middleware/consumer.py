@@ -17,8 +17,6 @@ except Exception as e:
     log.error(e)
     sys.exit(1)
 
-# TODO add DLQ logic (see DLG_TAG logging)
-
 Q_URL = os.environ['Q_URL']
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
