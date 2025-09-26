@@ -77,9 +77,10 @@ module "ecs" {
   source  = "HENNGE/ecs/aws"
   version = "~> 5.3"
 
-  name                      = local.prefix
-  capacity_providers        = ["FARGATE"]
-  enable_container_insights = true
+  name                        = local.prefix
+  capacity_providers          = ["FARGATE"]
+  enable_container_insights   = true
+  container_insights_enhanced = true
 
   tags = var.tags
 }
@@ -97,6 +98,7 @@ module "tools" {
   logging_key_id         = var.logging_key_arn
   otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
   execution_policies     = [aws_iam_policy.secrets.arn]
+  task_policies          = [aws_iam_policy.queue.arn]
   dockerfile             = "Dockerfile.tools"
   docker_context         = "${path.module}/../../../"
   ephemeral_volumes = {
@@ -116,6 +118,40 @@ module "tools" {
   environment_secrets = {
     PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
     PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
+    SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
+  }
+
+  tags = var.tags
+}
+
+module "consumer" {
+  source     = "../persistent_service"
+  depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
+
+  project                = var.project
+  environment            = var.environment
+  service                = "consumer"
+  image_tag              = var.image_tag
+  image_tags_mutable     = var.image_tags_mutable
+  container_key_arn      = aws_kms_key.container.arn
+  logging_key_id         = var.logging_key_arn
+  otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
+  execution_policies     = [aws_iam_policy.secrets.arn]
+  task_policies          = [aws_iam_policy.queue.arn]
+  security_groups        = [module.task_security_group.security_group_id]
+  cluster_arn            = module.ecs.arn
+  container_subnets      = var.container_subnets
+  desired_containers     = var.consumer_container_count
+  cpu                    = var.consumer_cpu
+  memory                 = var.consumer_memory
+  dockerfile             = "Dockerfile.consumer"
+  docker_context         = "${path.module}/../../../"
+
+  environment_variables = {
+    Q_URL : module.sqs.queue_url
+  }
+
+  environment_secrets = {
     SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
   }
 

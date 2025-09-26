@@ -24,7 +24,7 @@ module "ecs_task" {
   version = "~> 5.3"
 
   name   = local.prefix
-  cpu    = var.cpu
+  cpu    = (var.cpu * 1024)
   memory = var.memory
   # TODO: These roles?
   daemon_role              = aws_iam_role.execution.arn
@@ -37,8 +37,8 @@ module "ecs_task" {
   container_definitions = jsonencode(yamldecode(templatefile(
     "${path.module}/templates/container-definitions.yaml.tftpl", {
       name              = local.prefix
-      cpu               = var.cpu - 256
-      memory            = var.memory - 512
+      cpu               = (var.cpu * 1024)
+      memory            = var.memory
       image             = "${module.ecr.repository_url}:${var.image_tag}"
       container_command = var.container_command
       container_port    = var.container_port

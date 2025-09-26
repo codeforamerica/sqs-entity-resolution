@@ -6,6 +6,7 @@ resource "aws_iam_policy" "queue" {
     queues = [
       module.sqs.queue_arn,
     ]
+    kms_arn = aws_kms_key.queue.arn
   })))
 
   tags = var.tags

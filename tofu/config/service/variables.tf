@@ -4,6 +4,24 @@ variable "apply_database_updates_immediately" {
   default     = false
 }
 
+variable "consumer_container_count" {
+  type        = number
+  description = "Desired number of consumer containers to run."
+  default     = 1
+}
+
+variable "consumer_cpu" {
+  type        = number
+  description = "Number of virtual CPUs to allocate to each consumer container."
+  default     = 1
+}
+
+variable "consumer_memory" {
+  type        = number
+  description = "Amount of memory (in MiB) to allocate to each consumer container."
+  default     = 4096
+}
+
 variable "database_skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final snapshot when the database cluster is deleted."
