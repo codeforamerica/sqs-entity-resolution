@@ -55,6 +55,7 @@ and run the consumer service on our local machine. This setup includes:
 
 Access the `tools` container to interact with the services:
 
+<<<<<<< HEAD
     ```bash
     docker compose run tools /bin/bash
     ```
@@ -183,6 +184,16 @@ simultaneously as needed):
    Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
    --env LOG_LEVEL=INFO consumer
    ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
+
+### Redoer
+
+Similar to the consumer, the reoder is also a continually-running process.
+
+    ```bash
+    docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=debug redoer
+    ```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
 
