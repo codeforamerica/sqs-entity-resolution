@@ -51,9 +51,10 @@ def init():
     '''Returns sqs client object'''
     try:
         sess = _make_boto_session()
-        sqs = sess.client('sqs')
-        log.info(AWS_TAG + 'SQS client object instantiated.')
-        return sqs
+        if 'AWS_ENDPOINT_URL' in os.environ:
+            return sess.client('sqs', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+        else:
+            return sess.client('sqs')
     except Exception as e:
         log.error(AWS_TAG + str(e))
         sys.exit(1)
@@ -66,9 +67,8 @@ def get_msgs(sqs, q_url):
     - Body -- here, should be the JSONL record as a string
     '''
     while 1:
-        print('waiting for msg')
         try:
-            log.info(AWS_TAG + 'Polling SQS for the next message')
+            log.debug(AWS_TAG + 'Polling SQS for the next message')
             resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
                                        WaitTimeSeconds=POLL_SECONDS)
             if 'Messages' in resp and len(resp['Messages']) == 1:
@@ -155,7 +155,7 @@ def go():
             # Get next message.
             msg = next(msgs)
             receipt_handle, body = msg['ReceiptHandle'], msg['Body']
-            log.info('SQS message retrieved, having ReceiptHandle: '
+            log.debug('SQS message retrieved, having ReceiptHandle: '
                      + receipt_handle)
             rcd = json.loads(body)
 

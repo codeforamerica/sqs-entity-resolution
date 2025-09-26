@@ -128,23 +128,3 @@ def main():
 
 if __name__ == '__main__': main()
 
-#-------------------------------------------------------------------------------
-# ad-hoc test funcs - might move later
-
-def _upload_test_file_to_s3():
-    print("Starting test upload to S3 ...")
-    s3 = make_s3_client()
-    print(s3)
-    fname = 'hemingway.txt'
-    resp = s3.upload_file(fname, S3_BUCKET_NAME, fname)
-    print(resp) 
-    print('Upload successful.')
-
-def _get_file_from_s3(key):
-    '''Get file from S3 and write to /tmp (use docker-compose to map this
-    to desired directory on host machine).'''
-    print('Grabbing file...') 
-    s3 = make_s3_client()
-    resp = s3.download_file(S3_BUCKET_NAME, key, '/tmp/'+key)
-    print(resp)
-    print('Done.')

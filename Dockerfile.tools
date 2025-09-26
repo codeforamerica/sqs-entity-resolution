@@ -9,7 +9,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc
 # Update packages and install additional dependencies.
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install --no-install-recommends -y awscli pipx postgresql-client senzingsdk-poc && \
+    apt-get install --no-install-recommends -y awscli pipx postgresql-client senzingsdk-poc python3 python3-pip python3-boto3 && \
     apt-get autoremove \
     && apt-get clean
 
@@ -30,9 +30,15 @@ USER senzing
 ENV PATH="$PATH:/home/senzing/.local/bin"
 RUN pipx install awscli-local
 
+ENV PYTHONPATH=$PYTHONPATH:/home/senzing/dev:/usr/lib/python3/dist-packages
+
 # Define volumes necessary to support a read-only root filesystem on ECS
 # Fargate.
 VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
 
 WORKDIR /home/senzing
+
+RUN mkdir -p dev
+COPY dev-scripts/* dev
+
 ENTRYPOINT ["/entrypoint.sh"]

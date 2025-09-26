@@ -75,6 +75,13 @@ services:
             "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
           }
         }
+      AWS_PROFILE: localstack
+      S3_BUCKET_NAME: sqs-senzing-local-export
+      PYTHONPATH: ${PYTHONPATH}:/opt/senzing/er/sdk/python:/home/senzing/dev:/usr/lib/python3/dist-packages
+      PYTHONUNBUFFERED: 1 # Flush buffer - helps with print statements.
+    volumes:
+      - ~/tmp:/tmp
+      - ~/.aws:/home/senzing/.aws
 
   consumer:
     build:
