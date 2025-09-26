@@ -1,3 +1,8 @@
+variable "cluster_arn" {
+  type        = string
+  description = "ARN of the ECS cluster to deploy to."
+}
+
 variable "container_command" {
   type        = list(string)
   description = "Command to run in the container. Defaults to the image's CMD."
@@ -9,15 +14,20 @@ variable "container_key_arn" {
   description = "ARN of the KMS key to use for encrypting the container image repository."
 }
 
-variable "container_port" {
-  type        = number
-  description = "Port that the container listens on."
-  default     = 80
+variable "container_subnets" {
+  type        = list(string)
+  description = "The IDs of the subnets in which the container resources should be deployed."
 }
 
 variable "cpu" {
   type        = number
   description = "Number of virtual CPUs to allocate to the container."
+  default     = 1
+}
+
+variable "desired_containers" {
+  type        = number
+  description = "Desired number of running containers for the service."
   default     = 1
 }
 
@@ -31,6 +41,12 @@ variable "dockerfile" {
   type        = string
   description = "Path to the Dockerfile to use for building the image."
   default     = "Dockerfile"
+}
+
+variable "enable_execute_command" {
+  type        = bool
+  description = "Whether to enable ECS Exec on the service."
+  default     = false
 }
 
 variable "environment" {
@@ -109,6 +125,12 @@ variable "otel_log_level" {
 variable "project" {
   type        = string
   description = "Project that these resources are supporting."
+}
+
+variable "security_groups" {
+  type        = list(string)
+  description = "The IDs of the security groups to associate with the container resources."
+  default     = []
 }
 
 variable "service" {

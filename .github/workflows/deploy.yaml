@@ -41,6 +41,9 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+      TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
+      TF_VAR_CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
+      TF_VAR_CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
       TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
       TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
       TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
@@ -88,6 +91,9 @@ jobs:
           # For any of these that have a value, the corresponding TF_VAR_*
           # environment variable will be set.
           APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+          TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
+          CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
+          CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
           DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
           DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
           DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
@@ -100,7 +106,8 @@ jobs:
           REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
         run: |
           variables=(
-            "apply_database_updates_immediately" "database_skip_final_snapshot"
+            "apply_database_updates_immediately" "consumer_container_count"
+            "consumer_cpu" "consumer_memory" "database_skip_final_snapshot"
             "deletion_protection" "deployment_environments" "environment"
             "export_expiration" "image_tags_mutable" "key_recovery_period"
             "program" "project" "repository"
