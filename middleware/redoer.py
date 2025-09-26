@@ -51,6 +51,7 @@ def go():
     #   facilitate this.
     # - Each Senzing call (3 distinct calls) is couched in its own try-except block for
     #   robustness.
+    tally = None
     have_rcd = 0
     rcd = None
     while 1:
