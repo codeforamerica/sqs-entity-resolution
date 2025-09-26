@@ -82,6 +82,12 @@ variable "execution_policies" {
   default     = []
 }
 
+variable "force_delete" {
+  type        = bool
+  description = "Force deletion of resources. If changing to true, be sure to apply before destroying."
+  default     = false
+}
+
 variable "image_tag" {
   type        = string
   description = "Tag for the image to be deployed."

@@ -94,6 +94,7 @@ module "tools" {
   service                = "tools"
   image_tag              = var.image_tag
   image_tags_mutable     = var.image_tags_mutable
+  force_delete           = !var.deletion_protection
   container_key_arn      = aws_kms_key.container.arn
   logging_key_id         = var.logging_key_arn
   otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
@@ -133,6 +134,7 @@ module "consumer" {
   service                = "consumer"
   image_tag              = var.image_tag
   image_tags_mutable     = var.image_tags_mutable
+  force_delete           = !var.deletion_protection
   container_key_arn      = aws_kms_key.container.arn
   logging_key_id         = var.logging_key_arn
   otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn

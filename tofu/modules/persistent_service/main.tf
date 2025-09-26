@@ -5,6 +5,7 @@ module "task" {
   service                  = var.service
   image_tag                = var.image_tag
   image_tags_mutable       = var.image_tags_mutable
+  force_delete             = var.force_delete
   memory                   = var.memory
   otel_ssm_parameter_arn   = var.otel_ssm_parameter_arn
   otel_log_level           = var.otel_log_level
