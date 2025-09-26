@@ -55,7 +55,6 @@ and run the consumer service on our local machine. This setup includes:
 
 Access the `tools` container to interact with the services:
 
-<<<<<<< HEAD
     ```bash
     docker compose run tools /bin/bash
     ```
