@@ -55,9 +55,6 @@ def init():
             return sess.client('sqs', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
         else:
             return sess.client('sqs')
-
-        log.info(AWS_TAG + 'SQS client object instantiated.')
-        return sqs
     except Exception as e:
         log.error(AWS_TAG + str(e))
         sys.exit(1)
