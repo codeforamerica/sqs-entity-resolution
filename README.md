@@ -188,7 +188,7 @@ simultaneously as needed):
 
 ### Redoer
 
-Similar to the consumer, the reoder is also a continually-running process.
+Similar to the consumer, the redoer is also a continually-running process.
 
     ```bash
     docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=debug redoer

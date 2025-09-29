@@ -64,7 +64,7 @@ def go():
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record.')
                     continue
-                except SzRetryableError as sz_ret_err:
+                except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
                     log.error(SZ_TAG + str(sz_ret_err))
                     time.sleep(WAIT_SECONDS)
@@ -77,7 +77,7 @@ def go():
                 try:
                     tally = sz_eng.count_redo_records()
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
-                except SzRetryableError as sz_ret_err:
+                except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + str(sz_ret_err))
                     time.sleep(WAIT_SECONDS)
                     continue
@@ -97,7 +97,7 @@ def go():
                         else:
                             log.debug(SZ_TAG + 'Redo count was greater than 0, but got '
                                       + 'nothing from get_redo_record')
-                    except SzRetryableError as sz_ret_err:
+                    except sz.SzRetryableError as sz_ret_err:
                         log.error(SZ_TAG + str(sz_ret_err))
                     except sz.SzError as sz_err:
                         log.error(SZ_TAG + str(sz_err))
