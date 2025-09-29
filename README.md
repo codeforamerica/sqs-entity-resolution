@@ -186,6 +186,16 @@ simultaneously as needed):
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
 
+### Redoer
+
+Similar to the consumer, the redoer is also a continually-running process.
+
+    ```bash
+    docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=debug redoer
+    ```
+
+`LOG_LEVEL` is optional; defaults to `INFO`.
+
 ### Exporter
 
 Spinning up the exporter middleware (this is intended to be an ephemeral
