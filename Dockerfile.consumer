@@ -25,6 +25,6 @@ ENV PYTHONUNBUFFERED=1
 # Fargate.
 VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD ./healthcheck.sh consumer.py || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ./healthcheck.sh consumer.py || exit 1
 
 CMD ["python3", "consumer.py"]
