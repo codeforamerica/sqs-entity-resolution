@@ -181,7 +181,7 @@ simultaneously as needed):
    ```bash
    docker compose run --env AWS_PROFILE=localstack --env \
    Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
-   --env LOG_LEVEL=INFO consumer
+   --env LOG_LEVEL=DEBUG consumer
    ```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
@@ -191,7 +191,7 @@ simultaneously as needed):
 Similar to the consumer, the redoer is also a continually-running process.
 
     ```bash
-    docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=debug redoer
+    docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
     ```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
