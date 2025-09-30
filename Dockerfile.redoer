@@ -10,6 +10,8 @@ RUN apt-get update \
 WORKDIR /app
 COPY middleware/* .
 
+RUN chmod +x healthcheck.sh
+
 # Add a new user and switch to it.
 RUN useradd -m -u 1001 senzing
 USER senzing
@@ -18,5 +20,7 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD ./healthcheck.sh redoer.py || exit 1
 
 CMD ["python3", "redoer.py"]
