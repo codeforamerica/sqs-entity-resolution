@@ -84,6 +84,7 @@ services:
       - ~/.aws:/home/senzing/.aws
 
   consumer:
+    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.consumer
@@ -110,6 +111,7 @@ services:
       - ~/.aws:/home/senzing/.aws
 
   redoer:
+    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.redoer
@@ -134,6 +136,7 @@ services:
       - ~/.aws:/home/senzing/.aws
 
   exporter:
+    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.exporter
