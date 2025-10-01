@@ -40,50 +40,74 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'us-west-1' }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
+#      - name: Setup OpenTofu
+#        uses: opentofu/setup-opentofu@v1
+#        with:
+#          tofu_wrapper: false
+#      - name: Display OpenTofu version
+#        run: tofu version
+#      - name: Set optional variables
+#        env:
+#          # For any of these that have a value, the corresponding TF_VAR_*
+#          # environment variable will be set.
+#          APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+#          TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
+#          CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
+#          CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
+#          DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
+#          DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
+#          DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
+#          ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
+#          EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+#          IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
+#          KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
+#          PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+#          PROJECT: ${{ secrets.TF_VAR_PROJECT }}
+#          REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
+#        run: |
+#          variables=(
+#            "apply_database_updates_immediately" "consumer_container_count"
+#            "consumer_cpu" "consumer_memory" "database_skip_final_snapshot"
+#            "deletion_protection" "deployment_environments" "environment"
+#            "export_expiration" "image_tags_mutable" "key_recovery_period"
+#            "program" "project" "repository"
+#          )
+#          for var in ${variables[@]}; do
+#            name="$(echo $var | tr '[:lower:]' '[:upper:]')"
+#            if [ -n "${!name}" ]; then
+#              echo "Setting TF_VAR_$var"
+#              echo "TF_VAR_$var=${!name}" >> $GITHUB_ENV
+#            else
+#              echo "$name is not set"
+#            fi
+#          done
+#      - name: Initialize OpenTofu
+#        working-directory: ./tofu/config/service
+#        run: tofu init
       - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v1
-        with:
-          tofu_wrapper: false
-      - name: Display OpenTofu version
-        run: tofu version
-      - name: Set optional variables
+        uses: ./.github/actions/setup-opentofu
         env:
-          # For any of these that have a value, the corresponding TF_VAR_*
-          # environment variable will be set.
-          APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
+          TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
           TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
-          CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
-          CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
-          DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
-          DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
-          DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
-          ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
-          EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
-          IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
-          KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
-          PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
-          PROJECT: ${{ secrets.TF_VAR_PROJECT }}
-          REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
-        run: |
-          variables=(
-            "apply_database_updates_immediately" "consumer_container_count"
-            "consumer_cpu" "consumer_memory" "database_skip_final_snapshot"
-            "deletion_protection" "deployment_environments" "environment"
-            "export_expiration" "image_tags_mutable" "key_recovery_period"
-            "program" "project" "repository"
-          )
-          for var in ${variables[@]}; do
-            name="$(echo $var | tr '[:lower:]' '[:upper:]')"
-            if [ -n "${!name}" ]; then
-              echo "Setting TF_VAR_$var"
-              echo "TF_VAR_$var=${!name}" >> $GITHUB_ENV
-            else
-              echo "$name is not set"
-            fi
-          done
-      - name: Initialize OpenTofu
-        working-directory: ./tofu/config/service
-        run: tofu init
+          TF_VAR_CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
+          TF_VAR_CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
+          TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
+          TF_VAR_DATABASE_INSTANCE_COUNT: ${{ secrets.TF_VAR_DATABASE_INSTANCE_COUNT }}
+          TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
+          TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
+          TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
+          TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
+          TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
+          TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
+          TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
+          TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+          TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
+          TF_VAR_REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
+          TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
+          TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
+          TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
+        with:
+          config: service
       - name: Get OpenTofu outputs
         id: outputs
         working-directory: ./tofu/config/service
@@ -110,8 +134,6 @@ jobs:
           echo "command<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMAND_STRING" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-#      - name: Show outputs
-#        run: echo "${{ steps.command.outputs.command }}"
       - name: Launch container
         id: run-task
         uses: geekcell/github-action-aws-ecs-run-task@v5

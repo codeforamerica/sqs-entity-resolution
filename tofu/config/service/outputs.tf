@@ -8,6 +8,11 @@ output "export_bucket" {
   description = "The name of the S3 bucket for exports."
 }
 
+output "image_tag" {
+  value       = local.image_tag
+  description = "The tag of the container image used for the ECS tasks."
+}
+
 output "queue_url" {
   value       = module.system.queue_url
   description = "The URL of the SQS queue."
