@@ -2,7 +2,5 @@ misconfigurations:
   # The tools Dockerfile doesn't need a healthcheck.
   - id: AVD-DS-0026
     paths:
-      - Dockerfile.consumer # Jira -67
-      - Dockerfile.redoer # Jira -67
       - Dockerfile.exporter # ephemeral container, healthcheck not necessary
       - Dockerfile.tools
