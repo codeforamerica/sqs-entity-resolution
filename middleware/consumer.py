@@ -18,10 +18,10 @@ except Exception as e:
     sys.exit(1)
 
 Q_URL = os.environ['Q_URL']
+SQS_VISIBILITY_TIMEOUT_SECONDS = int(os.environ.get('SQS_VISIBILITY_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
-HIDE_MESSAGE_SECONDS = 600          # SQS visibility timeout
 
 #-------------------------------------------------------------------------------
 
@@ -68,7 +68,8 @@ def get_msgs(sqs, q_url):
         try:
             log.debug(AWS_TAG + 'Polling SQS for the next message')
             resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
-                                       WaitTimeSeconds=POLL_SECONDS)
+                                       WaitTimeSeconds=POLL_SECONDS,
+                                       VisibilityTimeout=SQS_VISIBILITY_TIMEOUT_SECONDS)
             if 'Messages' in resp and len(resp['Messages']) == 1:
                 yield resp['Messages'][0]
         except Exception as e:
