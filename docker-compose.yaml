@@ -84,7 +84,6 @@ services:
       - ~/.aws:/home/senzing/.aws
 
   consumer:
-    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.consumer
@@ -106,12 +105,12 @@ services:
           }
         }
       Q_URL: http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest
+      AWS_PROFILE: localstack
     volumes:
       # Note: `.aws` mount might not be needed later.
       - ~/.aws:/home/senzing/.aws
 
   redoer:
-    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.redoer
@@ -136,7 +135,6 @@ services:
       - ~/.aws:/home/senzing/.aws
 
   exporter:
-    profiles: [middleware]
     build:
       context: .
       dockerfile: Dockerfile.exporter
