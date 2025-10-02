@@ -4,7 +4,6 @@ class LongRunningCallTimeoutEx(Exception):
     pass
 
 def alarm_handler(signum, _):
-    print('FFFOOOOOOOOOOOOOOOOOOOOOOOOOO')
     raise LongRunningCallTimeoutEx()
 
 def start_alarm_timer(num_seconds):
