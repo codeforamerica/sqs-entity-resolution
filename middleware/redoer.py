@@ -64,7 +64,7 @@ def go():
                 try:
                     sz_eng.process_redo_record(rcd)
                     have_rcd = 0
-                    log.debug(SZ_TAG + 'Successfully redid one record.')
+                    log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue
                 except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
