@@ -8,6 +8,8 @@ import senzing as sz
 from loglib import *
 log = retrieve_logger()
 
+from timeout_handling import *
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -18,7 +20,7 @@ except Exception as e:
     sys.exit(1)
 
 Q_URL = os.environ['Q_URL']
-SQS_VISIBILITY_TIMEOUT_SECONDS = int(os.environ.get('SQS_VISIBILITY_TIMEOUT_SECONDS', 420))
+SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
@@ -69,7 +71,7 @@ def get_msgs(sqs, q_url):
             log.debug(AWS_TAG + 'Polling SQS for the next message')
             resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
                                        WaitTimeSeconds=POLL_SECONDS,
-                                       VisibilityTimeout=SQS_VISIBILITY_TIMEOUT_SECONDS)
+                                       VisibilityTimeout=SZ_CALL_TIMEOUT_SECONDS)
             if 'Messages' in resp and len(resp['Messages']) == 1:
                 yield resp['Messages'][0]
         except Exception as e:
@@ -161,7 +163,9 @@ def go():
 
             try:
                 # Process and send to Senzing.
+                start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
+                cancel_alarm_timer()
                 log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except sz.SzUnknownDataSourceError as sz_uds_err:
@@ -171,11 +175,17 @@ def go():
                     register_data_source(rcd['DATA_SOURCE'])
 
                     # Then try again: process and send to Senzing.
+                    start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
+                    cancel_alarm_timer()
                     log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                              + receipt_handle)
-                except sz.SzError as sz_err:
-                    raise sz_err
+                except Exception as ex:
+                    raise ex
+            except LongRunningCallTimeoutEx as lrex:
+                log.error(f'{SZ_TAG} {type(lrex).__module__}.{type(lrex).__qualname__} :: '
+                          + f'Long-running Senzing add_record call exceeded {SZ_CALL_TIMEOUT_SECONDS} sec.; '
+                          + f'abandoning and moving on; receipt_handle was: {receipt_handle}')
             except sz.SzError as sz_err:
                 log.error(SZ_TAG + DLQ_TAG + str(sz_err))
                 # "Toss back" this message to be re-consumed; we rely on AWS

@@ -187,7 +187,7 @@ Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-sen
 Environment variables:
 
 - `LOG_LEVEL` is optional; defaults to `INFO`.
-- `SQS_VISIBILITY_TIMEOUT_SECONDS`
+- `SZ_CALL_TIMEOUT_SECONDS`
   - Optional; defaults to 420 seconds (7 min.)
   - This does two things: sets the (in)visiblity of a message when it's
     initially retrieved from SQS
