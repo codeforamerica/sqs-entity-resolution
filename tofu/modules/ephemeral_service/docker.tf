@@ -9,6 +9,12 @@ resource "docker_image" "container" {
       "${local.prefix}:${var.image_tag}",
       "${module.ecr.repository_url}:${var.image_tag}"
     ]
+
+    auth_config {
+      host_name  = data.aws_ecr_authorization_token.token.proxy_endpoint
+      password = data.aws_ecr_authorization_token.token.password
+      user_name = data.aws_ecr_authorization_token.token.user_name
+    }
   }
 
   triggers = {
@@ -28,8 +34,8 @@ resource "docker_registry_image" "container" {
 
   auth_config {
     address  = data.aws_ecr_authorization_token.token.proxy_endpoint
-    username = data.aws_ecr_authorization_token.token.user_name
     password = data.aws_ecr_authorization_token.token.password
+    username = data.aws_ecr_authorization_token.token.user_name
   }
 
   triggers = {

@@ -8,6 +8,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Cache OpenTofu
+      uses: actions/cache@v4
+      with:
+        path: ./tofu/config/${{ inputs.config }}/.terraform
+        key: ${{ runner.os }}-tofu-${{ hashFiles('./tofu/config/${{ inputs.config }}/.terraform.lock.hcl') }}
+        restore-keys: |
+          ${{ runner.os }}-tofu-
     - name: Setup OpenTofu
       uses: opentofu/setup-opentofu@v1
       with:
