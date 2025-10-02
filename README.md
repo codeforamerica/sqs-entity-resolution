@@ -208,6 +208,11 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
 
+`MAX_REDO_ATTEMPTS` (defaults to 20): It's possible that Senzing's
+`process_redo_record` might raise an `SzRetryableError`; this variable sets the
+max attempts the redoer will make to redo a particular record (if/when this
+particular error keeps getting raised) before moving on to the next record.
+
 You can view information about files in the LocalStack S3 bucket by visiting
 this URL:
 
