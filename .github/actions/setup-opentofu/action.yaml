@@ -1,0 +1,47 @@
+name: Setup OpenTofu
+description: Sets up OpenTofu and related environment variables
+inputs:
+  config:
+    description: OpenTofu configuration to initialize.
+    required: true
+    default: service
+runs:
+  using: composite
+  steps:
+    - name: Cache OpenTofu
+      uses: actions/cache@v4
+      with:
+        path: ./tofu/config/${{ inputs.config }}/.terraform
+        key: ${{ runner.os }}-tofu-${{ hashFiles('./tofu/config/${{ inputs.config }}/.terraform.lock.hcl') }}
+        restore-keys: |
+          ${{ runner.os }}-tofu-
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_wrapper: false
+    - name: Display OpenTofu version
+      shell: bash
+      run: tofu version
+    - name: Set optional variables
+      shell: bash
+      run: |
+        variables=(
+          "apply_database_updates_immediately" "consumer_container_count"
+          "consumer_cpu" "consumer_memory" "database_instance_count"
+          "database_skip_final_snapshot" "deletion_protection"
+          "deployment_environments" "environment" "export_expiration"
+          "image_tags_mutable" "key_recovery_period" "program" "project" "repository"
+        )
+        for var in ${variables[@]}; do
+          name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"
+          if [ -n "${!name}" ]; then
+            echo "Setting TF_VAR_$var"
+            echo "TF_VAR_$var=${!name}" >> $GITHUB_ENV
+          else
+            echo "$name is not set"
+          fi
+        done
+    - name: Initialize OpenTofu
+      shell: bash
+      working-directory: ./tofu/config/${{ inputs.config }}
+      run: tofu init

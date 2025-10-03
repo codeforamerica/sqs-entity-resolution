@@ -30,9 +30,10 @@ module "system" {
   container_subnets   = split(",", module.inputs.values["vpc/private_subnets"])
 
   apply_database_updates_immediately = var.apply_database_updates_immediately
+  database_instance_count            = var.database_instance_count
   database_skip_final_snapshot       = var.database_skip_final_snapshot
   deletion_protection                = var.deletion_protection
-  image_tag                          = var.image_tag != null ? var.image_tag : sha256(timestamp())
+  image_tag                          = local.image_tag
   image_tags_mutable                 = var.image_tags_mutable
 
   consumer_container_count = var.consumer_container_count

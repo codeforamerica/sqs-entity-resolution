@@ -22,6 +22,17 @@ variable "consumer_memory" {
   default     = 4096
 }
 
+variable "database_instance_count" {
+  type        = number
+  description = "Number of instances in the database cluster."
+  default     = 1
+
+  validation {
+    condition     = var.database_instance_count >= 0 && var.database_instance_count < 17
+    error_message = "Database instance count must be between 0 and 16."
+  }
+}
+
 variable "database_skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final snapshot when the database cluster is deleted."

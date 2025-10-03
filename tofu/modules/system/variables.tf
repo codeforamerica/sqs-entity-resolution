@@ -33,8 +33,8 @@ variable "database_instance_count" {
   default     = 1
 
   validation {
-    condition     = var.database_instance_count > 0 && var.database_instance_count < 17
-    error_message = "Database instance count must be between 1 and 16."
+    condition     = var.database_instance_count >= 0 && var.database_instance_count < 17
+    error_message = "Database instance count must be between 0 and 16."
   }
 }
 
