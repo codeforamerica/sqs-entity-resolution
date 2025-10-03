@@ -83,11 +83,11 @@ variable "key_recovery_period" {
 variable "log_level" {
   type        = string
   description = "Log level for all containers."
-  default     = "info"
+  default     = "INFO"
 
   validation {
-    condition     = contains(["debug", "info", "warning", "error", "critical"], var.log_level)
-    error_message = "Valid log levels are: debug, info, warning, error, critical."
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "Valid log levels are: DEBUG, INFO, WARNING, ERROR, CRITICAL."
   }
 }
 
