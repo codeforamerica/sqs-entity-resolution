@@ -1,3 +1,19 @@
+resource "aws_iam_policy" "exports" {
+  name_prefix = "${local.prefix}-exports-access-"
+  description = "Allow access to the S3 bucket for Senzing exports."
+
+  policy = jsonencode(yamldecode(templatefile("${path.module}/templates/exports-access-policy.yaml.tftpl", {
+    bucket_arn = module.s3.arn
+    kms_arn    = aws_kms_key.queue.arn
+  })))
+
+  tags = var.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_iam_policy" "queue" {
   name_prefix = "${local.prefix}-queue-access-"
   description = "Allow access to the SQS queues for Senzing."

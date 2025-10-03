@@ -123,7 +123,7 @@ module "consumer" {
 
 module "exporter" {
   source     = "../ephemeral_service"
-  depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
+  depends_on = [aws_iam_policy.exports, aws_iam_policy.secrets]
 
   project                = var.project
   environment            = var.environment
@@ -135,7 +135,7 @@ module "exporter" {
   logging_key_id         = var.logging_key_arn
   otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
   execution_policies     = [aws_iam_policy.secrets.arn]
-  task_policies          = [aws_iam_policy.queue.arn]
+  task_policies          = [aws_iam_policy.exports.arn]
   dockerfile             = "Dockerfile.exporter"
   docker_context         = "${path.module}/../../../"
 
