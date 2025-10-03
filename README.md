@@ -55,9 +55,9 @@ and run the consumer service on our local machine. This setup includes:
 
 Access the `tools` container to interact with the services:
 
-    ```bash
-    docker compose run tools /bin/bash
-    ```
+```bash
+docker compose run tools /bin/bash
+```
 
 The `tools` container should be configured with the necessary environment
 variables to interact with the SQS and S3 services in LocalStack, as well as the
@@ -178,11 +178,11 @@ Spinning up the consumer middleware (intended to be a continually-running
 process; in a production scenario, multiple instances could be running 
 simultaneously as needed):
 
-   ```bash
-   docker compose run --env AWS_PROFILE=localstack --env \
-   Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
-   --env LOG_LEVEL=DEBUG consumer
-   ```
+```bash
+docker compose run --env AWS_PROFILE=localstack --env \
+Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest" \
+--env LOG_LEVEL=DEBUG consumer
+```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
 
@@ -190,9 +190,9 @@ simultaneously as needed):
 
 Similar to the consumer, the redoer is also a continually-running process.
 
-    ```bash
-    docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
-    ```
+```bash
+docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
+```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
 
@@ -201,12 +201,17 @@ Similar to the consumer, the redoer is also a continually-running process.
 Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
 
-  ```bash
-  docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
-  --env LOG_LEVEL=INFO exporter
-  ```
+```bash
+docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
+--env LOG_LEVEL=INFO exporter
+```
 
 `LOG_LEVEL` is optional; defaults to `INFO`.
+
+`MAX_REDO_ATTEMPTS` (defaults to 20): It's possible that Senzing's
+`process_redo_record` might raise an `SzRetryableError`; this variable sets the
+max attempts the redoer will make to redo a particular record (if/when this
+particular error keeps getting raised) before moving on to the next record.
 
 You can view information about files in the LocalStack S3 bucket by visiting
 this URL:

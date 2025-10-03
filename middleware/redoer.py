@@ -22,6 +22,8 @@ SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 # How long to wait before attempting next Senzing op.
 WAIT_SECONDS = int(os.environ.get('WAIT_SECONDS', 10))
 
+MAX_REDO_ATTEMPTS = int(os.environ.get('MAX_REDO_ATTEMPTS', 20))
+
 #-------------------------------------------------------------------------------
 
 def go():
@@ -54,19 +56,25 @@ def go():
     tally = None
     have_rcd = 0
     rcd = None
+    attempts_left = MAX_REDO_ATTEMPTS
     while 1:
         try:
 
             if have_rcd:
                 try:
                     sz_eng.process_redo_record(rcd)
-                    rcd = None      # <-- TODO this op might not be necessary
                     have_rcd = 0
-                    log.debug(SZ_TAG + 'Successfully redid one record.')
+                    log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue
                 except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
                     log.error(SZ_TAG + str(sz_ret_err))
+                    attempts_left -= 1
+                    log.debug(SZ_TAG + f'Remaining attempts for this record: {attempts_left}')
+                    if not attempts_left:
+                        have_rcd = 0
+                        log.error(SZ_TAG + f'Max redo attempts ({MAX_REDO_ATTEMPTS}) reached'
+                                  + ' for this record; dropping on the floor and moving on.')
                     time.sleep(WAIT_SECONDS)
                     continue
                 except sz.SzError as sz_err:
@@ -91,6 +99,7 @@ def go():
                         rcd = sz_eng.get_redo_record()
                         if rcd:
                             have_rcd = 1
+                            attempts_left = MAX_REDO_ATTEMPTS
                             # At this point, rcd var holds a record, and have_rcd flag
                             # raised. Will process in the next loop.
                             log.debug(SZ_TAG + 'Retrieved 1 record via get_redo_record()')
@@ -98,6 +107,7 @@ def go():
                             log.debug(SZ_TAG + 'Redo count was greater than 0, but got '
                                       + 'nothing from get_redo_record')
                     except sz.SzRetryableError as sz_ret_err:
+                        # No additional action needed; we'll just try getting again.
                         log.error(SZ_TAG + str(sz_ret_err))
                     except sz.SzError as sz_err:
                         log.error(SZ_TAG + str(sz_err))

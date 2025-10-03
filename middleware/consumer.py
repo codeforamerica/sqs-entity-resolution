@@ -72,7 +72,8 @@ def get_msgs(sqs, q_url):
             if 'Messages' in resp and len(resp['Messages']) == 1:
                 yield resp['Messages'][0]
         except Exception as e:
-            log.error(AWS_TAG + str(e))
+            log.error(f'{AWS_TAG} {type(e).__module__}.{type(e).__qualname__} :: {e}')
+            sys.exit(1)
    
 def del_msg(sqs, q_url, receipt_handle):
     try:
