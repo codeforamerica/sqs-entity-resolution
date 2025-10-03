@@ -66,6 +66,7 @@ jobs:
     needs: plan
     environment: ${{ inputs.environment || 'development' }}
     env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
       TF_VAR_image_tag: ${{ inputs.image_tag || github.sha }}
       # Set required variables.
       TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
