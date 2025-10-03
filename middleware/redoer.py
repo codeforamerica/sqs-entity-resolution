@@ -8,6 +8,8 @@ import senzing as sz
 from loglib import *
 log = retrieve_logger()
 
+from timeout_handling import *
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -17,6 +19,7 @@ except Exception as e:
     log.error(e)
     sys.exit(1)
 
+SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 # How long to wait before attempting next Senzing op.
@@ -62,7 +65,9 @@ def go():
 
             if have_rcd:
                 try:
+                    start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     sz_eng.process_redo_record(rcd)
+                    cancel_alarm_timer()
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue
@@ -77,6 +82,12 @@ def go():
                                   + ' for this record; dropping on the floor and moving on.')
                     time.sleep(WAIT_SECONDS)
                     continue
+                except LongRunningCallTimeoutEx as lrex:
+                    # Abandon and move on.
+                    have_rcd = 0
+                    log.error(f'{SZ_TAG} {type(lrex).__module__}.{type(lrex).__qualname__} :: '
+                              + f'Long-running Senzing add_record call exceeded {SZ_CALL_TIMEOUT_SECONDS} sec.; '
+                              + f'skipping and moving on; receipt_handle was: {receipt_handle}')
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + str(sz_err))
                     sys.exit(1)

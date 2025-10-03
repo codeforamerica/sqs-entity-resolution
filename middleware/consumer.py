@@ -187,7 +187,7 @@ def go():
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 cancel_alarm_timer()
-                log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+                log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except sz.SzUnknownDataSourceError as sz_uds_err:
                 try:

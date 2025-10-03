@@ -202,7 +202,13 @@ Similar to the consumer, the redoer is also a continually-running process.
 docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
 ```
 
-`LOG_LEVEL` is optional; defaults to `INFO`.
+Environment variables:
+
+- `LOG_LEVEL` is optional; defaults to `INFO`.
+- `SZ_CALL_TIMEOUT_SECONDS`
+  - Optional; defaults to 420 seconds (7 min.)
+  - Sets the maximum amount of time the Exporter will wait for a Senzing
+    `process_redo_record` to complete before bailing and moving on.
 
 ### Exporter
 
