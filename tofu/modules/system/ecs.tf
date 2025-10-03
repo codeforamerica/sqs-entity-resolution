@@ -85,46 +85,6 @@ module "ecs" {
   tags = var.tags
 }
 
-module "tools" {
-  source     = "../ephemeral_service"
-  depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
-
-  project                = var.project
-  environment            = var.environment
-  service                = "tools"
-  image_tag              = var.image_tag
-  image_tags_mutable     = var.image_tags_mutable
-  force_delete           = !var.deletion_protection
-  container_key_arn      = aws_kms_key.container.arn
-  logging_key_id         = var.logging_key_arn
-  otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
-  execution_policies     = [aws_iam_policy.secrets.arn]
-  task_policies          = [aws_iam_policy.queue.arn]
-  dockerfile             = "Dockerfile.tools"
-  docker_context         = "${path.module}/../../../"
-  ephemeral_volumes = {
-    senzing-home = "/home/senzing"
-    # We need these to support ecs exec with a read-only root filesystem.
-    aws-lib = "/var/lib/amazon"
-    logs    = "/var/log"
-  }
-
-  environment_variables = {
-    PGHOST : module.database.cluster_endpoint
-    PGSSLMODE : "require"
-    Q_URL : module.sqs.queue_url
-    SENZING_DATASOURCES : "PEOPLE CUSTOMERS"
-  }
-
-  environment_secrets = {
-    PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
-    PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
-    SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
-  }
-
-  tags = var.tags
-}
-
 module "consumer" {
   source     = "../persistent_service"
   depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
@@ -150,10 +110,83 @@ module "consumer" {
   docker_context         = "${path.module}/../../../"
 
   environment_variables = {
+    LOG_LEVEL : var.log_level
     Q_URL : module.sqs.queue_url
   }
 
   environment_secrets = {
+    SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
+  }
+
+  tags = var.tags
+}
+
+module "exporter" {
+  source     = "../ephemeral_service"
+  depends_on = [aws_iam_policy.exports, aws_iam_policy.secrets]
+
+  project                = var.project
+  environment            = var.environment
+  service                = "exporter"
+  image_tag              = var.image_tag
+  image_tags_mutable     = var.image_tags_mutable
+  force_delete           = !var.deletion_protection
+  container_key_arn      = aws_kms_key.container.arn
+  logging_key_id         = var.logging_key_arn
+  otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
+  execution_policies     = [aws_iam_policy.secrets.arn]
+  task_policies          = [aws_iam_policy.exports.arn]
+  dockerfile             = "Dockerfile.exporter"
+  docker_context         = "${path.module}/../../../"
+
+  environment_variables = {
+    Q_URL : module.sqs.queue_url
+    S3_BUCKET_NAME : module.s3.bucket
+    LOG_LEVEL : var.log_level
+  }
+
+  environment_secrets = {
+    SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
+  }
+
+  tags = var.tags
+}
+
+module "tools" {
+  source     = "../ephemeral_service"
+  depends_on = [aws_iam_policy.queue, aws_iam_policy.secrets]
+
+  project                = var.project
+  environment            = var.environment
+  service                = "tools"
+  image_tag              = var.image_tag
+  image_tags_mutable     = var.image_tags_mutable
+  force_delete           = !var.deletion_protection
+  container_key_arn      = aws_kms_key.container.arn
+  logging_key_id         = var.logging_key_arn
+  otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
+  execution_policies     = [aws_iam_policy.secrets.arn]
+  task_policies          = [aws_iam_policy.queue.arn]
+  dockerfile             = "Dockerfile.tools"
+  docker_context         = "${path.module}/../../../"
+  ephemeral_volumes = {
+    senzing-home = "/home/senzing"
+    # We need these to support ecs exec with a read-only root filesystem.
+    aws-lib = "/var/lib/amazon"
+    logs    = "/var/log"
+  }
+
+  environment_variables = {
+    LOG_LEVEL : var.log_level
+    PGHOST : module.database.cluster_endpoint
+    PGSSLMODE : "require"
+    Q_URL : module.sqs.queue_url
+    SENZING_DATASOURCES : "PEOPLE CUSTOMERS"
+  }
+
+  environment_secrets = {
+    PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
+    PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
     SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
   }
 

@@ -1,0 +1,15 @@
+Version: '2012-10-17'
+Statement:
+  - Sid: KeyAccess
+    Effect: Allow
+    Action:
+      - kms:Decrypt
+      - kms:GenerateDataKey
+    Resource:
+      - "${kms_arn}"
+  - Sid: S3Access
+    Effect: Allow
+    Action:
+      - s3:PutObject
+    Resource:
+      - "${bucket_arn}/*"

@@ -11,8 +11,8 @@ resource "docker_image" "container" {
     ]
 
     auth_config {
-      host_name  = data.aws_ecr_authorization_token.token.proxy_endpoint
-      password = data.aws_ecr_authorization_token.token.password
+      host_name = data.aws_ecr_authorization_token.token.proxy_endpoint
+      password  = data.aws_ecr_authorization_token.token.password
       user_name = data.aws_ecr_authorization_token.token.user_name
     }
   }

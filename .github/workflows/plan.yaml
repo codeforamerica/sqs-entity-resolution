@@ -18,8 +18,14 @@ on:
         required: false
         type: string
     secrets:
+      # Required secrets.
       AWS_REGION:
       AWS_ROLE_ARN:
+      TF_VAR_REPO_OIDC_ARN:
+      TF_VAR_VPC_CIDR:
+      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
+      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
+      # Optional secrets.
       TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY:
         required: false
       TF_VAR_CONSUMER_CONTAINER_COUNT:
@@ -42,16 +48,14 @@ on:
         required: false
       TF_VAR_KEY_RECOVERY_PERIOD:
         required: false
+      TF_VAR_LOG_LEVEL:
+        required: false
       TF_VAR_PROGRAM:
         required: false
       TF_VAR_PROJECT:
         required: false
-      TF_VAR_REPO_OIDC_ARN:
       TF_VAR_REPOSITORY:
         required: false
-      TF_VAR_VPC_CIDR:
-      TF_VAR_VPC_PRIVATE_SUBNET_CIDRS:
-      TF_VAR_VPC_PUBLIC_SUBNET_CIDRS:
   workflow_dispatch:
     inputs:
       config:
@@ -113,6 +117,7 @@ jobs:
           TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
           TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
+          TF_VAR_LOG_LEVEL: ${{ secrets.TF_VAR_LOG_LEVEL }}
           TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
           TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
           TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}

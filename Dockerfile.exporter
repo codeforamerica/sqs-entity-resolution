@@ -19,4 +19,8 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
 
+# Define volumes necessary to support a read-only root filesystem on ECS
+# Fargate.
+VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
+
 CMD ["python3", "exporter.py"]

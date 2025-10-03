@@ -80,6 +80,17 @@ variable "key_recovery_period" {
   }
 }
 
+variable "log_level" {
+  type        = string
+  description = "Log level for all containers."
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "Valid log levels are: DEBUG, INFO, WARNING, ERROR, CRITICAL."
+  }
+}
+
 variable "program" {
   type        = string
   description = "Program the application belongs to."

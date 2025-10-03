@@ -24,13 +24,19 @@ runs:
       run: tofu version
     - name: Set optional variables
       shell: bash
+      env:
+        TF_VAR_REGION: ${{ env.AWS_REGION }}
+      # For any of the defined variables that have a value set into TF_VAR_*
+      # (all uppercase), we set the corresponding TF_VAR_* (lowercase) variable
+      # that OpenTofu expects.
       run: |
         variables=(
           "apply_database_updates_immediately" "consumer_container_count"
           "consumer_cpu" "consumer_memory" "database_instance_count"
           "database_skip_final_snapshot" "deletion_protection"
           "deployment_environments" "environment" "export_expiration"
-          "image_tags_mutable" "key_recovery_period" "program" "project" "repository"
+          "image_tags_mutable" "key_recovery_period" "log_level" "program"
+          "project" "region" "repository"
         )
         for var in ${variables[@]}; do
           name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"

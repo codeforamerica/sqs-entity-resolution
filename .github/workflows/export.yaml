@@ -1,20 +1,13 @@
-name: Launch tools container
+name: Trigger an export from Senzing to S3
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: Environment to launch into.
+        description: Environment to run the exporter in.
         default: development
         required: true
         type: environment
-      command:
-        description: |
-          Command to run in the tools container in the CMD format: executable,
-          param1, param2, ...
-        default: "echo,hello world"
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -22,11 +15,10 @@ permissions:
 
 jobs:
   launch:
-    name: Launch tools container in ${{ inputs.environment }}
+    name: Trigger export in ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
       # Set required variables.
       TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
@@ -82,30 +74,18 @@ jobs:
           echo "subnets<<EOF" >> $GITHUB_OUTPUT
           echo "$SUBNET_STRING" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - name: Parse command
-        id: command
-        env:
-          COMMAND: ${{ inputs.command }}
-        run: |
-          IFS=',' read -ra parts <<< "$COMMAND"
-          COMMAND_STRING=$(printf "%s\n" "${parts[@]}")
-          echo "command<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMAND_STRING" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
       - name: Launch container
         id: run-task
         uses: geekcell/github-action-aws-ecs-run-task@v5
         with:
           cluster: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}
-          task-definition: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
-          override-container: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
+          task-definition: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-exporter
+          override-container: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-exporter
           assign-public-ip: DISABLED
           tail-logs: true
           task-wait-until-stopped: true
           # The block style indicator (|) is necessary to tell YAML to preserve
           # newlines.
-          override-container-command: |
-            ${{ steps.command.outputs.command }}
           subnet-ids: |
             ${{ steps.subnets.outputs.subnets }}
           security-group-ids: |

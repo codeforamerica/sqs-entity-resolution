@@ -129,6 +129,17 @@ variable "logging_bucket" {
   description = "S3 bucket to use for log collection."
 }
 
+variable "log_level" {
+  type        = string
+  description = "Log level for all containers."
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "Valid log levels are: DEBUG, INFO, WARNING, ERROR, CRITICAL."
+  }
+}
+
 variable "logging_key_arn" {
   type        = string
   description = "ARN of the KMS key to use for log encryption."
