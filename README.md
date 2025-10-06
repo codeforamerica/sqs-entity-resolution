@@ -189,7 +189,7 @@ Environment variables:
 - `LOG_LEVEL` is optional; defaults to `INFO`.
 - `SZ_CALL_TIMEOUT_SECONDS`
   - Optional; defaults to 420 seconds (7 min.)
-  - This does two things: sets the (in)visiblity of a message when it's
+  - This does two things: sets the (in)visibility of a message when it's
     initially retrieved from SQS
   - Sets the maximum amount of time the Consumer will wait for a Senzing
     `add_record` to complete before bailing and moving on.

@@ -140,7 +140,7 @@ def go():
 
     # Orderly clean-up logic if process is suddenly shut down.
     def clean_up(signum, frm):
-        '''Attempt to cleanly reset the visiblity of the current in-flight
+        '''Attempt to cleanly reset the visibility of the current in-flight
         message before exiting. (It's possible we are exiting after
         a message was deleted but the next has not yet been retrieved; that's ok'''
         nonlocal sqs
@@ -190,19 +190,11 @@ def go():
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except sz.SzUnknownDataSourceError as sz_uds_err:
-                try:
-                    log.info(SZ_TAG + str(sz_uds_err))
-                    # Encountered a new data source name; register it.
-                    register_data_source(rcd['DATA_SOURCE'])
-
-                    # Then try again: process and send to Senzing.
-                    start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                    resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
-                    cancel_alarm_timer()
-                    log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
-                             + receipt_handle)
-                except Exception as ex:
-                    raise ex
+                log.info(SZ_TAG + str(sz_uds_err))
+                # Encountered a new data source name; register it.
+                register_data_source(rcd['DATA_SOURCE'])
+                # Toss back message for now.
+                make_msg_visible(sqs, Q_URL, receipt_handle)
             except LongRunningCallTimeoutEx as lrex:
                 log.error(f'{SZ_TAG} {type(lrex).__module__}.{type(lrex).__qualname__} :: '
                           + f'Long-running Senzing add_record call exceeded {SZ_CALL_TIMEOUT_SECONDS} sec.; '
