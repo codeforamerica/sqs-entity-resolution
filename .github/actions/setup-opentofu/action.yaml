@@ -36,7 +36,8 @@ runs:
           "database_skip_final_snapshot" "deletion_protection"
           "deployment_environments" "environment" "export_expiration"
           "image_tags_mutable" "key_recovery_period" "log_level" "program"
-          "project" "region" "repository"
+          "project" "redoer_container_count" "redoer_cpu" "redoer_memory"
+          "region" "repository"
         )
         for var in ${variables[@]}; do
           name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"

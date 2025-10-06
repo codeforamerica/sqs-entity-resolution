@@ -157,6 +157,24 @@ variable "project" {
   default     = "sqs-senzing"
 }
 
+variable "redoer_container_count" {
+  type        = number
+  description = "Desired number of redoer containers to run."
+  default     = 1
+}
+
+variable "redoer_cpu" {
+  type        = number
+  description = "Number of virtual CPUs to allocate to each redoer container."
+  default     = 1
+}
+
+variable "redoer_memory" {
+  type        = number
+  description = "Amount of memory (in MiB) to allocate to each redoer container."
+  default     = 4096
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags to apply to resources."
