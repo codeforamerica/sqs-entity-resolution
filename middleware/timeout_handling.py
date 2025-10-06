@@ -1,5 +1,7 @@
 import signal
 
+from loglib import *
+
 class LongRunningCallTimeoutEx(Exception):
     pass
 
@@ -13,3 +15,12 @@ def cancel_alarm_timer():
     signal.alarm(0)
 
 signal.signal(signal.SIGALRM, alarm_handler)
+
+def build_sz_timeout_msg(module_name,
+                         class_name,
+                         num_seconds,
+                         receipt_handle):
+    return (
+        f'{SZ_TAG} {module_name}.{class_name} :: '
+        + f'Long-running Senzing add_record call exceeded {num_seconds} sec.; '
+        + f'abandoning and moving on; receipt_handle was: {receipt_handle}')

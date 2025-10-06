@@ -196,9 +196,11 @@ def go():
                 # Toss back message for now.
                 make_msg_visible(sqs, Q_URL, receipt_handle)
             except LongRunningCallTimeoutEx as lrex:
-                log.error(f'{SZ_TAG} {type(lrex).__module__}.{type(lrex).__qualname__} :: '
-                          + f'Long-running Senzing add_record call exceeded {SZ_CALL_TIMEOUT_SECONDS} sec.; '
-                          + f'abandoning and moving on; receipt_handle was: {receipt_handle}')
+                log.error(build_sz_timeout_msg(
+                    type(lrex).__module__,
+                    type(lrex).__qualname__,
+                    SZ_CALL_TIMEOUT_SECONDS,
+                    receipt_handle))
             except sz.SzError as sz_err:
                 log.error(SZ_TAG + DLQ_TAG + str(sz_err))
                 # "Toss back" this message to be re-consumed; we rely on AWS

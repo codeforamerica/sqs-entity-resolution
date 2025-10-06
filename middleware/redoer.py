@@ -85,9 +85,11 @@ def go():
                 except LongRunningCallTimeoutEx as lrex:
                     # Abandon and move on.
                     have_rcd = 0
-                    log.error(f'{SZ_TAG} {type(lrex).__module__}.{type(lrex).__qualname__} :: '
-                              + f'Long-running Senzing add_record call exceeded {SZ_CALL_TIMEOUT_SECONDS} sec.; '
-                              + f'skipping and moving on; receipt_handle was: {receipt_handle}')
+                    log.error(build_sz_timeout_msg(
+                        type(lrex).__module__,
+                        type(lrex).__qualname__,
+                        SZ_CALL_TIMEOUT_SECONDS,
+                        receipt_handle))
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + str(sz_err))
                     sys.exit(1)
