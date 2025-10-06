@@ -77,6 +77,9 @@ jobs:
       TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
       TF_VAR_LOG_LEVEL: ${{ secrets.TF_VAR_LOG_LEVEL }}
       TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+      TF_VAR_REDOER_CONTAINER_COUNT: ${{ secrets.TF_VAR_REDOER_CONTAINER_COUNT }}
+      TF_VAR_REDOER_CPU: ${{ secrets.TF_VAR_REDOER_CPU }}
+      TF_VAR_REDOER_MEMORY: ${{ secrets.TF_VAR_REDOER_MEMORY }}
       TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
       TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}

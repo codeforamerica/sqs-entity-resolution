@@ -121,6 +121,42 @@ module "consumer" {
   tags = var.tags
 }
 
+module "redoer" {
+  source     = "../persistent_service"
+  depends_on = [aws_iam_policy.secrets]
+
+  project                = var.project
+  environment            = var.environment
+  service                = "redoer"
+  image_tag              = var.image_tag
+  image_tags_mutable     = var.image_tags_mutable
+  force_delete           = !var.deletion_protection
+  container_key_arn      = aws_kms_key.container.arn
+  logging_key_id         = var.logging_key_arn
+  otel_ssm_parameter_arn = module.otel_config.ssm_parameter_arn
+  execution_policies     = [aws_iam_policy.secrets.arn]
+  task_policies          = [aws_iam_policy.queue.arn]
+  security_groups        = [module.task_security_group.security_group_id]
+  cluster_arn            = module.ecs.arn
+  container_subnets      = var.container_subnets
+  desired_containers     = var.redoer_container_count
+  cpu                    = var.redoer_cpu
+  memory                 = var.redoer_memory
+  dockerfile             = "Dockerfile.redoer"
+  docker_context         = "${path.module}/../../../"
+
+  environment_variables = {
+    LOG_LEVEL : var.log_level
+    Q_URL : module.sqs.queue_url
+  }
+
+  environment_secrets = {
+    SENZING_ENGINE_CONFIGURATION_JSON = module.senzing_config.ssm_parameter_arn
+  }
+
+  tags = var.tags
+}
+
 module "exporter" {
   source     = "../ephemeral_service"
   depends_on = [aws_iam_policy.exports, aws_iam_policy.secrets]
