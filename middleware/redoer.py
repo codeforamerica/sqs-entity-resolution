@@ -57,7 +57,7 @@ def go():
     #   'get', then 'continue' to the next loop; the have_rcd flag is used to
     #   facilitate this.
     #   - Rationale: the approach is simple and allows for the use of a single while-loop.
-    #     (An alternative would be too have two inner while-loops housed within
+    #     (An alternative would be to have two inner while-loops housed within
     #     an outer while-loop.)
     # - Each Senzing call (3 distinct calls) is couched in its own try-except block for
     #   robustness.
