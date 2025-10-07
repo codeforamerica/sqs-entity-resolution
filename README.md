@@ -37,6 +37,35 @@ and run the consumer service on our local machine. This setup includes:
 - A `tools` container with the [Senzing v4 SDK][senzing-sdk] and
   [`awslocal`][awslocal] wrapper for interacting with LocalStack services
 
+### Configuring an AWS profile for LocalStack
+
+To use the tools container or the middleware (consumer, etc.) with LocalStack,
+an AWS profile specific to LocalStack will be needed.
+
+Your `~/.aws/config` file should have something like:
+
+    [profile localstack]
+    region = us-east-1
+    output = json
+    ignore_configure_endpoint_urls = true
+    endpoint_url = http://localhost:4566
+
+Your `~/.aws/credentials` file should have:
+
+    [localstack]
+    aws_access_key_id=test
+    aws_secret_access_key=test
+
+Also, when writing custom Python, the `endpoint_url` argument will normally be
+needed when instantiating client objects for use with particular LocalStack
+services, e.g.:
+
+    sess = boto3.Session()
+    if 'AWS_ENDPOINT_URL' in os.environ:
+        return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
+    else:
+        return sess.client('s3')
+
 ### Starting the services
 
 1. Build the necessary images:
@@ -59,9 +88,9 @@ Access the `tools` container to interact with the services:
 docker compose run tools /bin/bash
 ```
 
-The `tools` container should be configured with the necessary environment
+The `tools` container needs to be given the necessary environment
 variables to interact with the SQS and S3 services in LocalStack, as well as the
-Senzing SDK.
+Senzing SDK (this is done for you already inside `docker-compose.yaml`).
 
 You can use the `awslocal` command to interact with the SQS and S3 services. For
 example, to send a message to the SQS queue:
@@ -98,7 +127,7 @@ From inside the tools container:
 https://senzing.com/docs/quickstart/quickstart_docker/#download-the-files
 2. Register the data source names using `sz_configtool`; see:
 https://senzing.com/docs/quickstart/quickstart_docker/#add-the-data-source
-3. Actually load each of the data files into the Senzing database, i.e.:
+3. Then, actually load each of the data files into the Senzing database, i.e.:
 
         sz_file_loader -f customers.jsonl
         sz_file_loader -f reference.jsonl
@@ -117,9 +146,6 @@ Purge the database:
     docker compose run tools python dev/db_purge.py
 
 ##### S3
-
-You might need to configure an AWS profile before using these S3-related
-utilities. See further down below for how to do that.
 
 Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be
 sure this folder already exists -- on macOS, that would be
@@ -144,34 +170,6 @@ There are three middleware applications:
 - redoer (continually-running service)
 - exporter (ephemeral container)
 
-### Configuring an AWS profile for LocalStack
-
-To use the middleware (consumer, etc.) with LocalStack, an AWS profile specific
-to LocalStack will be needed.
-
-Your `~/.aws/config` file should have something like:
-
-    [profile localstack]
-    region = us-east-1
-    output = json
-    ignore_configure_endpoint_urls = true
-    endpoint_url = http://localhost:4566
-
-Your `~/.aws/credentials` file should have:
-
-    [localstack]
-    aws_access_key_id=test
-    aws_secret_access_key=test
-
-Generally speaking, the `endpoint_url` argument will be needed when
-instantiating client objects for use with particular LocalStack services, e.g.:
-
-    sess = boto3.Session()
-    if 'AWS_ENDPOINT_URL' in os.environ:
-        return sess.client('s3', endpoint_url=os.environ['AWS_ENDPOINT_URL'])
-    else:
-        return sess.client('s3')
-
 ### Consumer
 
 Spinning up the consumer middleware (intended to be a continually-running
@@ -184,8 +182,12 @@ Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-sen
 --env LOG_LEVEL=DEBUG consumer
 ```
 
-Environment variables:
+_Environment variables (see docker-compose.yaml):_
 
+- `AWS_PROFILE`
+- `AWS_ENDPOINT_URL` (when using LocalStack)
+- `Q_URL` -- required; the URL of the AWS SQS primary ingestion queue.
+- `SENZING_ENGINE_CONFIGURATION_JSON` -- required.
 - `LOG_LEVEL` is optional; defaults to `INFO`.
 - `SZ_CALL_TIMEOUT_SECONDS`
   - Optional; defaults to 420 seconds (7 min.)
@@ -193,6 +195,11 @@ Environment variables:
     initially retrieved from SQS
   - Sets the maximum amount of time the Consumer will wait for a Senzing
     `add_record` to complete before bailing and moving on.
+
+_Mounts in docker-compose.yaml:_
+
+    volumes:
+      - ~/.aws:/home/senzing/.aws
 
 ### Redoer
 
@@ -202,13 +209,33 @@ Similar to the consumer, the redoer is also a continually-running process.
 docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
 ```
 
-Environment variables:
+_Environment variables:_
 
+- `AWS_PROFILE`
+- `AWS_ENDPOINT_URL` (when using LocalStack)
+- `SENZING_ENGINE_CONFIGURATION_JSON` -- required.
 - `LOG_LEVEL` is optional; defaults to `INFO`.
 - `SZ_CALL_TIMEOUT_SECONDS`
   - Optional; defaults to 420 seconds (7 min.)
   - Sets the maximum amount of time the Exporter will wait for a Senzing
     `process_redo_record` to complete before bailing and moving on.
+- `MAX_REDO_ATTEMPTS` (defaults to 20): It's possible that Senzing's
+  `process_redo_record` might raise an `SzRetryableError`; this variable sets
+  the max attempts the redoer will make to redo a particular record (if/when
+  this particular error keeps getting raised) before moving on to the next
+  record.
+- `WAIT_SECONDS`
+  - Optional; defaults to 10 seconds.
+  - When either (a) Senzing's internal redo queue is empty or (b) a
+    `SzRetryableError` is encountered, this sets how long to wait before
+    attemping the next Senzing op.
+
+_Mounts in docker-compose.yaml:_
+
+Similar to the consumer, this mount is configured in docker-compose.yaml:
+
+    volumes:
+      - ~/.aws:/home/senzing/.aws
 
 ### Exporter
 
@@ -220,12 +247,17 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
 --env LOG_LEVEL=INFO exporter
 ```
 
-`LOG_LEVEL` is optional; defaults to `INFO`.
+- `AWS_PROFILE`
+- `AWS_ENDPOINT_URL` (when using LocalStack)
+- `SENZING_ENGINE_CONFIGURATION_JSON` -- required.
+- `S3_BUCKET_NAME` -- required.
+- `LOG_LEVEL` -- optional; defaults to `INFO`.
 
-`MAX_REDO_ATTEMPTS` (defaults to 20): It's possible that Senzing's
-`process_redo_record` might raise an `SzRetryableError`; this variable sets the
-max attempts the redoer will make to redo a particular record (if/when this
-particular error keeps getting raised) before moving on to the next record.
+_Mounts in docker-compose.yaml:_
+
+    volumes:
+      - ~/.aws:/home/senzing/.aws
+      - ~/tmp:/tmp # Should you wish to write files to host.
 
 You can view information about files in the LocalStack S3 bucket by visiting
 this URL:
