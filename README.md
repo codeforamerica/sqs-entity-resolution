@@ -244,13 +244,15 @@ container):
 
 ```bash
 docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
---env LOG_LEVEL=INFO exporter
+--env LOG_LEVEL=DEBUG exporter
 ```
 
 - `AWS_PROFILE`
 - `AWS_ENDPOINT_URL` (when using LocalStack)
 - `SENZING_ENGINE_CONFIGURATION_JSON` -- required.
 - `S3_BUCKET_NAME` -- required.
+- `FOLDER_NAME` -- optional (defaults to `exporter-outputs`); folder inside S3
+  where the file will be placed.
 - `LOG_LEVEL` -- optional; defaults to `INFO`.
 
 _Mounts in docker-compose.yaml:_
