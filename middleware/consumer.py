@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 import time
 import sys
 import boto3
@@ -7,6 +8,8 @@ import senzing as sz
 
 from loglib import *
 log = retrieve_logger()
+
+from timeout_handling import *
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -18,10 +21,10 @@ except Exception as e:
     sys.exit(1)
 
 Q_URL = os.environ['Q_URL']
+SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
-HIDE_MESSAGE_SECONDS = 600          # SQS visibility timeout
 
 #-------------------------------------------------------------------------------
 
@@ -68,7 +71,8 @@ def get_msgs(sqs, q_url):
         try:
             log.debug(AWS_TAG + 'Polling SQS for the next message')
             resp = sqs.receive_message(QueueUrl=q_url, MaxNumberOfMessages=1,
-                                       WaitTimeSeconds=POLL_SECONDS)
+                                       WaitTimeSeconds=POLL_SECONDS,
+                                       VisibilityTimeout=SZ_CALL_TIMEOUT_SECONDS)
             if 'Messages' in resp and len(resp['Messages']) == 1:
                 yield resp['Messages'][0]
         except Exception as e:
@@ -132,6 +136,26 @@ def go():
     log.info('Spinning up messages generator')
     msgs = get_msgs(sqs, Q_URL)
 
+    receipt_handle = None
+
+    # Orderly clean-up logic if process is suddenly shut down.
+    def clean_up(signum, frm):
+        '''Attempt to cleanly reset the visibility of the current in-flight
+        message before exiting. (It's possible we are exiting after
+        a message was deleted but the next has not yet been retrieved; that's ok'''
+        nonlocal sqs
+        nonlocal receipt_handle
+        log.info('***************************')
+        log.info('SIGINT or SIGTERM received.')
+        log.info('***************************')
+        try:
+            make_msg_visible(sqs, Q_URL, receipt_handle)
+        except Exception as ex:
+            log.error(ex)
+        sys.exit(0)
+    signal.signal(signal.SIGINT, clean_up)
+    signal.signal(signal.SIGTERM, clean_up)
+
     # Senzing init tasks.
     sz_eng = None
     try:
@@ -160,21 +184,23 @@ def go():
 
             try:
                 # Process and send to Senzing.
+                start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
-                log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
+                cancel_alarm_timer()
+                log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except sz.SzUnknownDataSourceError as sz_uds_err:
-                try:
-                    log.info(SZ_TAG + str(sz_uds_err))
-                    # Encountered a new data source name; register it.
-                    register_data_source(rcd['DATA_SOURCE'])
-
-                    # Then try again: process and send to Senzing.
-                    resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
-                    log.info(SZ_TAG + 'Successful add_record having ReceiptHandle: '
-                             + receipt_handle)
-                except sz.SzError as sz_err:
-                    raise sz_err
+                log.info(SZ_TAG + str(sz_uds_err))
+                # Encountered a new data source name; register it.
+                register_data_source(rcd['DATA_SOURCE'])
+                # Toss back message for now.
+                make_msg_visible(sqs, Q_URL, receipt_handle)
+            except LongRunningCallTimeoutEx as lrex:
+                log.error(build_sz_timeout_msg(
+                    type(lrex).__module__,
+                    type(lrex).__qualname__,
+                    SZ_CALL_TIMEOUT_SECONDS,
+                    receipt_handle))
             except sz.SzError as sz_err:
                 log.error(SZ_TAG + DLQ_TAG + str(sz_err))
                 # "Toss back" this message to be re-consumed; we rely on AWS

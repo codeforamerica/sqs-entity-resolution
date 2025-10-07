@@ -118,11 +118,11 @@ Purge the database:
 
 ##### S3
 
-You might need to configure an AWS profile before using these S3-related 
+You might need to configure an AWS profile before using these S3-related
 utilities. See further down below for how to do that.
 
-Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be 
-sure this folder already exists -- on macOS, that would be 
+Copy a file out of the LocalStack S3 bucket into `~/tmp` on your machine (be
+sure this folder already exists -- on macOS, that would be
 `/Users/yourusername/tmp`):
 
 > [!NOTE]
@@ -130,7 +130,7 @@ sure this folder already exists -- on macOS, that would be
 > doesn't already exist.
 
     # Here, `hemingway.txt` is the file you wish to retrieve from S3.
-    docker compose run tools python3 dev/s3_get.py hemingway.txt      
+    docker compose run tools python3 dev/s3_get.py hemingway.txt
 
 Purge the LocalStack S3 bucket:
 
@@ -174,8 +174,8 @@ instantiating client objects for use with particular LocalStack services, e.g.:
 
 ### Consumer
 
-Spinning up the consumer middleware (intended to be a continually-running 
-process; in a production scenario, multiple instances could be running 
+Spinning up the consumer middleware (intended to be a continually-running
+process; in a production scenario, multiple instances could be running
 simultaneously as needed):
 
 ```bash
@@ -184,7 +184,15 @@ Q_URL="http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-sen
 --env LOG_LEVEL=DEBUG consumer
 ```
 
-`LOG_LEVEL` is optional; defaults to `INFO`.
+Environment variables:
+
+- `LOG_LEVEL` is optional; defaults to `INFO`.
+- `SZ_CALL_TIMEOUT_SECONDS`
+  - Optional; defaults to 420 seconds (7 min.)
+  - This does two things: sets the (in)visibility of a message when it's
+    initially retrieved from SQS
+  - Sets the maximum amount of time the Consumer will wait for a Senzing
+    `add_record` to complete before bailing and moving on.
 
 ### Redoer
 
@@ -194,7 +202,13 @@ Similar to the consumer, the redoer is also a continually-running process.
 docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
 ```
 
-`LOG_LEVEL` is optional; defaults to `INFO`.
+Environment variables:
+
+- `LOG_LEVEL` is optional; defaults to `INFO`.
+- `SZ_CALL_TIMEOUT_SECONDS`
+  - Optional; defaults to 420 seconds (7 min.)
+  - Sets the maximum amount of time the Exporter will wait for a Senzing
+    `process_redo_record` to complete before bailing and moving on.
 
 ### Exporter
 
