@@ -230,13 +230,6 @@ _Environment variables:_
     `SzRetryableError` is encountered, this sets how long to wait before
     attemping the next Senzing op.
 
-_Mounts in docker-compose.yaml:_
-
-Similar to the consumer, this mount is configured in docker-compose.yaml:
-
-    volumes:
-      - ~/.aws:/home/senzing/.aws
-
 ### Exporter
 
 Spinning up the exporter middleware (this is intended to be an ephemeral
