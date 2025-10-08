@@ -266,6 +266,29 @@ this URL:
 
   http://localhost:4566/sqs-senzing-local-export
 
+## Running Tests
+
+Tests are located in the `test/` folder. The overall flow is tested using
+LocalStack components.
+
+Create a virtualenv and install dependencies:
+
+    mkdir venv
+    # Use the Python runtime of your choice
+    ~/pythons/python-3.12.6/bin/python3.12 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+Run tests:
+
+    python3 -m unittest discover
+
+The expected report at the end should be that 1 test ran OK.
+
+Deactivate the virtualenv when finished:
+
+    deactivate
+
 
 [awslocal]: https://docs.localstack.cloud/aws/integrations/aws-native-tools/aws-cli/#localstack-aws-cli-awslocal
 [localstack]: https://www.localstack.cloud/
