@@ -121,7 +121,7 @@ def go():
 
     # write buff to S3 using upload_fileobj
     full_path = FOLDER_NAME + '/' + build_output_filename()
-    log.info(AWS_TAG + 'About to upload JSON file ' + fname + ' to S3 ...')
+    log.info(AWS_TAG + 'About to upload JSON file ' + full_path + ' to S3 ...')
     try:
         s3.upload_fileobj(buff, S3_BUCKET_NAME, full_path)
         log.info(AWS_TAG + 'Successfully uploaded file.')

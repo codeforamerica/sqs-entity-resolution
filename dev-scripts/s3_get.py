@@ -15,7 +15,8 @@ def get_file_from_s3(key):
     to desired directory on host machine).'''
     s3 = make_s3_client()
     print('Grabbing file...') 
-    resp = s3.download_file(os.environ['S3_BUCKET_NAME'], key, '/tmp/'+key)
+    # Note we slice off the S3 folder name when specifying target filename.
+    resp = s3.download_file(os.environ['S3_BUCKET_NAME'], key, '/tmp/' + key[key.rfind('/')+1:])
     print ('Got file, put in tmp')
 
 print("Starting util_s3_retrieve ...")
