@@ -54,7 +54,7 @@ def build_output_filename(tag='exporter-output', kind='json'):
         '2025-10-07T23:15:54-UTC-exporter-output.json'
     '''
     return (
-        datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SUTC")
+        datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S-UTC")
         + '-' + tag
         + '.' + kind)
 
