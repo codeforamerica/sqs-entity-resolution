@@ -1,3 +1,4 @@
+import datetime
 import json
 import io
 import os
@@ -27,6 +28,7 @@ if 'S3_BUCKET_NAME' not in os.environ:
     log.error('S3_BUCKET_NAME environment variable required.')
     sys.exit(1)
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
+FOLDER_NAME = os.environ.get('FOLDER_NAME', 'exporter-outputs')
 
 EXPORT_FLAGS =  sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
@@ -47,6 +49,15 @@ def make_s3_client():
         log.error(AWS_TAG + str(e))
         sys.exit(1)
 
+def build_output_filename(tag='exporter-output', kind='json'):
+    '''Returns a str, e.g.,
+        '2025-10-07T23:15:54-UTC-exporter-output.json'
+    '''
+    return (
+        datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S-UTC")
+        + '-' + tag
+        + '.' + kind)
+
 def go():
     '''
     Exports Senzing JSON entity report data into a buffer, then
@@ -59,10 +70,10 @@ def go():
 
     # Init S3 client
     s3 = make_s3_client()
-    
+
     # Init senzing engine object.
     # Note that Senzing engine object cannot be passed around between functions,
-    # else it will be eagerly cleaned up / destroyed and no longer usable. 
+    # else it will be eagerly cleaned up / destroyed and no longer usable.
     sz_eng = None
     try:
         sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
@@ -77,7 +88,7 @@ def go():
 
     # init buffer
     buff = io.BytesIO()
-    
+
     # Retrieve output from sz into buff
     # sz will export JSONL lines; we add the chars necessary to make
     # the output as a whole be a single JSON blob.
@@ -109,10 +120,10 @@ def go():
     buff.flush()
 
     # write buff to S3 using upload_fileobj
-    fname = 'output-' + ts() + '.json'
-    log.info(AWS_TAG + 'About to upload JSON file ' + fname + ' to S3 ...')
+    full_path = FOLDER_NAME + '/' + build_output_filename()
+    log.info(AWS_TAG + 'About to upload JSON file ' + full_path + ' to S3 ...')
     try:
-        s3.upload_fileobj(buff, S3_BUCKET_NAME, fname)
+        s3.upload_fileobj(buff, S3_BUCKET_NAME, full_path)
         log.info(AWS_TAG + 'Successfully uploaded file.')
     except Exception as e:
         log.error(AWS_TAG + str(e))

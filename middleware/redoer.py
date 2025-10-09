@@ -25,6 +25,8 @@ SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 # How long to wait before attempting next Senzing op.
 WAIT_SECONDS = int(os.environ.get('WAIT_SECONDS', 10))
 
+# How many times to attempt process_redo_record before giving up and moving on
+# (see README).
 MAX_REDO_ATTEMPTS = int(os.environ.get('MAX_REDO_ATTEMPTS', 20))
 
 #-------------------------------------------------------------------------------
@@ -54,6 +56,9 @@ def go():
     # - We don't try to both 'get' and 'process' in a single loop; instead we
     #   'get', then 'continue' to the next loop; the have_rcd flag is used to
     #   facilitate this.
+    #   - Rationale: the approach is simple and allows for the use of a single while-loop.
+    #     (An alternative would be to have two inner while-loops housed within
+    #     an outer while-loop.)
     # - Each Senzing call (3 distinct calls) is couched in its own try-except block for
     #   robustness.
     tally = None
