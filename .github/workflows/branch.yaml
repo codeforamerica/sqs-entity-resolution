@@ -14,38 +14,9 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Find all terraform modules
-        id: find
-        uses: bendrucker/find-terraform-modules@v1
-        with:
-          working-directory: tofu
-      - name: Show all matching modules
-        shell: bash
-        run: |
-          mods=(${{ join(fromJSON(steps.find.outputs.modules), ' ') }})
-          printf "%s\n" "${mods[@]}"
-      - name: Find all changed files
-        id: diff
-        uses: technote-space/get-diff-action@v6
-        with:
-          FORMAT: json
-      - name: Show changed files
-        run: |
-          echo "${{ steps.diff.outputs.diff }}"
-      - name: Get the modified modules
+      - name: Find changed OpenTofu modules
         id: modified
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const modules = ${{ steps.find.outputs.modules }}
-            const diff = ${{ steps.diff.outputs.diff }}
-            const modifiedModules = modules.filter(
-              (module) => {
-                return !!diff.find(file => new RegExp(`^${module}/.+`).test(file))
-              }
-            )
-
-            core.setOutput('modules', modifiedModules)
+        uses: ./.github/actions/changed-modules
       - name: Show modified modules
         run: |
           echo "${{ steps.modified.outputs.modules }}"
