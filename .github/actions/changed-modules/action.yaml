@@ -1,0 +1,53 @@
+name: Discover changed OpenTofu modules
+description: |
+  Finds all OpenTofu modules that have changed in a pull request or push to a
+  branch.
+outputs:
+  modules:
+    description: A JSON array of all changed modules.
+    value: ${{ steps.modified.outputs.modules }}
+inputs:
+  working-directory:
+    description: The working directory to search for modules in.
+    required: false
+    default: tofu
+runs:
+  using: composite
+  steps:
+    - name: Find all OpenTofu modules
+      id: find
+      uses: bendrucker/find-terraform-modules@v1
+      with:
+        working-directory: ${{ inputs.working-directory }}
+    - name: Show all matching modules
+      shell: bash
+      run: |
+        mods=(${{ join(fromJSON(steps.find.outputs.modules), ' ') }})
+        printf "%s\n" "${mods[@]}"
+    - name: Find all changed files
+      id: diff
+      uses: technote-space/get-diff-action@v6
+      with:
+        FORMAT: json
+    - name: Show changed files
+      shell: bash
+      run: |
+        echo "${{ steps.diff.outputs.diff }}"
+    - name: Get the modified modules
+      id: modified
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const modules = ${{ steps.find.outputs.modules }}
+          const diff = ${{ steps.diff.outputs.diff }}
+          const modifiedModules = modules.filter(
+            (module) => {
+              return !!diff.find(file => new RegExp(`^${module}/.+`).test(file))
+            }
+          )
+
+          core.setOutput('modules', modifiedModules)
+    - name: Show modified modules
+      shell: bash
+      run: |
+        echo "${{ steps.modified.outputs.modules }}"

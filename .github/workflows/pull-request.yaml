@@ -11,43 +11,24 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Find all configs
-        id: find
-        uses: bendrucker/find-terraform-modules@v1
+      - name: Find changed OpenTofu modules
+        id: modified
+        uses: ./.github/actions/changed-modules
         with:
           working-directory: tofu/config
-      - name: Show all matching configs
-        shell: bash
-        run: |
-          mods=(${{ join(fromJSON(steps.find.outputs.modules), ' ') }})
-          printf "%s\n" "${mods[@]}"
-      - name: Find all changed files
-        id: diff
-        uses: technote-space/get-diff-action@v6
-        with:
-          FORMAT: json
-      - name: Show changed files
-        run: |
-          echo "${{ steps.diff.outputs.diff }}"
-      - name: Get the modified configs
-        id: modified
+      - name: Strip prefix from modified configs
+        id: configs
         uses: actions/github-script@v7
         with:
           script: |
-            const configs = ${{ steps.find.outputs.modules }}
-            const diff = ${{ steps.diff.outputs.diff }}
-            const modifiedConfigs = configs.filter(
-              (config) => {
-                return !!diff.find(file => new RegExp(`^${config}/.+`).test(file))
-              }
-            ).map(config => config.replace(/^tofu\/config\//, ''))
-
-            core.setOutput('configs', modifiedConfigs)
+            const modules = ${{ steps.modified.outputs.modules }}
+            const configs = modules.map(m => m.replace(/^tofu\/config\//, ''))
+            core.setOutput('configs', configs)
       - name: Show modified configs
         run: |
-          echo "${{ steps.modified.outputs.configs }}"
+          echo "${{ steps.configs.outputs.configs }}"
     outputs:
-      configs: ${{ steps.modified.outputs.configs }}
+      configs: ${{ steps.configs.outputs.configs }}
 
   plan:
     uses: ./.github/workflows/plan.yaml

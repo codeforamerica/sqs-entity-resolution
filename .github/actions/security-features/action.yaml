@@ -1,0 +1,29 @@
+name: Check for GitHub security features
+description: |
+  Checks if the repository is public or has GitHub Advanced Security enabled.
+outputs:
+  codeql:
+    description: Whether or not CodeQL analysis is supported.
+    value: ${{ github.event.repository.security_and_analysis.advanced_security_enabled || !github.event.repository.private }}
+  ghas:
+    description: Whether or not GitHub Advanced Security is enabled.
+    value: ${{ github.event.repository.security_and_analysis.advanced_security_enabled }}
+  public:
+    description: Whether or not the repository is public.
+    value: ${{ github.event.repository.private == false }}
+  sarif:
+    description: Whether or not SARIF uploads are supported.
+    value: ${{ github.event.repository.security_and_analysis.advanced_security_enabled || !github.event.repository.private }}
+runs:
+  using: composite
+  steps:
+    - name: GHAS enabled notice
+      shell: bash
+      if: ${{ github.event.repository.security_and_analysis.advanced_security_enabled }}
+      run: |
+        echo "GitHub Advanced Security is enabled."
+    - name: Public repository notice
+      shell: bash
+      if: ${{ github.event.repository.private == false }}
+      run: |
+        echo "Repository is public."
