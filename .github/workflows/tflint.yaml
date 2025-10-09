@@ -1,25 +1,25 @@
-name: Main Checks
+name: TFLint Checks
 
 on:
   push:
+  pull_request:
     branches:
       - main
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    env:
-      # Required to avoid rate limiting when downloading plugins.
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - uses: actions/cache@v4
-        name: Cache plugin directory
+      - name: Check security features
+        id: security-features
+        uses: ./.github/actions/security-features
+      - name: Cache plugin directory
+        uses: actions/cache@v4
         with:
           path: ~/.tflint.d/plugins
           key: tflint-${{ hashFiles('.tflint.hcl') }}
@@ -31,8 +31,16 @@ jobs:
         run: tflint --init
       - name: Run TFLint
         run: tflint --format sarif --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" > tflint-results.sarif
-      - name: Upload SARIF result
+      - name: Parse SARIF file for annotations
         if: always()
+        uses: Miragon/sarif-report-parse@v1.0.4
+        with:
+          severity-level: low
+          sarif-file: tflint-results.sarif
+      # When run on main, if SARIF uploads are available, we want to upload the
+      # SARIF file to GitHub.
+      - name: Upload SARIF result
+        if: always() && github.ref == 'refs/heads/main' && steps.security-features.outputs.sarif == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: tflint-results.sarif
