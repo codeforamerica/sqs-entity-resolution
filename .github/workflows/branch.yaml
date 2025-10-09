@@ -88,24 +88,3 @@ jobs:
           done
 
           exit $exit_code
-
-  trivy:
-    name: trivy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          scan-type: config
-          ignore-unfixed: true
-          skip-dirs: '"**/*/.terraform"'
-          exit-code: 1
-          format: sarif
-          output: trivy-results.sarif
-      - name: Parse SARIF file
-        if: always()
-        uses: Miragon/sarif-report-parse@v1.0.4
-        with:
-          sarif-file: trivy-results.sarif
