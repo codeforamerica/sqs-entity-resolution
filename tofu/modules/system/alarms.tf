@@ -6,7 +6,7 @@ resource "aws_cloudwatch_metric_alarm" "queue_active" {
   metric_name         = "ApproximateNumberOfMessagesVisible"
   namespace           = "AWS/SQS"
   statistic           = "Sum"
-  treat_missing_data = "notBreaching"
+  treat_missing_data  = "notBreaching"
   period              = 60
   threshold           = 1
 
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_metric_alarm" "queue_empty" {
   metric_name         = "ApproximateNumberOfMessagesVisible"
   namespace           = "AWS/SQS"
   statistic           = "Maximum"
-  treat_missing_data = "breaching"
+  treat_missing_data  = "breaching"
   period              = 60
   threshold           = 0
 

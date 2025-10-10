@@ -32,12 +32,13 @@ runs:
       run: |
         variables=(
           "apply_database_updates_immediately" "consumer_container_count"
-          "consumer_cpu" "consumer_memory" "database_instance_count"
+          "consumer_container_max" "consumer_cpu" "consumer_memory"
+          "consumer_message_threshold" "database_instance_count"
           "database_skip_final_snapshot" "deletion_protection"
           "deployment_environments" "environment" "export_expiration"
           "image_tags_mutable" "key_recovery_period" "log_level" "program"
-          "project" "redoer_container_count" "redoer_cpu" "redoer_memory"
-          "region" "repository"
+          "project" "queue_empty_threshold" "redoer_container_count"
+          "redoer_cpu" "redoer_memory" "region" "repository"
         )
         for var in ${variables[@]}; do
           name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"

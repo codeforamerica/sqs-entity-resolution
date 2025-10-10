@@ -30,9 +30,13 @@ on:
         required: false
       TF_VAR_CONSUMER_CONTAINER_COUNT:
         required: false
+      TF_VAR_CONSUMER_CONTAINER_MAX:
+        required: false
       TF_VAR_CONSUMER_CPU:
         required: false
       TF_VAR_CONSUMER_MEMORY:
+        required: false
+      TF_VAR_CONSUMER_MESSAGE_THRESHOLD:
         required: false
       TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT:
         required: false
@@ -53,6 +57,8 @@ on:
       TF_VAR_PROGRAM:
         required: false
       TF_VAR_PROJECT:
+        required: false
+      TF_VAR_QUEUE_EMPTY_THRESHOLD:
         required: false
       TF_VAR_REDOER_CONTAINER_COUNT:
         required: false
@@ -113,8 +119,10 @@ jobs:
         env:
           TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY: ${{ secrets.TF_VAR_APPLY_DATABASE_UPDATES_IMMEDIATELY }}
           TF_VAR_CONSUMER_CONTAINER_COUNT: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_COUNT }}
+          TF_VAR_CONSUMER_CONTAINER_MAX: ${{ secrets.TF_VAR_CONSUMER_CONTAINER_MAX }}
           TF_VAR_CONSUMER_CPU: ${{ secrets.TF_VAR_CONSUMER_CPU }}
           TF_VAR_CONSUMER_MEMORY: ${{ secrets.TF_VAR_CONSUMER_MEMORY }}
+          TF_VAR_CONSUMER_MESSAGE_THRESHOLD: ${{ secrets.TF_VAR_CONSUMER_MESSAGE_THRESHOLD }}
           TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
           TF_VAR_DATABASE_INSTANCE_COUNT: ${{ secrets.TF_VAR_DATABASE_INSTANCE_COUNT }}
           TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
@@ -126,6 +134,7 @@ jobs:
           TF_VAR_LOG_LEVEL: ${{ secrets.TF_VAR_LOG_LEVEL }}
           TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
           TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
+          TF_VAR_QUEUE_EMPTY_THRESHOLD: ${{ secrets.TF_VAR_QUEUE_EMPTY_THRESHOLD }}
           TF_VAR_REDOER_CONTAINER_COUNT: ${{ secrets.TF_VAR_REDOER_CONTAINER_COUNT }}
           TF_VAR_REDOER_CPU: ${{ secrets.TF_VAR_REDOER_CPU }}
           TF_VAR_REDOER_MEMORY: ${{ secrets.TF_VAR_REDOER_MEMORY }}

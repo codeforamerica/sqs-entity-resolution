@@ -109,7 +109,7 @@ module "consumer" {
   memory                 = var.consumer_memory
   dockerfile             = "Dockerfile.consumer"
   docker_context         = "${path.module}/../../../"
-  scale_up_policy        = { step : var.consumer_message_threshold, start: 1 }
+  scale_up_policy        = { step : var.consumer_message_threshold, start : 1 }
   scale_down_policy      = {}
 
   environment_variables = {

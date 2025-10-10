@@ -115,6 +115,12 @@ variable "project" {
   default     = "sqs-senzing"
 }
 
+variable "queue_empty_threshold" {
+  type        = number
+  description = "Number of minutes that the SQS queue must have zero messages before we consider it empty."
+  default     = 15
+}
+
 variable "redoer_container_count" {
   type        = number
   description = "Desired number of redoer containers to run."
