@@ -18,15 +18,16 @@ module "inputs" {
 module "system" {
   source = "../../modules/system"
 
-  environment         = var.environment
-  project             = var.project
-  export_expiration   = var.export_expiration
-  key_recovery_period = var.key_recovery_period
-  logging_bucket      = module.inputs.values["logging/bucket"]
-  logging_key_arn     = module.inputs.values["logging/key"]
-  log_level           = var.log_level
-  tags                = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
-  vpc_id              = module.inputs.values["vpc/id"]
+  environment           = var.environment
+  project               = var.project
+  export_expiration     = var.export_expiration
+  key_recovery_period   = var.key_recovery_period
+  logging_bucket        = module.inputs.values["logging/bucket"]
+  logging_key_arn       = module.inputs.values["logging/key"]
+  log_level             = var.log_level
+  tags                  = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
+  vpc_id                = module.inputs.values["vpc/id"]
+  queue_empty_threshold = var.queue_empty_threshold
 
   database_subnets                   = split(",", module.inputs.values["vpc/private_subnets"])
   apply_database_updates_immediately = var.apply_database_updates_immediately
@@ -36,11 +37,13 @@ module "system" {
   image_tag                          = local.image_tag
   image_tags_mutable                 = var.image_tags_mutable
 
-  container_subnets        = split(",", module.inputs.values["vpc/private_subnets"])
-  consumer_container_count = var.consumer_container_count
-  consumer_cpu             = var.consumer_cpu
-  consumer_memory          = var.consumer_memory
-  redoer_container_count   = var.redoer_container_count
-  redoer_cpu               = var.redoer_cpu
-  redoer_memory            = var.redoer_memory
+  container_subnets          = split(",", module.inputs.values["vpc/private_subnets"])
+  consumer_container_count   = var.consumer_container_count
+  consumer_container_max     = var.consumer_container_max
+  consumer_cpu               = var.consumer_cpu
+  consumer_memory            = var.consumer_memory
+  consumer_message_threshold = var.consumer_message_threshold
+  redoer_container_count     = var.redoer_container_count
+  redoer_cpu                 = var.redoer_cpu
+  redoer_memory              = var.redoer_memory
 }

@@ -29,11 +29,13 @@ module "service" {
   source  = "HENNGE/ecs/aws//modules/core/service"
   version = "5.3.0"
 
-  cluster                = var.cluster_arn
-  name                   = join("-", compact([var.project, var.environment, var.service]))
-  create_task_definition = false
-  task_definition_arn    = module.task.task_definition_arn
-  desired_count          = var.desired_containers
+  cluster                      = var.cluster_name
+  name                         = local.prefix
+  create_task_definition       = false
+  task_definition_arn          = module.task.task_definition_arn
+
+  # Ignore changes to the desired count to prevent conflicts with auto-scaling.
+  ignore_desired_count_changes = true
 
   launch_type                   = "FARGATE"
   task_requires_compatibilities = ["FARGATE"]
@@ -47,4 +49,14 @@ module "service" {
   }
 
   tags = var.tags
+}
+
+module "scaling_target" {
+  source  = "HENNGE/ecs/aws//modules/core/ecs-autoscaling-target"
+  version = "5.3.0"
+
+  ecs_cluster_name = var.cluster_name
+  ecs_service_name = module.service.name
+  min_capacity     = var.desired_containers
+  max_capacity     = var.max_containers
 }

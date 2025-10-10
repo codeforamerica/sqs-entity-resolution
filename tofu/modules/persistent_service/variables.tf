@@ -1,6 +1,6 @@
-variable "cluster_arn" {
+variable "cluster_name" {
   type        = string
-  description = "ARN of the ECS cluster to deploy to."
+  description = "Name of the ECS cluster to deploy to."
 }
 
 variable "container_command" {
@@ -105,6 +105,12 @@ variable "logging_key_id" {
   description = "KMS key ID for encrypting logs."
 }
 
+variable "max_containers" {
+  type        = number
+  description = "Maximum number of running containers for the service."
+  default     = 10
+}
+
 variable "memory" {
   type        = number
   description = "Memory for this task."
@@ -125,6 +131,24 @@ variable "otel_log_level" {
 variable "project" {
   type        = string
   description = "Project that these resources are supporting."
+}
+
+variable "scale_down_policy" {
+  type = object({
+    enabled = optional(bool, true)
+  })
+  description = "Configuration for scaling down the service. If not provided, no scaling policy will be created."
+  default     = { enabled : false }
+}
+
+variable "scale_up_policy" {
+  type = object({
+    enabled = optional(bool, true)
+    start   = optional(number, 1)
+    step    = optional(number, 250000)
+  })
+  description = "Configuration for scaling up the service. If not provided, no scaling policy will be created."
+  default     = { enabled : false }
 }
 
 variable "security_groups" {

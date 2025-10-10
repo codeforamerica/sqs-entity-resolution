@@ -10,6 +10,12 @@ variable "consumer_container_count" {
   default     = 1
 }
 
+variable "consumer_container_max" {
+  type        = number
+  description = "Maximum number of consumer containers to run."
+  default     = 10
+}
+
 variable "consumer_cpu" {
   type        = number
   description = "Number of virtual CPUs to allocate to each consumer container."
@@ -20,6 +26,12 @@ variable "consumer_memory" {
   type        = number
   description = "Amount of memory (in MiB) to allocate to each consumer container."
   default     = 4096
+}
+
+variable "consumer_message_threshold" {
+  type        = number
+  description = "Number of messages in the SQS queue that will trigger scaling up the number of consumer containers."
+  default     = 250000
 }
 
 variable "database_instance_count" {
@@ -101,6 +113,12 @@ variable "project" {
   type        = string
   description = "Project that these resources are supporting."
   default     = "sqs-senzing"
+}
+
+variable "queue_empty_threshold" {
+  type        = number
+  description = "Number of minutes that the SQS queue must have zero messages before we consider it empty."
+  default     = 15
 }
 
 variable "redoer_container_count" {

@@ -101,13 +101,16 @@ module "consumer" {
   execution_policies     = [aws_iam_policy.secrets.arn]
   task_policies          = [aws_iam_policy.queue.arn]
   security_groups        = [module.task_security_group.security_group_id]
-  cluster_arn            = module.ecs.arn
+  cluster_name           = module.ecs.name
   container_subnets      = var.container_subnets
   desired_containers     = var.consumer_container_count
+  max_containers         = var.consumer_container_max
   cpu                    = var.consumer_cpu
   memory                 = var.consumer_memory
   dockerfile             = "Dockerfile.consumer"
   docker_context         = "${path.module}/../../../"
+  scale_up_policy        = { step : var.consumer_message_threshold, start : 1 }
+  scale_down_policy      = {}
 
   environment_variables = {
     LOG_LEVEL : var.log_level
@@ -137,13 +140,16 @@ module "redoer" {
   execution_policies     = [aws_iam_policy.secrets.arn]
   task_policies          = [aws_iam_policy.queue.arn]
   security_groups        = [module.task_security_group.security_group_id]
-  cluster_arn            = module.ecs.arn
+  cluster_name           = module.ecs.name
   container_subnets      = var.container_subnets
   desired_containers     = var.redoer_container_count
+  max_containers         = var.redoer_container_count > 1 ? var.redoer_container_count : 1
   cpu                    = var.redoer_cpu
   memory                 = var.redoer_memory
   dockerfile             = "Dockerfile.redoer"
   docker_context         = "${path.module}/../../../"
+  scale_up_policy        = {}
+  scale_down_policy      = {}
 
   environment_variables = {
     LOG_LEVEL : var.log_level
@@ -217,7 +223,6 @@ module "tools" {
     PGHOST : module.database.cluster_endpoint
     PGSSLMODE : "require"
     Q_URL : module.sqs.queue_url
-    SENZING_DATASOURCES : "PEOPLE CUSTOMERS"
   }
 
   environment_secrets = {
