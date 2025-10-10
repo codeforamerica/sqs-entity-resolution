@@ -8,6 +8,7 @@ Statement:
       - "${kms_arn}"
   - Effect: Allow
     Action:
+      - sqs:ChangeMessageVisibility
       - sqs:DeleteMessage
       - sqs:ReceiveMessage
       - sqs:SendMessage

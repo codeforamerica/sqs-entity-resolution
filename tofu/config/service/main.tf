@@ -36,11 +36,13 @@ module "system" {
   image_tag                          = local.image_tag
   image_tags_mutable                 = var.image_tags_mutable
 
-  container_subnets        = split(",", module.inputs.values["vpc/private_subnets"])
-  consumer_container_count = var.consumer_container_count
-  consumer_cpu             = var.consumer_cpu
-  consumer_memory          = var.consumer_memory
-  redoer_container_count   = var.redoer_container_count
-  redoer_cpu               = var.redoer_cpu
-  redoer_memory            = var.redoer_memory
+  container_subnets          = split(",", module.inputs.values["vpc/private_subnets"])
+  consumer_container_count   = var.consumer_container_count
+  consumer_container_max     = var.consumer_container_max
+  consumer_cpu               = var.consumer_cpu
+  consumer_memory            = var.consumer_memory
+  consumer_message_threshold = var.consumer_message_threshold
+  redoer_container_count     = var.redoer_container_count
+  redoer_cpu                 = var.redoer_cpu
+  redoer_memory              = var.redoer_memory
 }

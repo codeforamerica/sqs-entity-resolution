@@ -119,6 +119,13 @@ sz_command -C add_record \
   PEOPLE 1 '{"NAME_FULL":"Robert Smith", "DATE_OF_BIRTH":"7/4/1976", "PHONE_NUMBER":"555-555-2088"}'
 ```
 
+You can also run commands using the tools container without entering an
+interactive shell. For example, to purge the repository, you could run:
+
+```bash
+docker compose run tools sz_command -C "purge_repository --FORCEPURGE"
+```
+
 #### Loading sample data
 
 From inside the tools container:
