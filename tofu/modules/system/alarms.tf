@@ -18,6 +18,8 @@ resource "aws_cloudwatch_metric_alarm" "queue_active" {
     module.consumer.scale_up_policy_arn,
     module.redoer.scale_up_policy_arn
   ]
+
+  tags = var.tags
 }
 
 resource "aws_cloudwatch_metric_alarm" "queue_empty" {
@@ -40,4 +42,6 @@ resource "aws_cloudwatch_metric_alarm" "queue_empty" {
     module.consumer.scale_down_policy_arn,
     module.redoer.scale_down_policy_arn
   ]
+
+  tags = var.tags
 }
