@@ -15,15 +15,25 @@ resource "aws_appautoscaling_policy" "up" {
       for_each = range(1, var.max_containers + 1)
 
       content {
+        scaling_adjustment = step_adjustment.value
+
+        # If we're scaling from 0 to 1, we want the lower bound to be set to our
+        # starting value, minus 1 to make it inclusive. Otherwise, we want to
+        # calculate the lower bound based on the step size and current step
+        # value, and add 1 to make sure we're into the next step.
         metric_interval_lower_bound = (step_adjustment.value == 1
           ? var.scale_up_policy.start - 1
           : (step_adjustment.value - 1) * var.scale_up_policy.step + 1
         )
+
+        # If we're at the max containers, we don't want to set an upper bound
+        # since we can't scale any higher. Otherwise, we calculate the upper
+        # bound based on the step size and current step value, and add 1 because
+        # the upper bound is exclusive.
         metric_interval_upper_bound = (step_adjustment.value == var.max_containers
           ? null
           : step_adjustment.value * var.scale_up_policy.step + 1
         )
-        scaling_adjustment = step_adjustment.value
       }
     }
   }

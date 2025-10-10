@@ -33,6 +33,8 @@ module "service" {
   name                         = local.prefix
   create_task_definition       = false
   task_definition_arn          = module.task.task_definition_arn
+
+  # Ignore changes to the desired count to prevent conflicts with auto-scaling.
   ignore_desired_count_changes = true
 
   launch_type                   = "FARGATE"
