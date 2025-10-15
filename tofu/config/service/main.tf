@@ -18,16 +18,17 @@ module "inputs" {
 module "system" {
   source = "../../modules/system"
 
-  environment           = var.environment
-  project               = var.project
-  export_expiration     = var.export_expiration
-  key_recovery_period   = var.key_recovery_period
-  logging_bucket        = module.inputs.values["logging/bucket"]
-  logging_key_arn       = module.inputs.values["logging/key"]
-  log_level             = var.log_level
-  tags                  = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
-  vpc_id                = module.inputs.values["vpc/id"]
-  queue_empty_threshold = var.queue_empty_threshold
+  environment            = var.environment
+  project                = var.project
+  export_expiration      = var.export_expiration
+  key_recovery_period    = var.key_recovery_period
+  logging_bucket         = module.inputs.values["logging/bucket"]
+  logging_key_arn        = module.inputs.values["logging/key"]
+  log_level              = var.log_level
+  tags                   = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
+  vpc_id                 = module.inputs.values["vpc/id"]
+  queue_empty_threshold  = var.queue_empty_threshold
+  senzing_license_base64 = var.senzing_license_base64
 
   database_subnets                   = split(",", module.inputs.values["vpc/private_subnets"])
   apply_database_updates_immediately = var.apply_database_updates_immediately

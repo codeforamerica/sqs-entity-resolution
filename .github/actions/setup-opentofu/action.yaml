@@ -39,6 +39,7 @@ runs:
           "image_tags_mutable" "key_recovery_period" "log_level" "program"
           "project" "queue_empty_threshold" "redoer_container_count"
           "redoer_cpu" "redoer_memory" "region" "repository"
+          "senzing_license_base64"
         )
         for var in ${variables[@]}; do
           name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"

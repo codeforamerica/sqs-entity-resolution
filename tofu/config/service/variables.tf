@@ -145,6 +145,13 @@ variable "region" {
   default     = "us-west-1"
 }
 
+variable "senzing_license_base64" {
+  type        = string
+  description = "Base64 encoded Senzing license."
+  default     = null
+  sensitive   = true
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags to apply to all resources."
