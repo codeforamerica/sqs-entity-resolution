@@ -2,6 +2,7 @@ module "task" {
   source = "../ephemeral_service"
 
   project                  = var.project
+  environment              = var.environment
   service                  = var.service
   image_tag                = var.image_tag
   image_tags_mutable       = var.image_tags_mutable

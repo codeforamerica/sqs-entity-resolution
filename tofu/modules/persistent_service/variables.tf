@@ -52,7 +52,7 @@ variable "enable_execute_command" {
 variable "environment" {
   type        = string
   description = "Environment for the deployment."
-  default     = "dev"
+  default     = "development"
 }
 
 variable "environment_secrets" {

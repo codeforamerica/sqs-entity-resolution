@@ -28,6 +28,8 @@ Statement:
   - Sid: GlobalActions
     Effect: Allow
     Action:
+      - application-autoscaling:DescribeScalableTargets
+      - cloudwatch:DescribeAlarms
       - ec2:DescribeNetworkInterfaces
       - ec2:DescribeSecurityGroups
       - ec2:DescribeSecurityGroupRules
@@ -66,6 +68,40 @@ Statement:
       - rds:DescribeGlobalClusters
       - ssm:DescribeParameters
     Resource: "*"
+
+  - Sid: AutoScalingAccess
+    Effect: Allow
+    Action:
+      - application-autoscaling:DeleteScalingPolicy
+      - application-autoscaling:DescribeScalingPolicies
+      - application-autoscaling:DeregisterScalableTarget
+      - application-autoscaling:ListTagsForResource
+      - application-autoscaling:PutScalingPolicy
+    Resource:
+          - arn:${partition}:application-autoscaling:${region}:${account_id}:scalable-target/*
+    Condition:
+      StringEquals:
+        aws:ResourceTag/project: ${project}
+
+  - Sid: AutoScalingCreateAccess
+    Effect: Allow
+    Action:
+      - application-autoscaling:RegisterScalableTarget
+      - application-autoscaling:TagResource
+    Resource:
+      - arn:${partition}:application-autoscaling:${region}:${account_id}:scalable-target/*
+    Condition:
+      StringEquals:
+        aws:RequestTag/project: ${project}
+
+  - Sid: CloudWatchAlarmsAccess
+    Effect: Allow
+    Action:
+      - cloudwatch:DeleteAlarms
+      - cloudwatch:ListTagsForResource
+      - cloudwatch:PutMetricAlarm
+    Resource:
+      - arn:${partition}:cloudwatch:${region}:${account_id}:alarm:${project}-${system_environment}-*
 
   - Sid: CloudWatchLogsAccess
     Effect: Allow
@@ -140,6 +176,7 @@ Statement:
     Action:
       - iam:AttachRolePolicy
       - iam:CreatePolicy
+      - iam:CreatePolicyVersion
       - iam:CreateRole
       - iam:CreateServiceLinkedRole
       - iam:DeletePolicy
