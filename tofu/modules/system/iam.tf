@@ -51,3 +51,28 @@ resource "aws_iam_policy" "secrets" {
     create_before_destroy = true
   }
 }
+
+resource "aws_iam_role" "eventbridge" {
+  name = "${local.prefix}-eventbridge-run-task"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "events.amazonaws.com" },
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy" "eventbridge" {
+  name = "${local.prefix}-eventbridge-run-task"
+  role = aws_iam_role.eventbridge.id
+
+  policy = jsonencode(yamldecode(templatefile("${path.module}/templates/eventbridge-policy.yaml.tftpl", {
+    export_task_arn    = module.exporter.task_definition_arn
+    execution_role_arn = module.exporter.execution_role_arn
+    task_role_arn      = module.exporter.task_role_arn
+  })))
+}

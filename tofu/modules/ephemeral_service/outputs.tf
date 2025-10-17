@@ -13,7 +13,17 @@ docker push ${module.ecr.repository_url}:latest
 EOT
 }
 
+output "execution_role_arn" {
+  description = "ARN of the ECS task execution role."
+  value       = aws_iam_role.execution.arn
+}
+
 output "task_definition_arn" {
   description = "ARN of the ECS task definition."
   value       = module.ecs_task.arn
+}
+
+output "task_role_arn" {
+  description = "ARN of the ECS task role."
+  value       = aws_iam_role.task.arn
 }
