@@ -68,6 +68,8 @@ on:
         required: false
       TF_VAR_REPOSITORY:
         required: false
+      TF_VAR_SENZING_LICENSE_BASE64:
+        required: false
   workflow_dispatch:
     inputs:
       config:
@@ -140,6 +142,7 @@ jobs:
           TF_VAR_REDOER_MEMORY: ${{ secrets.TF_VAR_REDOER_MEMORY }}
           TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
           TF_VAR_REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
+          TF_VAR_SENZING_LICENSE_BASE64: ${{ secrets.TF_VAR_SENZING_LICENSE_BASE64 }}
           TF_VAR_VPC_CIDR: ${{ secrets.TF_VAR_VPC_CIDR }}
           TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
           TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}

@@ -67,7 +67,7 @@ module "senzing_config" {
     database_host : module.database.cluster_endpoint
     database_username : jsondecode(data.aws_secretsmanager_secret_version.database.secret_string).username
     database_password : urlencode(jsondecode(data.aws_secretsmanager_secret_version.database.secret_string).password)
-    senzing_license_base64 : " "
+    senzing_license_base64 : coalesce(var.senzing_license_base64, " ")
   })))
 
   tags = var.tags
