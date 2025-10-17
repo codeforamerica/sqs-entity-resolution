@@ -1,0 +1,15 @@
+Version: "2012-10-17"
+Statement:
+  - Action:
+      - ecs:RunTask
+    Effect: Allow
+    Resource:
+      - ${export_task_arn}
+    Sid: RunTask
+  - Action:
+      - iam:PassRole
+    Effect: Allow
+    Resource:
+      - ${execution_role_arn}
+      - ${task_role_arn}
+    Sid: PassRoles
