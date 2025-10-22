@@ -6,6 +6,9 @@ import sys
 import boto3
 import senzing as sz
 
+from opentelemetry import metrics
+meter = metrics.get_meter('consumer.meter')
+
 from loglib import *
 log = retrieve_logger()
 
@@ -24,6 +27,10 @@ SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
+
+# OpenTelemetry metrics
+ot_msgs_counter = meter.create_counter('consumer.messages.count')
+ot_duration = meter.create_counter('consumer.messages.duration')
 
 #-------------------------------------------------------------------------------
 
@@ -181,6 +188,9 @@ def go():
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 cancel_alarm_timer()
+                ot_msgs_counter.add(1, {'status': 'success',
+                                        'service': 'consumer',
+                                        'environment': 'TODO'})
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except KeyError as ke:
