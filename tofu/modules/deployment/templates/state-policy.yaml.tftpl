@@ -1,0 +1,26 @@
+Version: "2012-10-17"
+Statement:
+  - Sid: InfraStateAccess
+    Effect: Allow
+    Action:
+      - s3:CreateBucket
+      - s3:ListBucket
+      - s3:GetBucketLocation
+      - s3:GetObject
+      - s3:PutObject
+      - s3:DeleteObject
+    Resource:
+      - arn:${partition}:s3:::${project}-${environment}-tfstate
+      - arn:${partition}:s3:::${project}-${environment}-tfstate/*
+  - Sid: InfraLockAccess
+    Effect: Allow
+    Action:
+      - dynamodb:CreateTable
+      - dynamodb:DescribeTable
+      - dynamodb:DeleteTable
+      - dynamodb:UpdateTable
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:DeleteItem
+    Resource:
+      - arn:${partition}:dynamodb:${region}:${account_id}:table/${environment}.tfstate
