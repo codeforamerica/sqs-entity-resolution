@@ -103,6 +103,12 @@ variable "log_level" {
   }
 }
 
+variable "otel_version" {
+  type        = string
+  description = "Version of the OpenTelemetry collector to use."
+  default     = "v0.45.1"
+}
+
 variable "program" {
   type        = string
   description = "Program the application belongs to."

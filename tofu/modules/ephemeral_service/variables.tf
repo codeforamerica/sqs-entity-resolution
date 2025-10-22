@@ -95,15 +95,27 @@ variable "memory" {
   default     = 4096
 }
 
-variable "otel_ssm_parameter_arn" {
+variable "otel_ecr_arn" {
   type        = string
-  description = "ARN of the SSM parameter containing the OpenTelemetry collector configuration."
+  description = "ARN of the ECR repository containing the OpenTelemetry collector image. Only required if using a custom OTEL image from a private repository."
+  default     = null
+}
+
+variable "otel_image" {
+  type        = string
+  description = "URI of the OpenTelemetry collector image to use."
+  default     = "public.ecr.aws/aws-observability/aws-otel-collector:latest"
 }
 
 variable "otel_log_level" {
   type        = string
   description = "Log level for the OpenTelemetry collector."
   default     = "info"
+}
+
+variable "otel_ssm_parameter_arn" {
+  type        = string
+  description = "ARN of the SSM parameter containing the OpenTelemetry collector configuration."
 }
 
 variable "project" {

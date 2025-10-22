@@ -47,6 +47,7 @@ module "ecs_task" {
       namespace         = "${var.project}/${var.service}"
       env_vars          = var.environment_variables
       otel_log_level    = var.otel_log_level
+      otel_image        = var.otel_image
       otel_ssm_arn      = var.otel_ssm_parameter_arn
       env_secrets       = var.environment_secrets
 

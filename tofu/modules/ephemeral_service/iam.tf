@@ -5,7 +5,7 @@ resource "aws_iam_policy" "execution" {
   policy = jsonencode(yamldecode(templatefile("${path.module}/templates/execution-policy.yaml.tftpl", {
     project     = var.project
     environment = var.environment
-    ecr_arn     = module.ecr.repository_arn
+    ecr_arns    = compact([module.ecr.repository_arn, var.otel_ecr_arn])
   })))
 
   tags = var.tags
