@@ -7,6 +7,12 @@ RUN apt-get update \
  && apt-get -y autoremove \
  && apt-get -y clean
 
+RUN pip3 install --break-system-packages opentelemetry-distro
+# Above, `--break-system-packages` flag overrides the
+# "This environment is externally managed" error that calling pip
+# would otherwise incur here.
+# TODO Research alternative approach.
+
 WORKDIR /app
 COPY middleware/* .
 
@@ -21,10 +27,12 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
 
+ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+
 # Define volumes necessary to support a read-only root filesystem on ECS
 # Fargate.
 VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ./healthcheck.sh consumer.py || exit 1
 
-CMD ["python3", "consumer.py"]
+CMD ["opentelemetry-instrument", "--logs_exporter","none","--traces_exporter","none","--metrics_exporter","console", "python3", "consumer.py"]
