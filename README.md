@@ -202,6 +202,8 @@ _Environment variables (see docker-compose.yaml):_
     initially retrieved from SQS
   - Sets the maximum amount of time the Consumer will wait for a Senzing
     `add_record` to complete before bailing and moving on.
+- `RUNTIME_ENV` -- the runtime enviroment (e.g., "Dev", "Prod", etc.). Optional;
+  defaults to "unknown".
 
 _Mounts in docker-compose.yaml:_
 

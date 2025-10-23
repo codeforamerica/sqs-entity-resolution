@@ -25,11 +25,14 @@ except Exception as e:
 Q_URL = os.environ['Q_URL']
 SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
+RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
 
 # OpenTelemetry metrics
-ot_msgs_counter = meter.create_counter('consumer.messages.count')
+ot_msgs_counter = meter.create_counter(
+    'consumer.messages.count',
+    description='Counter incremented with each message processed by the consumer.')
 ot_duration = meter.create_counter('consumer.messages.duration')
 
 #-------------------------------------------------------------------------------
@@ -190,7 +193,7 @@ def go():
                 cancel_alarm_timer()
                 ot_msgs_counter.add(1, {'status': 'success',
                                         'service': 'consumer',
-                                        'environment': 'TODO'})
+                                        'environment': RUNTIME_ENV})
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except KeyError as ke:
