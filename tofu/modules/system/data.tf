@@ -4,6 +4,10 @@ data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
+data "aws_ecr_authorization_token" "otel" {
+  registry_id = module.otel_ecr.repository_registry_id
+}
+
 data "aws_secretsmanager_secret_version" "database" {
   secret_id = module.database.cluster_master_user_secret[0].secret_arn
 }
@@ -11,4 +15,8 @@ data "aws_secretsmanager_secret_version" "database" {
 data "aws_subnet" "container" {
   for_each = toset(var.container_subnets)
   id       = each.value
+}
+
+data "aws_vpc" "current" {
+  id = var.vpc_id
 }

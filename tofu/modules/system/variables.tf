@@ -157,6 +157,12 @@ variable "logging_key_arn" {
   description = "ARN of the KMS key to use for log encryption."
 }
 
+variable "otel_version" {
+  type        = string
+  description = "Version of the OpenTelemetry collector to use."
+  default     = "v0.45.1"
+}
+
 variable "postgres_version" {
   type        = string
   description = "Version of PostgreSQL to use for the database cluster."
@@ -204,6 +210,12 @@ variable "tags" {
   type        = map(string)
   description = "Tags to apply to resources."
   default     = {}
+}
+
+variable "untagged_image_retention" {
+  type        = number
+  description = "Retention period (after push) for untagged images, in days."
+  default     = 14
 }
 
 variable "vpc_id" {

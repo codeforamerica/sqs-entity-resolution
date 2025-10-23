@@ -39,6 +39,7 @@ module "system" {
   image_tags_mutable                 = var.image_tags_mutable
 
   container_subnets          = split(",", module.inputs.values["vpc/private_subnets"])
+  otel_version               = var.otel_version
   consumer_container_count   = var.consumer_container_count
   consumer_container_max     = var.consumer_container_max
   consumer_cpu               = var.consumer_cpu

@@ -38,7 +38,7 @@
       valueFrom: "${value}"
     %{~ endfor ~}
 - name: otel-collector
-  image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+  image: "${otel_image}"
   readonlyRootFilesystem: true
   essential: false
   logConfiguration:

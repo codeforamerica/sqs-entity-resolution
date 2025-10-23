@@ -38,8 +38,8 @@ resource "aws_iam_policy" "secrets" {
 
   policy = jsonencode(yamldecode(templatefile("${path.module}/templates/secrets-access-policy.yaml.tftpl", {
     secrets = [
-      module.otel_config.ssm_parameter_arn,
-      module.senzing_config.ssm_parameter_arn,
+      aws_ssm_parameter.otel_config.arn,
+      aws_ssm_parameter.senzing_config.arn,
       module.database.cluster_master_user_secret[0].secret_arn,
     ]
     kms_arn = aws_kms_key.container.arn

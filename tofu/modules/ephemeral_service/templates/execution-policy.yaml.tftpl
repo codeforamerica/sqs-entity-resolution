@@ -5,15 +5,16 @@ Statement:
   Action:
   - ecr:GetAuthorizationToken
   Resource: "*"
-%{ if ecr_arn != "" ~}
 - Sid: ECRRepositoryAccess
   Effect: Allow
   Action:
   - ecr:BatchCheckLayerAvailability
   - ecr:GetDownloadUrlForLayer
   - ecr:BatchGetImage
-  Resource: "${ecr_arn}"
-%{ endif ~}
+  Resource:
+    %{~ for arn in ecr_arns ~}
+    - "${arn}"
+    %{~ endfor ~}
 - Sid: CloudWatchAgent
   Effect: Allow
   Action:

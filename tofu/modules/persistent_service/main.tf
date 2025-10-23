@@ -21,6 +21,8 @@ module "task" {
   environment_secrets      = var.environment_secrets
   environment_variables    = var.environment_variables
   ephemeral_volumes        = var.ephemeral_volumes
+  otel_ecr_arn             = var.otel_ecr_arn
+  otel_image               = var.otel_image
   cpu                      = var.cpu
 
   tags = var.tags

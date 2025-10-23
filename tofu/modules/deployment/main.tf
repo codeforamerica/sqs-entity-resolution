@@ -40,6 +40,6 @@ resource "aws_iam_policy" "state" {
 }
 
 resource "aws_iam_role_policy_attachments_exclusive" "attach" {
-  role_name = aws_iam_role.deployment.name
+  role_name   = aws_iam_role.deployment.name
   policy_arns = [aws_iam_policy.state.arn]
 }
