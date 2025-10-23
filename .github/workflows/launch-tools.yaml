@@ -98,9 +98,13 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Launch container
         id: run-task
-        uses: geekcell/github-action-aws-ecs-run-task@v5
+        # TODO: Replace with `geekcell/github-action-aws-ecs-run-task` once
+        # https://github.com/geekcell/github-action-aws-ecs-run-task/pull/37 is
+        # merged.
+        uses: jamesiarmes/github-action-aws-ecs-run-task@ecs-exec
         with:
           cluster: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}
+          enable-execute-command: true
           task-definition: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
           override-container: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
           assign-public-ip: DISABLED
