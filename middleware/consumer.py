@@ -6,8 +6,37 @@ import sys
 import boto3
 import senzing as sz
 
+# --- BEGIN OTEL SETUP --- #
+# Refs:
+#  https://opentelemetry.io/docs/languages/python/instrumentation/#metrics
+#  https://opentelemetry.io/docs/languages/python/exporters/#console
+#  https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader)
+resource = Resource.create(attributes={
+    SERVICE_NAME: "consumer"
+})
+metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+# Set the global default meter provider:
+metrics.set_meter_provider(meter_provider)
+# Create a meter from the global meter provider:
 meter = metrics.get_meter('consumer.meter')
+
+### Set up specific metric instrument objects:
+ot_msgs_counter = meter.create_counter(
+    'consumer.messages.count',
+    description='Counter incremented with each message processed by the consumer.')
+ot_durations = meter.create_histogram(
+    'consumer.messages.duration',
+    'Message processing duration for the consumer.')
+SUCCESS = 'success'
+FAILURE = 'failure'
+# ---- END OTEL SETUP ---- #
 
 from loglib import *
 log = retrieve_logger()
@@ -28,12 +57,6 @@ SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
-
-# OpenTelemetry metrics
-ot_msgs_counter = meter.create_counter(
-    'consumer.messages.count',
-    description='Counter incremented with each message processed by the consumer.')
-ot_duration = meter.create_counter('consumer.messages.duration')
 
 #-------------------------------------------------------------------------------
 
@@ -179,6 +202,9 @@ def go():
 
     while 1:
         try:
+            start = time.perf_counter()
+            success_status = FAILURE
+
             # Get next message.
             msg = next(msgs)
             receipt_handle, body = msg['ReceiptHandle'], msg['Body']
@@ -191,9 +217,7 @@ def go():
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 cancel_alarm_timer()
-                ot_msgs_counter.add(1, {'status': 'success',
-                                        'service': 'consumer',
-                                        'environment': RUNTIME_ENV})
+                success_status = SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except KeyError as ke:
@@ -220,6 +244,16 @@ def go():
             # Lastly, delete msg if no errors.
             else:
                 del_msg(sqs, Q_URL, receipt_handle)
+
+            finish = time.perf_counter()
+            ot_msgs_counter.add(1,
+                {'status': success_status,
+                'service': 'consumer',
+                'environment': RUNTIME_ENV})
+            ot_durations.record(finish - start,
+                {'status':  success_status,
+                 'service': 'consumer',
+                 'environment': RUNTIME_ENV})
 
         except Exception as e:
             log.error(fmterr(e))
