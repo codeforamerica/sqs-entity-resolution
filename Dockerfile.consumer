@@ -35,4 +35,4 @@ VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ./healthcheck.sh consumer.py || exit 1
 
-CMD ["opentelemetry-instrument", "--logs_exporter","none","--traces_exporter","none","--metrics_exporter","console", "--service-name", "consumer", "python3", "consumer.py"]
+CMD ["opentelemetry-instrument", "--logs_exporter","none","--traces_exporter","none","--metrics_exporter","console", "--service_name", "consumer", "python3", "consumer.py"]
