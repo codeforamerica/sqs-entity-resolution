@@ -27,12 +27,15 @@ metrics.set_meter_provider(meter_provider)
 meter = metrics.get_meter('redoer.meter')
 
 ### Set up specific metric instrument objects:
-ot_msgs_counter = meter.create_counter(
+otel_msgs_counter = meter.create_counter(
     'redoer.messages.count',
     description='Counter incremented with each message processed by the redoer.')
-ot_durations = meter.create_histogram(
+otel_durations = meter.create_histogram(
     'redoer.messages.duration',
     'Message processing duration for the redoer.')
+otel_queue_count = meter.create_up_down_counter(
+    name='redoer.queue.count',
+    description='Current number of items in the redo queue.')
 SUCCESS = 'success'
 FAILURE = 'failure'
 # ---- END OTEL SETUP ---- #
@@ -52,6 +55,7 @@ except Exception as e:
 
 SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
+RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 # How long to wait before attempting next Senzing op.
 WAIT_SECONDS = int(os.environ.get('WAIT_SECONDS', 10))
@@ -96,9 +100,9 @@ def go():
     attempts_left = MAX_REDO_ATTEMPTS
     while 1:
         try:
-            start = time.perf_counter()
-            success_status = FAILURE
             if have_rcd:
+                start = time.perf_counter()
+                success_status = FAILURE # initial default value
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     sz_eng.process_redo_record(rcd)
@@ -128,6 +132,16 @@ def go():
                         receipt_handle))
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
+
+            finish = time.perf_counter()
+            otel_msgs_counter.add(1,
+                {'status': success_status,
+                'service': 'redoer',
+                'environment': RUNTIME_ENV})
+            otel_durations.record(finish - start,
+                {'status':  success_status,
+                 'service': 'redoer',
+                 'environment': RUNTIME_ENV})
 
             else:
                 try:
