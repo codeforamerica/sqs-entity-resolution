@@ -44,12 +44,15 @@ data "docker_registry_image" "otel" {
 resource "docker_image" "otel" {
   name          = data.docker_registry_image.otel.name
   platform      = "linux/amd64"
+  # pull_triggers = [timestamp()]
   pull_triggers = [data.docker_registry_image.otel.sha256_digest]
 }
 
 resource "docker_tag" "otel" {
   source_image = docker_image.otel.name
   target_image = "${module.otel_ecr.repository_url}:${var.otel_version}"
+  # tag_triggers = [timestamp()]
+  tag_triggers = [data.docker_registry_image.otel.sha256_digest]
 }
 
 resource "docker_registry_image" "otel" {
