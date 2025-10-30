@@ -5,6 +5,38 @@ import sys
 import boto3
 import senzing as sz
 
+# --- BEGIN OTEL SETUP --- #
+# Refs:
+#  https://opentelemetry.io/docs/languages/python/instrumentation/#metrics
+#  https://opentelemetry.io/docs/languages/python/exporters/#console
+#  https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader)
+resource = Resource.create(attributes={
+    SERVICE_NAME: "redoer"
+})
+metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+# Set the global default meter provider:
+metrics.set_meter_provider(meter_provider)
+# Create a meter from the global meter provider:
+meter = metrics.get_meter('redoer.meter')
+
+### Set up specific metric instrument objects:
+ot_msgs_counter = meter.create_counter(
+    'redoer.messages.count',
+    description='Counter incremented with each message processed by the redoer.')
+ot_durations = meter.create_histogram(
+    'redoer.messages.duration',
+    'Message processing duration for the redoer.')
+SUCCESS = 'success'
+FAILURE = 'failure'
+# ---- END OTEL SETUP ---- #
+
 from loglib import *
 log = retrieve_logger()
 
@@ -64,12 +96,14 @@ def go():
     attempts_left = MAX_REDO_ATTEMPTS
     while 1:
         try:
-
+            start = time.perf_counter()
+            success_status = FAILURE
             if have_rcd:
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     sz_eng.process_redo_record(rcd)
                     cancel_alarm_timer()
+                    sucess_status = SUCCESS
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue
