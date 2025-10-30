@@ -208,6 +208,13 @@ _Mounts in docker-compose.yaml:_
     volumes:
       - ~/.aws:/home/senzing/.aws
 
+_Required record keys:_
+
+- The record to be sent into Senzing requires, at the very least, these two
+  keys:
+  - `DATA_SOURCE`
+  - `RECORD_ID`
+
 ### Redoer
 
 Similar to the consumer, the redoer is also a continually-running process.
