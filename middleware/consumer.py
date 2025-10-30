@@ -17,7 +17,7 @@ try:
     log.info('Imported senzing_core successfully.')
 except Exception as e:
     log.error('Importing senzing_core library failed.')
-    log.error(e)
+    log.error(fmterr(e))
     sys.exit(1)
 
 Q_URL = os.environ['Q_URL']
@@ -57,7 +57,7 @@ def init():
         else:
             return sess.client('sqs')
     except Exception as e:
-        log.error(AWS_TAG + str(e))
+        log.error(AWS_TAG + fmterr(e))
         sys.exit(1)
 
 def get_msgs(sqs, q_url):
@@ -76,7 +76,7 @@ def get_msgs(sqs, q_url):
             if 'Messages' in resp and len(resp['Messages']) == 1:
                 yield resp['Messages'][0]
         except Exception as e:
-            log.error(f'{AWS_TAG} {type(e).__module__}.{type(e).__qualname__} :: {e}')
+            log.error(f'{AWS_TAG} {type(e).__module__}.{type(e).__qualname__} :: {fmterr(e)}')
             sys.exit(1)
    
 def del_msg(sqs, q_url, receipt_handle):
@@ -85,7 +85,7 @@ def del_msg(sqs, q_url, receipt_handle):
         return sqs.delete_message(QueueUrl=q_url, ReceiptHandle=receipt_handle)
     except Exception as e:
         log.error(AWS_TAG + DLQ_TAG + 'SQS delete failure for ReceiptHandle: ' +
-                  ReceiptHandle + ' Additional info: ' + str(e))
+                  ReceiptHandle + ' Additional info: ' + fmterr(e))
 
 def make_msg_visible(sqs, q_url, receipt_handle):
     '''Setting visibility timeout to 0 on an SQS message makes it visible again,
@@ -97,7 +97,7 @@ def make_msg_visible(sqs, q_url, receipt_handle):
             ReceiptHandle=receipt_handle,
             VisibilityTimeout=0)
     except Exception as e:
-        log.error(AWS_TAG + str(e))
+        log.error(AWS_TAG + fmterr(e))
 
 #-------------------------------------------------------------------------------
 
@@ -121,7 +121,7 @@ def register_data_source(data_source_name):
         f()
         log.info(SZ_TAG + 'Successfully registered data_source: ' + data_source_name)
     except sz.SzError as err:
-        log.error(SZ_TAG + str(err))
+        log.error(SZ_TAG + fmterr(err))
         sys.exit(1)
 
 #-------------------------------------------------------------------------------
@@ -151,7 +151,7 @@ def go():
         try:
             make_msg_visible(sqs, Q_URL, receipt_handle)
         except Exception as ex:
-            log.error(ex)
+            log.error(fmterr(ex))
         sys.exit(0)
     signal.signal(signal.SIGINT, clean_up)
     signal.signal(signal.SIGTERM, clean_up)
@@ -167,10 +167,10 @@ def go():
         sz_eng = sz_factory.create_engine()
         log.info(SZ_TAG + 'Senzing engine object instantiated.')
     except sz.SzError as sz_err:
-        log.error(SZ_TAG + str(sz_err))
+        log.error(SZ_TAG + fmterr(sz_err))
         sys.exit(1)
     except Exception as e:
-        log.error(str(e))
+        log.error(fmterr(e))
         sys.exit(1)
 
     while 1:
@@ -202,7 +202,7 @@ def go():
                     SZ_CALL_TIMEOUT_SECONDS,
                     receipt_handle))
             except sz.SzError as sz_err:
-                log.error(SZ_TAG + DLQ_TAG + str(sz_err))
+                log.error(SZ_TAG + DLQ_TAG + fmterr(sz_err))
                 # "Toss back" this message to be re-consumed; we rely on AWS
                 # config to move out-of-order messages into the DLQ at some point.
                 make_msg_visible(sqs, Q_URL, receipt_handle)
@@ -212,7 +212,7 @@ def go():
                 del_msg(sqs, Q_URL, receipt_handle)
 
         except Exception as e:
-            log.error(str(e))
+            log.error(fmterr(e))
             sys.exit(1)
 
 #-------------------------------------------------------------------------------

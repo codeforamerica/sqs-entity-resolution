@@ -25,3 +25,6 @@ def retrieve_logger(tag='default'):
         x.addHandler(handler)
         _instantiated_loggers[tag] = x
         return x
+
+def fmterr(e):
+    return ('%s :: %s' % (str(type(e)), str(e)))
