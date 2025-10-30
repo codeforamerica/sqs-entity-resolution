@@ -6,42 +6,12 @@ import sys
 import boto3
 import senzing as sz
 
-# --- BEGIN OTEL SETUP --- #
-# Refs:
-#  https://opentelemetry.io/docs/languages/python/instrumentation/#metrics
-#  https://opentelemetry.io/docs/languages/python/exporters/#console
-#  https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    ConsoleMetricExporter,
-    PeriodicExportingMetricReader)
-resource = Resource.create(attributes={
-    SERVICE_NAME: "consumer"
-})
-metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
-# Set the global default meter provider:
-metrics.set_meter_provider(meter_provider)
-# Create a meter from the global meter provider:
-meter = metrics.get_meter('consumer.meter')
-
-### Set up specific metric instrument objects:
-otel_msgs_counter = meter.create_counter(
-    'consumer.messages.count',
-    description='Counter incremented with each message processed by the consumer.')
-otel_durations = meter.create_histogram(
-    'consumer.messages.duration',
-    'Message processing duration for the consumer.')
-SUCCESS = 'success'
-FAILURE = 'failure'
-# ---- END OTEL SETUP ---- #
-
 from loglib import *
 log = retrieve_logger()
 
 from timeout_handling import *
+
+import otel
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -200,6 +170,16 @@ def go():
     except Exception as e:
         log.error(fmterr(e))
 
+    # OTel setup #
+    meter = otel.init('consumer')
+    otel_msgs_counter = meter.create_counter(
+        'consumer.messages.count',
+        description='Counter incremented with each message processed by the consumer.')
+    otel_durations = meter.create_histogram(
+        'consumer.messages.duration',
+        'Message processing duration for the consumer.')
+    # end OTel setup #
+
     while 1:
         try:
             # Get next message.
@@ -210,14 +190,14 @@ def go():
             rcd = json.loads(body)
 
             start = time.perf_counter()
-            success_status = FAILURE # initial default value
+            success_status = otel.FAILURE # initial default value
 
             try:
                 # Process and send to Senzing.
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 cancel_alarm_timer()
-                success_status = SUCCESS
+                success_status = otel.SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except KeyError as ke:
