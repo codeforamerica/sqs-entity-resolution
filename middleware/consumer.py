@@ -28,10 +28,10 @@ metrics.set_meter_provider(meter_provider)
 meter = metrics.get_meter('consumer.meter')
 
 ### Set up specific metric instrument objects:
-ot_msgs_counter = meter.create_counter(
+otel_msgs_counter = meter.create_counter(
     'consumer.messages.count',
     description='Counter incremented with each message processed by the consumer.')
-ot_durations = meter.create_histogram(
+otel_durations = meter.create_histogram(
     'consumer.messages.duration',
     'Message processing duration for the consumer.')
 SUCCESS = 'success'
@@ -202,15 +202,15 @@ def go():
 
     while 1:
         try:
-            start = time.perf_counter()
-            success_status = FAILURE
-
             # Get next message.
             msg = next(msgs)
             receipt_handle, body = msg['ReceiptHandle'], msg['Body']
             log.debug('SQS message retrieved, having ReceiptHandle: '
                      + receipt_handle)
             rcd = json.loads(body)
+
+            start = time.perf_counter()
+            success_status = FAILURE # initial default value
 
             try:
                 # Process and send to Senzing.
@@ -246,11 +246,11 @@ def go():
                 del_msg(sqs, Q_URL, receipt_handle)
 
             finish = time.perf_counter()
-            ot_msgs_counter.add(1,
+            otel_msgs_counter.add(1,
                 {'status': success_status,
                 'service': 'consumer',
                 'environment': RUNTIME_ENV})
-            ot_durations.record(finish - start,
+            otel_durations.record(finish - start,
                 {'status':  success_status,
                  'service': 'consumer',
                  'environment': RUNTIME_ENV})
