@@ -18,7 +18,6 @@ try:
 except Exception as e:
     log.error('Importing senzing_core library failed.')
     log.error(fmterr(e))
-    sys.exit(1)
 
 Q_URL = os.environ['Q_URL']
 SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
@@ -58,7 +57,6 @@ def init():
             return sess.client('sqs')
     except Exception as e:
         log.error(AWS_TAG + fmterr(e))
-        sys.exit(1)
 
 def get_msgs(sqs, q_url):
     '''Generator function; emits a single SQS msg at a time.
@@ -77,7 +75,6 @@ def get_msgs(sqs, q_url):
                 yield resp['Messages'][0]
         except Exception as e:
             log.error(f'{AWS_TAG} {type(e).__module__}.{type(e).__qualname__} :: {fmterr(e)}')
-            sys.exit(1)
    
 def del_msg(sqs, q_url, receipt_handle):
     try:
@@ -122,7 +119,6 @@ def register_data_source(data_source_name):
         log.info(SZ_TAG + 'Successfully registered data_source: ' + data_source_name)
     except sz.SzError as err:
         log.error(SZ_TAG + fmterr(err))
-        sys.exit(1)
 
 #-------------------------------------------------------------------------------
 
@@ -168,10 +164,8 @@ def go():
         log.info(SZ_TAG + 'Senzing engine object instantiated.')
     except sz.SzError as sz_err:
         log.error(SZ_TAG + fmterr(sz_err))
-        sys.exit(1)
     except Exception as e:
         log.error(fmterr(e))
-        sys.exit(1)
 
     while 1:
         try:
@@ -189,6 +183,9 @@ def go():
                 cancel_alarm_timer()
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
+            except KeyError as ke:
+                log.error(fmterr(ke))
+                make_msg_visible(sqs, Q_URL, receipt_handle)
             except sz.SzUnknownDataSourceError as sz_uds_err:
                 log.info(SZ_TAG + str(sz_uds_err))
                 # Encountered a new data source name; register it.
@@ -213,7 +210,6 @@ def go():
 
         except Exception as e:
             log.error(fmterr(e))
-            sys.exit(1)
 
 #-------------------------------------------------------------------------------
 
