@@ -245,6 +245,8 @@ _Environment variables:_
   - When either (a) Senzing's internal redo queue is empty or (b) a
     `SzRetryableError` is encountered, this sets how long to wait before
     attemping the next Senzing op.
+- `RUNTIME_ENV` -- the runtime enviroment (e.g., "Dev", "Prod", etc.). Optional;
+  defaults to "unknown".
 
 ### Exporter
 
