@@ -5,45 +5,12 @@ import sys
 import boto3
 import senzing as sz
 
-# --- BEGIN OTEL SETUP --- #
-# Refs:
-#  https://opentelemetry.io/docs/languages/python/instrumentation/#metrics
-#  https://opentelemetry.io/docs/languages/python/exporters/#console
-#  https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    ConsoleMetricExporter,
-    PeriodicExportingMetricReader)
-resource = Resource.create(attributes={
-    SERVICE_NAME: "redoer"
-})
-metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
-meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
-# Set the global default meter provider:
-metrics.set_meter_provider(meter_provider)
-# Create a meter from the global meter provider:
-meter = metrics.get_meter('redoer.meter')
-
-### Set up specific metric instrument objects:
-otel_msgs_counter = meter.create_counter(
-    'redoer.messages.count',
-    description='Counter incremented with each message processed by the redoer.')
-otel_durations = meter.create_histogram(
-    'redoer.messages.duration',
-    'Message processing duration for the redoer.')
-otel_queue_count = meter.create_up_down_counter(
-    name='redoer.queue.count',
-    description='Current number of items in the redo queue.')
-SUCCESS = 'success'
-FAILURE = 'failure'
-# ---- END OTEL SETUP ---- #
-
 from loglib import *
 log = retrieve_logger()
 
 from timeout_handling import *
+
+import otel
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -83,6 +50,32 @@ def go():
     except Exception as e:
         log.error(fmterr(e))
 
+    # OTel setup #
+    meter = otel.init('redoer')
+
+    otel_msgs_counter = meter.create_counter(
+        'redoer.messages.count',
+        description='Counter incremented with each message processed by the redoer.')
+
+    otel_durations = meter.create_histogram(
+        'redoer.messages.duration',
+        'Message processing duration for the redoer.')
+
+    def _queue_count_steward(tally):
+        '''Coroutine function; emits like a generator but values can also be
+        sent into it too. Its generator-like behavior let's us pass it into the Gauge
+        constructor.'''
+        while 1:
+            newtally = yield tally
+            tally = newtally if newtally
+    queue_count_steward = _queue_count_steward(0)
+    next(queue_count_steward) # prime it.
+    otel_queue_gauge = meter.create_observable_gauge(
+        'redoer.queue.count',
+        description='Current number of items in the redo queue.',
+        [queue_count_steward])
+    # end OTel setup #
+
     log.info('Starting primary loop.')
 
     # Approach:
@@ -102,12 +95,12 @@ def go():
         try:
             if have_rcd:
                 start = time.perf_counter()
-                success_status = FAILURE # initial default value
+                success_status = otel.FAILURE # initial default value
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     sz_eng.process_redo_record(rcd)
                     cancel_alarm_timer()
-                    sucess_status = SUCCESS
+                    sucess_status = otel.SUCCESS
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue
@@ -146,6 +139,7 @@ def go():
             else:
                 try:
                     tally = sz_eng.count_redo_records()
+                    queue_count_steward.send(tally)
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + fmterr(sz_ret_err))
