@@ -16,8 +16,7 @@ try:
     log.info('Imported senzing_core successfully.')
 except Exception as e:
     log.error('Importing senzing_core library failed.')
-    log.error(e)
-    sys.exit(1)
+    log.error(fmterr(e))
 
 if 'SENZING_ENGINE_CONFIGURATION_JSON' not in os.environ:
     log.error('SENZING_ENGINE_CONFIGURATION_JSON environment variable required.')
@@ -46,8 +45,7 @@ def make_s3_client():
         else:
             return sess.client('s3')
     except Exception as e:
-        log.error(AWS_TAG + str(e))
-        sys.exit(1)
+        log.error(AWS_TAG + fmterr(e))
 
 def build_output_filename(tag='exporter-output', kind='json'):
     '''Returns a str, e.g.,
@@ -80,11 +78,9 @@ def go():
         sz_eng = sz_factory.create_engine()
         log.info(SZ_TAG + 'Senzing engine object instantiated.')
     except sz.SzError as sz_err:
-        log.error(SZ_TAG + str(sz_err))
-        sys.exit(1)
+        log.error(SZ_TAG + fmterr(sz_err))
     except Exception as e:
-        log.error(str(e))
-        sys.exit(1)
+        log.error(fmterr(e))
 
     # init buffer
     buff = io.BytesIO()
@@ -111,9 +107,9 @@ def go():
         buff.write(']'.encode('utf-8'))
         log.info('Total bytes exported/buffered: ' + str(buff.getbuffer().nbytes))
     except sz.SzError as err:
-        log.error(SZ_TAG + str(err))
+        log.error(SZ_TAG + fmterr(err))
     except Exception as e:
-        log.error(str(e))
+        log.error(fmterr(e))
 
     # rewind buffer
     buff.seek(0)
@@ -126,7 +122,7 @@ def go():
         s3.upload_fileobj(buff, S3_BUCKET_NAME, full_path)
         log.info(AWS_TAG + 'Successfully uploaded file.')
     except Exception as e:
-        log.error(AWS_TAG + str(e))
+        log.error(AWS_TAG + fmterr(e))
 
 #-------------------------------------------------------------------------------
 
