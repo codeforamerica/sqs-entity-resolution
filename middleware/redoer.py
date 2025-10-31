@@ -16,8 +16,7 @@ try:
     log.info('Imported senzing_core successfully.')
 except Exception as e:
     log.error('Importing senzing_core library failed.')
-    log.error(e)
-    sys.exit(1)
+    log.error(fmterr(e))
 
 SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
@@ -44,11 +43,9 @@ def go():
         sz_eng = sz_factory.create_engine()
         log.info(SZ_TAG + 'Senzing engine object instantiated.')
     except sz.SzError as sz_err:
-        log.error(SZ_TAG + str(sz_err))
-        sys.exit(1)
+        log.error(SZ_TAG + fmterr(sz_err))
     except Exception as e:
-        log.error(str(e))
-        sys.exit(1)
+        log.error(fmterr(e))
 
     log.info('Starting primary loop.')
 
@@ -78,7 +75,7 @@ def go():
                     continue
                 except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
-                    log.error(SZ_TAG + str(sz_ret_err))
+                    log.error(SZ_TAG + fmterr(sz_ret_err))
                     attempts_left -= 1
                     log.debug(SZ_TAG + f'Remaining attempts for this record: {attempts_left}')
                     if not attempts_left:
@@ -96,20 +93,18 @@ def go():
                         SZ_CALL_TIMEOUT_SECONDS,
                         receipt_handle))
                 except sz.SzError as sz_err:
-                    log.error(SZ_TAG + str(sz_err))
-                    sys.exit(1)
+                    log.error(SZ_TAG + fmterr(sz_err))
 
             else:
                 try:
                     tally = sz_eng.count_redo_records()
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
-                    log.error(SZ_TAG + str(sz_ret_err))
+                    log.error(SZ_TAG + fmterr(sz_ret_err))
                     time.sleep(WAIT_SECONDS)
                     continue
                 except sz.SzError as sz_err:
-                    log.error(SZ_TAG + str(sz_err))
-                    sys.exit(1)
+                    log.error(SZ_TAG + fmterr(sz_err))
 
                 if tally:
 
@@ -126,18 +121,16 @@ def go():
                                       + 'nothing from get_redo_record')
                     except sz.SzRetryableError as sz_ret_err:
                         # No additional action needed; we'll just try getting again.
-                        log.error(SZ_TAG + str(sz_ret_err))
+                        log.error(SZ_TAG + fmterr(sz_ret_err))
                     except sz.SzError as sz_err:
-                        log.error(SZ_TAG + str(sz_err))
-                        sys.exit(1)
+                        log.error(SZ_TAG + fmterr(sz_err))
 
                 else:
                     log.debug('No redo records. Will wait ' + str(WAIT_SECONDS) + ' seconds.')
                     time.sleep(WAIT_SECONDS)
 
         except Exception as e:
-            log.error(str(e))
-            sys.exit(1)
+            log.error(fmterr(e))
 
 #-------------------------------------------------------------------------------
 
