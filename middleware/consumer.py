@@ -171,9 +171,11 @@ def go():
         log.error(fmterr(e))
 
     # OTel setup #
+    log.info('Starting OTel setup.')
     meter = otel.init('consumer')
     otel_msgs_counter = meter.create_counter('consumer.messages.count')
     otel_durations = meter.create_histogram('consumer.messages.duration')
+    log.info('Finished OTel setup.')
     # end OTel setup #
 
     while 1:

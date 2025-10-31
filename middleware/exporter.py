@@ -10,6 +10,8 @@ import senzing as sz
 from loglib import *
 log = retrieve_logger()
 
+import otel
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -28,6 +30,7 @@ if 'S3_BUCKET_NAME' not in os.environ:
     sys.exit(1)
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 FOLDER_NAME = os.environ.get('FOLDER_NAME', 'exporter-outputs')
+RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 EXPORT_FLAGS =  sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
@@ -82,6 +85,14 @@ def go():
     except Exception as e:
         log.error(fmterr(e))
 
+    # OTel setup #
+    log.info('Starting OTel setup.')
+    meter = otel.init('exporter')
+    otel_exp_counter = meter.create_counter('exporter.export.count')
+    otel_duration = meter.create_histogram('exporter.export.duration')
+    log.info('Finished OTel setup.')
+    # end OTel setup #
+
     # init buffer
     buff = io.BytesIO()
 
@@ -89,6 +100,10 @@ def go():
     # sz will export JSONL lines; we add the chars necessary to make
     # the output as a whole be a single JSON blob.
     log.info(SZ_TAG + 'Starting export from Senzing.')
+
+    start = time.perf_counter()
+    success_status = otel.FAILURE # initial default state
+
     try:
         export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
         log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
@@ -121,8 +136,19 @@ def go():
     try:
         s3.upload_fileobj(buff, S3_BUCKET_NAME, full_path)
         log.info(AWS_TAG + 'Successfully uploaded file.')
+        success_status = otel.SUCCESS
     except Exception as e:
         log.error(AWS_TAG + fmterr(e))
+
+    finish = time.perf_counter()
+    otel_exp_counter.add(1,
+        {'status': success_status,
+        'service': 'exporter',
+        'environment': RUNTIME_ENV})
+    otel_duration.record(finish - start,
+        {'status':  success_status,
+         'service': 'exporter',
+         'environment': RUNTIME_ENV})
 
 #-------------------------------------------------------------------------------
 
@@ -134,4 +160,3 @@ def main():
     go()
 
 if __name__ == '__main__': main()
-
