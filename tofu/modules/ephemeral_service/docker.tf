@@ -2,9 +2,11 @@ resource "docker_image" "container" {
   name = "${module.ecr.repository_url}:${var.image_tag}"
 
   build {
+    builder    = "default"
     context    = var.docker_context
-    dockerfile = var.dockerfile
+    dockerfile = "${var.docker_context}/${var.dockerfile}"
     platform   = "linux/amd64"
+
     tag = [
       "${local.prefix}:${var.image_tag}",
       "${module.ecr.repository_url}:${var.image_tag}"

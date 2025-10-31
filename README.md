@@ -1,4 +1,4 @@
-# SQS Entity Resolution using Senzing
+# SQS Entity Resolution Using Senzing
 
 This is an implementation of entity resolution using [Senzing] with [AWS
 SQS][sqs]. Data is sent to an SQS queue, which is processed by a "consumer"
