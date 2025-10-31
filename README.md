@@ -265,6 +265,8 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
 - `FOLDER_NAME` -- optional (defaults to `exporter-outputs`); folder inside S3
   where the file will be placed.
 - `LOG_LEVEL` -- optional; defaults to `INFO`.
+- `RUNTIME_ENV` -- the runtime enviroment (e.g., "Dev", "Prod", etc.). Optional;
+  defaults to "unknown".
 
 _Mounts in docker-compose.yaml:_
 
