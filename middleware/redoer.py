@@ -143,7 +143,6 @@ def go():
                 try:
                     tally = sz_eng.count_redo_records()
                     queue_count_steward.send(tally)
-                    #otel_queue_gauge.record(tally)
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + fmterr(sz_ret_err))
