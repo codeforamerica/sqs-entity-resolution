@@ -172,12 +172,8 @@ def go():
 
     # OTel setup #
     meter = otel.init('consumer')
-    otel_msgs_counter = meter.create_counter(
-        'consumer.messages.count',
-        description='Counter incremented with each message processed by the consumer.')
-    otel_durations = meter.create_histogram(
-        'consumer.messages.duration',
-        'Message processing duration for the consumer.')
+    otel_msgs_counter = meter.create_counter('consumer.messages.count')
+    otel_durations = meter.create_histogram('consumer.messages.duration')
     # end OTel setup #
 
     while 1:

@@ -19,7 +19,8 @@ services:
   init-db:
     image: senzing/init-database:latest
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SENZING_TOOLS_DATASOURCES: PEOPLE
       SENZING_TOOLS_ENGINE_CONFIGURATION_JSON: >-
