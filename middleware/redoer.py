@@ -68,7 +68,7 @@ def go():
             newtally = yield [metrics.Observation(tally)]
             # We check the type b/c OTel internals will send in a
             # CallbackOptions object that we'll want to ignore;
-            # meanwhile type `int` means we sent in an updated tally value.
+            # meanwhile type `int` means we sent in an updated tally value
             # ourselves.
             if newtally and type(newtally) is int: tally = newtally
     queue_count_steward = _queue_count_steward(-1)
