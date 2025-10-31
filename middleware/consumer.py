@@ -11,6 +11,8 @@ log = retrieve_logger()
 
 from timeout_handling import *
 
+import otel
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -22,6 +24,7 @@ except Exception as e:
 Q_URL = os.environ['Q_URL']
 SZ_CALL_TIMEOUT_SECONDS = int(os.environ.get('SZ_CALL_TIMEOUT_SECONDS', 420))
 SZ_CONFIG = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
+RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 POLL_SECONDS = 20                   # 20 seconds is SQS max
 
@@ -167,6 +170,14 @@ def go():
     except Exception as e:
         log.error(fmterr(e))
 
+    # OTel setup #
+    log.info('Starting OTel setup.')
+    meter = otel.init('consumer')
+    otel_msgs_counter = meter.create_counter('consumer.messages.count')
+    otel_durations = meter.create_histogram('consumer.messages.duration')
+    log.info('Finished OTel setup.')
+    # end OTel setup #
+
     while 1:
         try:
             # Get next message.
@@ -176,11 +187,15 @@ def go():
                      + receipt_handle)
             rcd = json.loads(body)
 
+            start = time.perf_counter()
+            success_status = otel.FAILURE # initial default value
+
             try:
                 # Process and send to Senzing.
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
                 cancel_alarm_timer()
+                success_status = otel.SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
             except KeyError as ke:
@@ -207,6 +222,16 @@ def go():
             # Lastly, delete msg if no errors.
             else:
                 del_msg(sqs, Q_URL, receipt_handle)
+
+            finish = time.perf_counter()
+            otel_msgs_counter.add(1,
+                {'status': success_status,
+                'service': 'consumer',
+                'environment': RUNTIME_ENV})
+            otel_durations.record(finish - start,
+                {'status':  success_status,
+                 'service': 'consumer',
+                 'environment': RUNTIME_ENV})
 
         except Exception as e:
             log.error(fmterr(e))

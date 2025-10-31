@@ -7,6 +7,11 @@ RUN apt-get update \
  && apt-get -y autoremove \
  && apt-get -y clean
 
+RUN pip3 install --break-system-packages opentelemetry-distro opentelemetry-exporter-otlp-proto-http
+# Above, `--break-system-packages` flag overrides the
+# "This environment is externally managed" error that calling pip
+# would otherwise incur here.
+
 WORKDIR /app
 COPY middleware/* .
 
@@ -20,6 +25,8 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
+
+ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
 
 # Define volumes necessary to support a read-only root filesystem on ECS
 # Fargate.
