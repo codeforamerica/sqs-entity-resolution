@@ -13,7 +13,7 @@ from opentelemetry.sdk.metrics.export import (
 def init(service_name):
     '''Perform general OTel setup and return meter obj.'''
     resource = Resource.create(attributes={SERVICE_NAME: service_name})
-    metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
+    metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter(), export_interval_millis=5000)
     meter_provider = MeterProvider(resource=resource,
                                    metric_readers=[metric_reader])
 

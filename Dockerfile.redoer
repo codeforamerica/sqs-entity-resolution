@@ -7,6 +7,11 @@ RUN apt-get update \
  && apt-get -y autoremove \
  && apt-get -y clean
 
+RUN pip3 install --break-system-packages opentelemetry-distro
+# Above, `--break-system-packages` flag overrides the
+# "This environment is externally managed" error that calling pip
+# would otherwise incur here.
+
 WORKDIR /app
 COPY middleware/* .
 
