@@ -3,17 +3,25 @@
 #  https://opentelemetry.io/docs/languages/python/exporters/#console
 #  https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
 
+import os
+
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader)
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
+INTERVAL_MS = 5000
 
 def init(service_name):
     '''Perform general OTel setup and return meter obj.'''
     resource = Resource.create(attributes={SERVICE_NAME: service_name})
-    metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter(), export_interval_millis=5000)
+    if os.getenv('OTEL_USE_OTLP_EXPORTER', 'false').lower() == 'true':
+        metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=INTERVAL_MS)
+    else:
+        metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter(), export_interval_millis=INTERVAL_MS)
     meter_provider = MeterProvider(resource=resource,
                                    metric_readers=[metric_reader])
 
