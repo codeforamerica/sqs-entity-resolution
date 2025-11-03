@@ -103,7 +103,7 @@ def go():
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
                     sz_eng.process_redo_record(rcd)
                     cancel_alarm_timer()
-                    sucess_status = otel.SUCCESS
+                    success_status = otel.SUCCESS
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
                     continue

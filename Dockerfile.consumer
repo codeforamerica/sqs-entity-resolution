@@ -26,8 +26,6 @@ ENV PYTHONPATH=/opt/senzing/er/sdk/python:/app
 # Flush buffer - helps with print statements.
 ENV PYTHONUNBUFFERED=1
 
-ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
-
 # Define volumes necessary to support a read-only root filesystem on ECS
 # Fargate.
 VOLUME ["/home/senzing", "/var/lib/amazon", "/var/log"]
