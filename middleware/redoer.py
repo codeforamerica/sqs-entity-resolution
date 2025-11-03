@@ -73,8 +73,7 @@ def go():
             if newtally and type(newtally) is int: tally = newtally
     queue_count_steward = _queue_count_steward(-1)
     next(queue_count_steward) # prime it.
-    otel_queue_gauge = meter.create_observable_gauge(
-        'redoer.queue.count', [queue_count_steward])
+    meter.create_observable_gauge('redoer.queue.count', [queue_count_steward])
 
     log.info('Finished OTel setup.')
     # end OTel setup #
