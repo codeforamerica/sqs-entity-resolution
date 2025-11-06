@@ -202,6 +202,10 @@ _Environment variables (see docker-compose.yaml):_
     initially retrieved from SQS
   - Sets the maximum amount of time the Consumer will wait for a Senzing
     `add_record` to complete before bailing and moving on.
+- `RUNTIME_ENV` -- the runtime environment (e.g., "Dev", "Prod", etc.).
+  - Optional; defaults to "unknown".
+- `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
 
 _Mounts in docker-compose.yaml:_
 
@@ -243,6 +247,10 @@ _Environment variables:_
   - When either (a) Senzing's internal redo queue is empty or (b) a
     `SzRetryableError` is encountered, this sets how long to wait before
     attemping the next Senzing op.
+- `RUNTIME_ENV` -- the runtime environment (e.g., "Dev", "Prod", etc.).
+  - Optional; defaults to "unknown".
+- `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
 
 ### Exporter
 
@@ -261,6 +269,10 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
 - `FOLDER_NAME` -- optional (defaults to `exporter-outputs`); folder inside S3
   where the file will be placed.
 - `LOG_LEVEL` -- optional; defaults to `INFO`.
+- `RUNTIME_ENV` -- the runtime environment (e.g., "Dev", "Prod", etc.).
+  - Optional; defaults to "unknown".
+- `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
 
 _Mounts in docker-compose.yaml:_
 
