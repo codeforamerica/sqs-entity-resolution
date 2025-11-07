@@ -18,10 +18,10 @@ architecture-beta
   service s3(disk)[S3 Bucket]
 
   consumer:L --> T:queue
-  consumer:B --> T:db
   redoer:B --> T:db
   exporter:B --> R:db
   exporter:R --> L:s3
+  consumer:B --> T:db
 ```
 
 ## Local development with Docker
