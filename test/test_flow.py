@@ -23,7 +23,7 @@ def slurp_json_data(fname):
 class TestFlow(unittest.TestCase):
 
     def docker_setup(s):
-        ret = subprocess.run(['docker', 'compose', 'down']).returncode
+        ret = subprocess.run(['docker', 'compose', 'down', '-v']).returncode
         s.assertEqual(ret, 0)    
         ret = subprocess.run(['docker', 'compose', 'rm', '-v', '-f']).returncode
         s.assertEqual(ret, 0)    

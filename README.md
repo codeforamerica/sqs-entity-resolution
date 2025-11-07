@@ -12,14 +12,16 @@ architecture-beta
 
   service queue(database)[SQS Queue] in vpc
   service consumer(server)[Senzing Consumer] in ecs
+  service redoer(server)[Senzing Redoer] in ecs
   service exporter(server)[Senzing Exporter] in ecs
   service db(database)[PostgreSQL] in vpc
   service s3(disk)[S3 Bucket]
 
   consumer:L --> T:queue
-  consumer:B --> T:db
+  redoer:B --> T:db
   exporter:B --> R:db
   exporter:R --> L:s3
+  consumer:B --> T:db
 ```
 
 ## Local development with Docker
@@ -286,6 +288,11 @@ this URL:
   http://localhost:4566/sqs-senzing-local-export
 
 ## Running Tests
+
+> [!CAUTION]
+> Running these tests will delete all named and unnamed Docker volumes. The 
+> primary reason is to ensure a fresh database. To change this behavior, take a 
+> look at `docker_setup()` and modify as desired.
 
 Tests are located in the `test/` folder. The overall flow is tested using
 LocalStack components.
