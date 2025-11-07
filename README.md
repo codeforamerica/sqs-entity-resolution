@@ -12,16 +12,16 @@ architecture-beta
 
   service queue(database)[SQS Queue] in vpc
   service consumer(server)[Senzing Consumer] in ecs
-  service redoer(server)[Senzing Consumer] in ecs
+  service redoer(server)[Senzing Redoer] in ecs
   service exporter(server)[Senzing Exporter] in ecs
   service db(database)[PostgreSQL] in vpc
   service s3(disk)[S3 Bucket]
 
   consumer:L --> T:queue
   consumer:B --> T:db
+  redoer:B --> T:db
   exporter:B --> R:db
   exporter:R --> L:s3
-  redoer:B --> T:db
 ```
 
 ## Local development with Docker
