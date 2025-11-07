@@ -50,7 +50,7 @@ resource "docker_image" "otel" {
 resource "docker_tag" "otel" {
   source_image = docker_image.otel.name
   target_image = "${module.otel_ecr.repository_url}:${var.otel_version}"
-  tag_triggers = [data.docker_registry_image.otel.sha256_digest]
+  tag_triggers = [data.docker_registry_image.otel.sha256_digest, timestamp()]
 }
 
 resource "docker_registry_image" "otel" {
