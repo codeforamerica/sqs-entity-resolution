@@ -8,7 +8,7 @@ terraform {
 }
 
 module "inputs" {
-  source = "../../modules/inputs"
+  source = "github.com/codeforamerica/tofu-modules-aws-ssm-inputs?ref=1.0.0"
 
   prefix = "/${var.project}/${var.environment}"
 
