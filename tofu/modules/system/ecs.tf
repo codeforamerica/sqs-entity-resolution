@@ -94,7 +94,10 @@ module "consumer" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    OTEL_USE_OTLP_EXPORTER : true
     Q_URL : module.sqs.queue_url
+    RUNTIME_ENV : var.environment
   }
 
   environment_secrets = {
@@ -136,7 +139,10 @@ module "redoer" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    OTEL_USE_OTLP_EXPORTER : true
     Q_URL : module.sqs.queue_url
+    RUNTIME_ENV : var.environment
   }
 
   environment_secrets = {
@@ -168,9 +174,12 @@ module "exporter" {
   otel_image               = docker_registry_image.otel.name
 
   environment_variables = {
-    Q_URL : module.sqs.queue_url
-    S3_BUCKET_NAME : module.s3.bucket
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    OTEL_USE_OTLP_EXPORTER : true
+    Q_URL : module.sqs.queue_url
+    RUNTIME_ENV : var.environment
+    S3_BUCKET_NAME : module.s3.bucket
   }
 
   environment_secrets = {
@@ -194,7 +203,7 @@ module "tools" {
   logging_key_id           = var.logging_key_arn
   otel_ssm_parameter_arn   = aws_ssm_parameter.otel_config.arn
   execution_policies       = [aws_iam_policy.secrets.arn]
-  task_policies            = [aws_iam_policy.queue.arn]
+  task_policies            = [aws_iam_policy.exports.arn, aws_iam_policy.queue.arn]
   dockerfile               = "Dockerfile.tools"
   docker_context           = "${path.module}/../../../"
   untagged_image_retention = var.untagged_image_retention
@@ -210,9 +219,13 @@ module "tools" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
+    OTEL_USE_OTLP_EXPORTER : true
     PGHOST : module.database.cluster_endpoint
     PGSSLMODE : "require"
     Q_URL : module.sqs.queue_url
+    RUNTIME_ENV : var.environment
+    S3_BUCKET_NAME : module.s3.bucket
   }
 
   environment_secrets = {
