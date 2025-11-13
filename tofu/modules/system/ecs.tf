@@ -94,6 +94,7 @@ module "consumer" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
@@ -138,6 +139,7 @@ module "redoer" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
@@ -173,6 +175,7 @@ module "exporter" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
@@ -216,6 +219,7 @@ module "tools" {
 
   environment_variables = {
     LOG_LEVEL : var.log_level
+    OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
     PGHOST : module.database.cluster_endpoint
     PGSSLMODE : "require"
