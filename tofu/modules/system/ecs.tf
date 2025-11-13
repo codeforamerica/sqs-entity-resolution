@@ -203,7 +203,7 @@ module "tools" {
   logging_key_id           = var.logging_key_arn
   otel_ssm_parameter_arn   = aws_ssm_parameter.otel_config.arn
   execution_policies       = [aws_iam_policy.secrets.arn]
-  task_policies            = [aws_iam_policy.queue.arn]
+  task_policies            = [aws_iam_policy.exports.arn, aws_iam_policy.queue.arn]
   dockerfile               = "Dockerfile.tools"
   docker_context           = "${path.module}/../../../"
   untagged_image_retention = var.untagged_image_retention
@@ -225,6 +225,7 @@ module "tools" {
     PGSSLMODE : "require"
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
+    S3_BUCKET_NAME : module.s3.bucket
   }
 
   environment_secrets = {
