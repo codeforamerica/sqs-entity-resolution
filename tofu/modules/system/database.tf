@@ -24,7 +24,6 @@ module "database" {
   name                                = "${local.prefix}-senzing"
   engine                              = "aurora-postgresql"
   engine_version                      = var.postgres_version
-  master_username                     = "root"
   storage_type                        = "aurora-iopt1"
   cluster_monitoring_interval         = 60
   vpc_id                              = var.vpc_id
@@ -35,6 +34,9 @@ module "database" {
   cloudwatch_log_group_kms_key_id     = var.logging_key_arn
   kms_key_id                          = aws_kms_key.database.arn
   backup_retention_period             = 35
+
+  master_username                                        = "root"
+  master_user_password_rotation_automatically_after_days = var.database_password_rotation_frequency
 
   instances = {
     for i in range(var.database_instance_count) : i + 1 => {
