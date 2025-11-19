@@ -125,6 +125,11 @@ def register_data_source(data_source_name):
 
 #-------------------------------------------------------------------------------
 
+def parse_affected_entities_resp(resp):
+    '''Returns array of ints (entity IDs)'''
+    r = json.loads(resp)
+    return list(map(lambda m: m['ENTITY_ID'], r['AFFECTED_ENTITIES']))
+
 def go():
     '''Starts the Consumer process; runs indefinitely.'''
 
@@ -193,11 +198,14 @@ def go():
             try:
                 # Process and send to Senzing.
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
+                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
+                                         sz.SzEngineFlags.SZ_WITH_INFO)
                 cancel_alarm_timer()
                 success_status = otel.SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
+                # TODO send affected entity IDs to tracker
+                affected = parse_affected_entities_resp(resp)
             except KeyError as ke:
                 log.error(fmterr(ke))
                 make_msg_visible(sqs, Q_URL, receipt_handle)
