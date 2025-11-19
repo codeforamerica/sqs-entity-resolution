@@ -23,9 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # We use JavaScript to analyze JSON and YAML files.
-          - language: javascript-typescript
-            build_mode: none
           - language: actions
             build_mode: none
           - language: python
