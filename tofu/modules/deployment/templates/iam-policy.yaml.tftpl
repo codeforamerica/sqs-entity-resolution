@@ -52,6 +52,7 @@ Statement:
       - application-autoscaling:DeregisterScalableTarget
       - application-autoscaling:ListTagsForResource
       - application-autoscaling:PutScalingPolicy
+      - application-autoscaling:RegisterScalableTarget
     Resource:
           - arn:${partition}:application-autoscaling:${region}:${account_id}:scalable-target/*
     Condition:
@@ -132,6 +133,7 @@ Statement:
       - ecs:DescribeServices
       - ecs:DescribeTaskDefinition
       - ecs:DescribeTasks
+      - ecs:ListTagsForResource
       - ecs:PutClusterCapacityProviders
       - ecs:RegisterTaskDefinition
       - ecs:RunTask
