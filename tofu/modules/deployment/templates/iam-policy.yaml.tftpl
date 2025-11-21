@@ -78,7 +78,14 @@ Statement:
       - cloudwatch:PutMetricAlarm
     Resource:
       - arn:${partition}:cloudwatch:${region}:${account_id}:alarm:${project}-${system_environment}-*
-
+  - Sid: CloudWatchDashboardsAccess
+    Effect: Allow
+    Action:
+      - cloudwatch:DeleteDashboards
+      - cloudwatch:GetDashboard
+      - cloudwatch:PutDashboard
+    Resource:
+      - arn:${partition}:cloudwatch::${account_id}:dashboard/${project}-${system_environment}-*
   - Sid: CloudWatchLogsAccess
     Effect: Allow
     Action:
