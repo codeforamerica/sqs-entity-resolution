@@ -3,8 +3,8 @@ resource "aws_cloudwatch_dashboard" "this" {
 
   dashboard_name = "${local.prefix}-${each.key}"
   dashboard_body = templatefile("${path.module}/templates/${each.key}.json.tftpl", {
-    project        = var.project
-    environment    = var.environment
-    region         = data.aws_region.current.region
+    project     = var.project
+    environment = var.environment
+    region      = data.aws_region.current.region
   })
 }
