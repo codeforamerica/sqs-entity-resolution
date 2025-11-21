@@ -9,6 +9,7 @@ on:
         required: true
         type: choice
         options:
+          - dashboards
           - foundation
           - networking
           - service

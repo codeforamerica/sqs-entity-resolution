@@ -25,7 +25,7 @@ module "system" {
   logging_bucket         = module.inputs.values["logging/bucket"]
   logging_key_arn        = module.inputs.values["logging/key"]
   log_level              = var.log_level
-  tags                   = merge({ awsApplication : module.inputs.values["application/tag"] }, var.tags)
+  tags                   = local.tags
   vpc_id                 = module.inputs.values["vpc/id"]
   queue_empty_threshold  = var.queue_empty_threshold
   senzing_license_base64 = var.senzing_license_base64

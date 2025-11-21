@@ -1,0 +1,441 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 6,
+      "y": 5,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "Failed", "id": "e2", "region": "${region}", "color": "#d62728" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "Sucessful", "id": "e3", "region": "${region}", "color": "#2ca02c" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "Total", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ "${project}/${environment}", "consumer.messages.count", "OTelLib", "consumer.meter", { "region": "${region}", "id": "m1", "visible": false, "label": "Count" } ],
+          [ ".", ".", "environment", "${environment}", "service", "consumer", "OTelLib", "consumer.meter", "status", "failure", { "id": "m2", "label": "Failure", "visible": false, "region": "${region}" } ],
+          [ "...", "success", { "id": "m3", "label": "Success", "visible": false, "region": "${region}" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "${region}",
+        "title": "Records processed",
+        "stat": "Sum",
+        "period": 60,
+        "yAxis": {
+          "left": {
+            "label": "Messages",
+            "showUnits": false
+          }
+        },
+        "legend": {
+          "position": "bottom"
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 11,
+      "width": 12,
+      "height": 10,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m3, 0)", "label": "Failed records", "id": "e3", "region": "${region}", "color": "#d62728" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "Successful records", "id": "e2", "region": "${region}", "color": "#2ca02c" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "All records", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ "${project}/${environment}", "consumer.messages.duration", "OTelLib", "consumer.meter", { "region": "${region}", "id": "m1", "visible": false, "label": "All" } ],
+          [ ".", ".", "environment", "${environment}", "service", "consumer", "OTelLib", "consumer.meter", "status", "success", { "id": "m2", "region": "${region}", "label": "Success", "visible": false } ],
+          [ "...", "failure", { "id": "m3", "region": "${region}", "label": "Failure", "visible": false } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "Average processing time",
+        "legend": {
+          "position": "bottom"
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 18,
+      "y": 9,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "CPU max", "id": "e1", "color": "#d62728", "region": "${region}" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "CPU average", "id": "e2", "color": "#1f77b4", "region": "${region}" } ],
+          [ "ECS/ContainerInsights", "TaskCpuUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m1", "stat": "Maximum", "label": "Maximum", "color": "#d62728", "region": "${region}", "visible": false } ],
+          [ "...", { "id": "m2", "label": "Average", "color": "#1f77b4", "region": "${region}", "visible": false } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "CPU utilization",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 4,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "Records", "id": "e1", "region": "${region}" } ],
+          [ "${project}/${environment}", "consumer.messages.count", "OTelLib", "consumer.meter", { "region": "${region}", "id": "m1", "visible": false } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "region": "${region}",
+        "title": "Records processed",
+        "stat": "Sum",
+        "period": 60,
+        "yAxis": {
+          "left": {
+            "label": "Messages",
+            "showUnits": false
+          }
+        },
+        "legend": {
+          "position": "hidden"
+        },
+        "singleValueFullPrecision": true,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "liveData": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 8,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "Seconds", "id": "e1", "region": "${region}" } ],
+          [ "${project}/${environment}", "consumer.messages.duration", "OTelLib", "consumer.meter", { "region": "${region}", "id": "m1", "visible": false } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "Average processing time",
+        "legend": {
+          "position": "hidden"
+        },
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "liveData": false,
+        "singleValueFullPrecision": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 15,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "Memory max", "id": "e2", "color": "#d62728", "region": "${region}" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "Memory average", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ "ECS/ContainerInsights", "TaskMemoryUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "stat": "Maximum", "label": "TaskMemoryUtilization Maximum", "region": "${region}", "id": "m1", "visible": false } ],
+          [ "ECS/ContainerInsights", "TaskMemoryUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "label": "TaskMemoryUtilization Average", "region": "${region}", "id": "m2", "visible": false } ]
+        ],
+        "period": 60,
+        "region": "${region}",
+        "stacked": false,
+        "title": "Memory utilization",
+        "view": "timeSeries",
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 9,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "Desired", "id": "e2", "region": "${region}", "color": "#1f77b4" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "Running", "id": "e1", "region": "${region}", "color": "#2ca02c" } ],
+          [ "ECS/ContainerInsights", "RunningTaskCount", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m1", "visible": false, "label": "Running", "color": "#2ca02c", "region": "${region}" } ],
+          [ ".", "DesiredTaskCount", ".", ".", ".", ".", { "id": "m2", "visible": false, "label": "Desired", "color": "#1f77b4", "region": "${region}" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "title": "Tasks",
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 21,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/aws/ecs/${project}/${environment}/consumer' | fields @timestamp, @message\n| filter @logStream like /^ecs\\/${project}-${environment}-consumer\\/[\\da-f]+/\n| sort @timestamp desc\n| limit 10000",
+        "region": "${region}",
+        "stacked": false,
+        "title": "Container logs",
+        "view": "table"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 5,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "Ingest", "id": "e1", "color": "#2ca02c", "region": "${region}" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "Dead letter", "id": "e2", "color": "#d62728", "region": "${region}" } ],
+          [ "AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${project}-${environment}-queue", { "label": "Ingest Queue (raw)", "color": "#2ca02c", "region": "${region}", "id": "m1", "visible": false } ],
+          [ "...", "${project}-${environment}-queue-dlq", { "label": "Dead Letter Queue (raw)", "color": "#d62728", "region": "${region}", "id": "m2", "visible": false } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "Queue Size",
+        "yAxis": {
+          "left": {
+            "label": "Messages",
+            "showUnits": false
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "Messages", "id": "e2", "color": "#1f77b4", "region": "${region}" } ],
+          [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${project}-${environment}-queue", { "id": "m2", "visible": false, "region": "${region}", "period": 60 } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Sum",
+        "period": 300,
+        "title": "Messages received",
+        "yAxis": {
+          "left": {
+            "showUnits": false,
+            "label": "Messages"
+          }
+        },
+        "singleValueFullPrecision": true,
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "liveData": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "CEIL(FILL(m1, 0))", "label": "Tasks", "id": "e1", "region": "${region}" } ],
+          [ "ECS/ContainerInsights", "RunningTaskCount", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m1", "visible": false, "label": "Running", "color": "#2ca02c", "region": "${region}" } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "title": "Average tasks",
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "sparkline": false,
+        "setPeriodToTimeRange": true,
+        "singleValueFullPrecision": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "% utilized", "id": "e2", "color": "#1f77b4", "region": "${region}" } ],
+          [ "ECS/ContainerInsights", "TaskCpuUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m2", "label": "Average", "color": "#1f77b4", "region": "${region}", "visible": false } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "Avergage CPU %",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        },
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "singleValueFullPrecision": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 20,
+      "y": 1,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "% utilized", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ "ECS/ContainerInsights", "TaskMemoryUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "label": "TaskMemoryUtilization Average", "region": "${region}", "id": "m2", "visible": false } ]
+        ],
+        "period": 60,
+        "region": "${region}",
+        "stacked": false,
+        "title": "Average memory %",
+        "view": "singleValue",
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        },
+        "setPeriodToTimeRange": true,
+        "sparkline": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 5,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m2, 0)", "label": "Tasks", "id": "e2", "region": "${region}", "color": "#d62728" } ],
+          [ "ECS/ContainerInsights", "RunningTaskCount", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m2", "visible": false, "region": "${region}", "stat": "Maximum" } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "title": "Max tasks",
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "sparkline": false,
+        "setPeriodToTimeRange": true,
+        "singleValueFullPrecision": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16,
+      "y": 5,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "% utilized", "id": "e1", "color": "#d62728", "region": "${region}" } ],
+          [ "ECS/ContainerInsights", "TaskCpuUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "id": "m1", "stat": "Maximum", "label": "Maximum", "color": "#d62728", "region": "${region}", "visible": false } ]
+        ],
+        "view": "singleValue",
+        "stacked": false,
+        "region": "${region}",
+        "stat": "Average",
+        "period": 60,
+        "title": "Max CPU %",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        },
+        "setPeriodToTimeRange": true,
+        "sparkline": false,
+        "singleValueFullPrecision": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 20,
+      "y": 5,
+      "width": 4,
+      "height": 4,
+      "properties": {
+        "metrics": [
+          [ { "expression": "FILL(m1, 0)", "label": "% utilized", "id": "e2", "color": "#d62728", "region": "${region}" } ],
+          [ "ECS/ContainerInsights", "TaskMemoryUtilization", "ServiceName", "${project}-${environment}-consumer", "ClusterName", "${project}-${environment}", { "stat": "Maximum", "label": "TaskMemoryUtilization Maximum", "region": "${region}", "id": "m1", "visible": false } ]
+        ],
+        "period": 60,
+        "region": "${region}",
+        "stacked": false,
+        "title": "Max memory %",
+        "view": "singleValue",
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "label": "%",
+            "showUnits": false
+          }
+        },
+        "setPeriodToTimeRange": true,
+        "sparkline": false
+      }
+    },
+    {
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 1,
+      "properties": {
+        "markdown": "# Performance Metrics",
+        "background": "transparent"
+      }
+    },
+    {
+      "type": "text",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 1,
+      "properties": {
+        "markdown": "# Resource Utilization",
+        "background": "transparent"
+      }
+    }
+  ]
+}
