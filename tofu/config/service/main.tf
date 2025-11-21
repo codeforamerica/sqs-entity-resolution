@@ -30,13 +30,15 @@ module "system" {
   queue_empty_threshold  = var.queue_empty_threshold
   senzing_license_base64 = var.senzing_license_base64
 
-  database_subnets                   = split(",", module.inputs.values["vpc/private_subnets"])
-  apply_database_updates_immediately = var.apply_database_updates_immediately
-  database_instance_count            = var.database_instance_count
-  database_skip_final_snapshot       = var.database_skip_final_snapshot
-  deletion_protection                = var.deletion_protection
-  image_tag                          = local.image_tag
-  image_tags_mutable                 = var.image_tags_mutable
+  database_subnets                     = split(",", module.inputs.values["vpc/private_subnets"])
+  apply_database_updates_immediately   = var.apply_database_updates_immediately
+  database_instance_count              = var.database_instance_count
+  database_instance_type               = var.database_instance_type
+  database_password_rotation_frequency = var.database_password_rotation_frequency
+  database_skip_final_snapshot         = var.database_skip_final_snapshot
+  deletion_protection                  = var.deletion_protection
+  image_tag                            = local.image_tag
+  image_tags_mutable                   = var.image_tags_mutable
 
   container_subnets          = split(",", module.inputs.values["vpc/private_subnets"])
   otel_version               = var.otel_version

@@ -45,6 +45,18 @@ variable "database_instance_count" {
   }
 }
 
+variable "database_instance_type" {
+  type        = string
+  description = "Instance type to use for the database instances."
+  default     = "db.t4g.medium"
+}
+
+variable "database_password_rotation_frequency" {
+  type        = number
+  description = "Number of days between automatic rotation of the database password."
+  default     = 30
+}
+
 variable "database_skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final snapshot when the database cluster is deleted."
