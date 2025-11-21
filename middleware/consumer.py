@@ -12,6 +12,7 @@ log = retrieve_logger()
 from timeout_handling import *
 
 import otel
+import util
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -183,11 +184,14 @@ def go():
             try:
                 # Process and send to Senzing.
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body)
+                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
+                                         sz.SzEngineFlags.SZ_WITH_INFO)
                 cancel_alarm_timer()
                 success_status = otel.SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
+                # TODO send affected entity IDs to tracker
+                affected = util.parse_affected_entities_resp(resp)
             except KeyError as ke:
                 log.error(fmterr(ke))
                 make_msg_visible(sqs, Q_URL, receipt_handle)
