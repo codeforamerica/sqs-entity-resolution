@@ -36,6 +36,7 @@ module "database" {
   backup_retention_period             = 35
 
   master_username                                        = "root"
+  manage_master_user_password_rotation                   = true
   master_user_password_rotation_automatically_after_days = var.database_password_rotation_frequency
 
   instances = {
