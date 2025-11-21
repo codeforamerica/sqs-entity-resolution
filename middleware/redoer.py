@@ -57,7 +57,7 @@ def go():
     otel_msgs_counter = meter.create_counter('redoer.messages.count')
     otel_durations = meter.create_histogram('redoer.messages.duration')
 
-    def _queue_count_steward(tally):
+    def _otel_queue_count_steward(tally):
         '''Coroutine function; this lets us both:
             - 1) easily pass in updated tally values via `send`
             - 2) accommodate OTel's spec of a "a generator that yields
@@ -70,10 +70,10 @@ def go():
             # CallbackOptions object that we'll want to ignore;
             # meanwhile type `int` means we sent in an updated tally value
             # ourselves.
-            if newtally and type(newtally) is int: tally = newtally
-    queue_count_steward = _queue_count_steward(-1)
-    next(queue_count_steward) # prime it.
-    meter.create_observable_gauge('redoer.queue.count', [queue_count_steward])
+            if newtally is not None and type(newtally) is int: tally = newtally
+    otel_queue_count_steward = _otel_queue_count_steward(-1)
+    next(otel_queue_count_steward) # prime it.
+    meter.create_observable_gauge('redoer.queue.count', [otel_queue_count_steward])
 
     log.info('Finished OTel setup.')
     # end OTel setup #
@@ -128,20 +128,21 @@ def go():
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
 
-                finish = time.perf_counter()
-                otel_msgs_counter.add(1,
-                    {'status': success_status,
-                    'service': 'redoer',
-                    'environment': RUNTIME_ENV})
-                otel_durations.record(finish - start,
-                    {'status':  success_status,
-                     'service': 'redoer',
-                     'environment': RUNTIME_ENV})
+                finally:
+                    finish = time.perf_counter()
+                    otel_msgs_counter.add(1,
+                        {'status': success_status,
+                        'service': 'redoer',
+                        'environment': RUNTIME_ENV})
+                    otel_durations.record(finish - start,
+                        {'status':  success_status,
+                         'service': 'redoer',
+                         'environment': RUNTIME_ENV})
 
             else:
                 try:
                     tally = sz_eng.count_redo_records()
-                    queue_count_steward.send(tally)
+                    otel_queue_count_steward.send(tally)
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + fmterr(sz_ret_err))
