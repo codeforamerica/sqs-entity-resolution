@@ -137,20 +137,10 @@ def go():
 
     receipt_handle = None
 
-    # Orderly clean-up logic if process is suddenly shut down.
     def clean_up(signum, frm):
-        '''Attempt to cleanly reset the visibility of the current in-flight
-        message before exiting. (It's possible we are exiting after
-        a message was deleted but the next has not yet been retrieved; that's ok'''
-        nonlocal sqs
-        nonlocal receipt_handle
         log.info('***************************')
         log.info('SIGINT or SIGTERM received.')
         log.info('***************************')
-        try:
-            make_msg_visible(sqs, Q_URL, receipt_handle)
-        except Exception as ex:
-            log.error(fmterr(ex))
         sys.exit(0)
     signal.signal(signal.SIGINT, clean_up)
     signal.signal(signal.SIGTERM, clean_up)
