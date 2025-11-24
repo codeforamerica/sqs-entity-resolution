@@ -12,6 +12,7 @@ log = retrieve_logger()
 from timeout_handling import *
 
 import otel
+import util
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -125,11 +126,6 @@ def register_data_source(data_source_name):
 
 #-------------------------------------------------------------------------------
 
-def parse_affected_entities_resp(resp):
-    '''Returns array of ints (entity IDs)'''
-    r = json.loads(resp)
-    return list(map(lambda m: m['ENTITY_ID'], r['AFFECTED_ENTITIES']))
-
 def go():
     '''Starts the Consumer process; runs indefinitely.'''
 
@@ -195,7 +191,7 @@ def go():
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
                 # TODO send affected entity IDs to tracker
-                affected = parse_affected_entities_resp(resp)
+                affected = util.parse_affected_entities_resp(resp)
             except KeyError as ke:
                 log.error(fmterr(ke))
                 make_msg_visible(sqs, Q_URL, receipt_handle)
