@@ -1,4 +1,10 @@
+# Usage:
+#   docker compose run tools python dev/check_export_tracker.py
+# To dump contents of export_tracker to stdout, run:
+#   docker compose run tools python dev/check_export_tracker.py dump
+
 import os
+import sys
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -25,6 +31,7 @@ try:
 except Exception as e:
     print(str(e))
 
+rslt = None
 try:
     curs.execute('select * from export_tracker')    
     rslt = curs.fetchall()
@@ -36,3 +43,6 @@ except Exception as e:
     print(str(e))
 
 print('==================================================')
+
+if len(sys.argv) == 2 and sys.argv[1] == 'dump':
+    print(rslt)
