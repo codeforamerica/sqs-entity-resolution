@@ -96,6 +96,9 @@ services:
     environment:
       AWS_PROFILE: localstack
       AWS_ENDPOINT_URL: http://localstack:4566
+      PGHOST: db
+      PGUSER: ${POSTGRES_USERNAME:-senzing}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
       Q_URL: http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-senzing-local-ingest
       SENZING_ENGINE_CONFIGURATION_JSON: >-
         {
@@ -122,6 +125,9 @@ services:
       db:
         condition: service_healthy
     environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USERNAME:-senzing}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
       SENZING_ENGINE_CONFIGURATION_JSON: >-
         {
           "PIPELINE": {
@@ -146,6 +152,9 @@ services:
     environment:
       AWS_PROFILE: localstack
       AWS_ENDPOINT_URL: http://localstack:4566
+      PGHOST: db
+      PGUSER: ${POSTGRES_USERNAME:-senzing}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
       S3_BUCKET_NAME: sqs-senzing-local-export
       SENZING_ENGINE_CONFIGURATION_JSON: >-
         {
