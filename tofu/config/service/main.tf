@@ -32,6 +32,7 @@ module "system" {
 
   database_subnets                     = split(",", module.inputs.values["vpc/private_subnets"])
   apply_database_updates_immediately   = var.apply_database_updates_immediately
+  database_admin_username              = var.database_admin_username
   database_instance_count              = var.database_instance_count
   database_instance_type               = var.database_instance_type
   database_password_rotation_frequency = var.database_password_rotation_frequency

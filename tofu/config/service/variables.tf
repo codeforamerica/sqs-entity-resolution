@@ -34,6 +34,12 @@ variable "consumer_message_threshold" {
   default     = 250000
 }
 
+variable "database_admin_username" {
+  type        = string
+  description = "Admin username for the database cluster."
+  default     = "root"
+}
+
 variable "database_instance_count" {
   type        = number
   description = "Number of instances in the database cluster."
