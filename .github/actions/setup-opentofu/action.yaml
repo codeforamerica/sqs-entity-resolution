@@ -35,12 +35,12 @@ runs:
           "consumer_container_max" "consumer_cpu" "consumer_memory"
           "consumer_message_threshold" "database_instance_count"
           "database_instance_type" "database_password_rotation_frequency"
-          "database_skip_final_snapshot" "deletion_protection"
-          "deployment_environments" "environment" "export_expiration"
-          "image_tags_mutable" "key_recovery_period" "log_level" "program"
-          "project" "queue_empty_threshold" "redoer_container_count"
-          "redoer_cpu" "redoer_memory" "region" "repository"
-          "senzing_license_base64"
+          "database_skip_final_snapshot" "database_admin_username"
+          "deletion_protection" "deployment_environments" "environment"
+          "export_expiration" "image_tags_mutable" "key_recovery_period"
+          "log_level" "program" "project" "queue_empty_threshold"
+          "redoer_container_count" "redoer_cpu" "redoer_memory" "region"
+          "repository" "senzing_license_base64"
         )
         for var in ${variables[@]}; do
           name="TF_VAR_$(echo $var | tr '[:lower:]' '[:upper:]')"

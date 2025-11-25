@@ -35,7 +35,7 @@ module "database" {
   kms_key_id                          = aws_kms_key.database.arn
   backup_retention_period             = 35
 
-  master_username                                        = "root"
+  master_username                                        = var.database_admin_username
   manage_master_user_password_rotation                   = true
   master_user_password_rotation_automatically_after_days = var.database_password_rotation_frequency
 
