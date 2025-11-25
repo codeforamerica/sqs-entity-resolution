@@ -46,3 +46,4 @@ print('==================================================')
 
 if len(sys.argv) == 2 and sys.argv[1] == 'dump':
     print(rslt)
+    print(f'Total: {len(rslt)}')
