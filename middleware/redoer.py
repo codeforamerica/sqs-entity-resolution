@@ -13,6 +13,9 @@ from timeout_handling import *
 import otel
 from opentelemetry import metrics
 
+import util
+import db
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -100,12 +103,18 @@ def go():
                 success_status = otel.FAILURE # initial default value
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                    sz_eng.process_redo_record(rcd)
+                    resp = sz_eng.process_redo_record(rcd, sz.SzEngineFlags.SZ_WITH_INFO)
                     cancel_alarm_timer()
                     success_status = otel.SUCCESS
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
+
+                    # Save affected entity IDs to tracker table for exporting later.
+                    affected = util.parse_affected_entities_resp(resp)
+                    for entity_id in affected: db.add_entity_id(entity_id)
+
                     continue
+
                 except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
                     log.error(SZ_TAG + fmterr(sz_ret_err))
