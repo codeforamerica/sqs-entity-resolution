@@ -32,7 +32,14 @@ S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 FOLDER_NAME = os.environ.get('FOLDER_NAME', 'exporter-outputs')
 RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
-EXPORT_FLAGS =  sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
+EXPORT_FLAGS = sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
+
+FULL_EXPORT_MODE = 'TODO' # grab from env var
+
+# The output file is accumulated chunk by chunk from Senzing; this is how
+# many bytes we put together before sending those combined chunks as a 'part'
+# to S3 via multipart S3 upload.
+BYTES_PER_PART = (1024 ** 2) * 10
 
 #-------------------------------------------------------------------------------
 
@@ -93,9 +100,6 @@ def go():
     log.info('Finished OTel setup.')
     # end OTel setup #
 
-    # init buffer
-    buff = io.BytesIO()
-
     # Retrieve output from sz into buff
     # sz will export JSONL lines; we add the chars necessary to make
     # the output as a whole be a single JSON blob.
@@ -104,41 +108,98 @@ def go():
     start = time.perf_counter()
     success_status = otel.FAILURE # initial default state
 
+    # For multipart S3 upload, S3 will hand back to us an etag for each
+    # part we upload to it. We need to accumulate the part IDs (which we
+    # set) and the etags (which S3 gives) and provide it all to S3 at the very
+    # end when wrapping up the upload.
+    # This is a list of maps:
+    part_ids_and_tags = []
+
+    FETCH_COMPLETE = False
+
+    key = FOLDER_NAME + '/' + build_output_filename()
+    upload_id = None
     try:
         export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
         log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
-        buff.write('['.encode('utf-8'))
+
+        mup_resp = s3.create_multipart_upload(
+            Bucket=S3_BUCKET_NAME,
+            ContentType='application/jsonl',
+            Key=key)
+
+        upload_id = mup_resp['UploadId']
+        log.debug(f'Initialized a multipart S3 upload. UploadId: {upload_id}')
+        print(mup_resp)
+
+        part_id = 0
+
+        # Each loop we put together a "part" of the file and send it to S3.
         while 1:
-            log.debug(SZ_TAG + 'Fetching chunk...')
-            chunk = sz_eng.fetch_next(export_handle)
-            if not chunk:
+            # init buffer
+            buff = io.BytesIO()
+            # Set up the ID for this particular part.
+            part_id += 1
+            # Inner loop lets us accumulate up to BYTES_PER_PART before
+            # sending off to S3.
+            while 1:
+                log.debug(SZ_TAG + 'Fetching chunk...')
+                chunk = sz_eng.fetch_next(export_handle)
+                if not chunk:
+                    FETCH_COMPLETE = True
+                    log.debug('Fetch from Senzing complete.')
+                else:
+                    buff.write(chunk.encode('utf-8'))
+                    log.debug('Wrote chunk to buffer.')
+                # Send this part to S3, and save the etag it gives us back.
+                if buff.getbuffer().nbytes >= BYTES_PER_PART or FETCH_COMPLETE:
+                    log.debug(f'Preparing and uploading part {part_id} to S3.')
+                    # rewind to start of buff
+                    buff.seek(0)
+                    buff.flush()
+                    resp = s3.upload_part(
+                        Bucket=S3_BUCKET_NAME,
+                        Key=key,
+                        UploadId=upload_id,
+                        PartNumber=part_id,
+                        Body=buff.read())
+                    log.debug(f'Sent part {part_id} to S3. ETag: {resp["ETag"]}')
+                    part_ids_and_tags.append({
+                        'PartNumber': part_id,
+                        'ETag': resp['ETag']})
+                    # We start wtih a new buff obj at next iteration.
+                    buff.close()
+                    break
+            # end inner while
+            if FETCH_COMPLETE:
                 break
-            buff.write(chunk.encode('utf-8'))
-            log.debug('Wrote chunk to buffer.')
-            buff.write(','.encode('utf-8'))
+        # end outer while
+
         sz_eng.close_export_report(export_handle)
-        log.info(SZ_TAG + 'Closed export handle.')
-        buff.seek(-1, os.SEEK_CUR) # toss out last comma
-        buff.write(']'.encode('utf-8'))
-        log.info('Total bytes exported/buffered: ' + str(buff.getbuffer().nbytes))
+        log.info(SZ_TAG + 'Closed Senzing export handle.')
+        # Wrap up the S3 upload via complete_multipart_upload
+        rslt = s3.complete_multipart_upload(
+            Bucket=S3_BUCKET_NAME,
+            Key=key,
+            MultipartUpload={'Parts':part_ids_and_tags},
+            UploadId=upload_id)
+        log.info('Finished uploading all parts to S3. All done.')
+        log.info(f'Full path in S3: {key}')
+
     except sz.SzError as err:
         log.error(SZ_TAG + fmterr(err))
+        if upload_id:
+            s3.abort_multipart_upload(
+                Bucket=S3_BUCKET_NAME,
+                Key=key,
+                UploadId=upload_id)
     except Exception as e:
         log.error(fmterr(e))
-
-    # rewind buffer
-    buff.seek(0)
-    buff.flush()
-
-    # write buff to S3 using upload_fileobj
-    full_path = FOLDER_NAME + '/' + build_output_filename()
-    log.info(AWS_TAG + 'About to upload JSON file ' + full_path + ' to S3 ...')
-    try:
-        s3.upload_fileobj(buff, S3_BUCKET_NAME, full_path)
-        log.info(AWS_TAG + 'Successfully uploaded file.')
-        success_status = otel.SUCCESS
-    except Exception as e:
-        log.error(AWS_TAG + fmterr(e))
+        if upload_id:
+            s3.abort_multipart_upload(
+                Bucket=S3_BUCKET_NAME,
+                Key=key,
+                UploadId=upload_id)
 
     finish = time.perf_counter()
     otel_exp_counter.add(1,

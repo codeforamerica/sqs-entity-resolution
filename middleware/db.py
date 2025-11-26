@@ -29,14 +29,31 @@ def add_entity_id(entity_id):
         _conn.commit()
     except Exception as e:
         _conn.rollback()
-        log.error(f'Failure to insert for entity ID: {entity_id}')
+        log.error(fmterr(e))
 
 def tag_todo_as_in_progress_and_retrieve():
     '''This function does two things:
     1. For all rows with status of EXPORT_STATUS_TODO, updates them
        to be EXPORT_STATUS_IN_PROGRESS.
     2. Returns a *distinct* (no duplicates) list of those entity IDs.'''
-    ...
+    out = []
+    log.debug('tag_todo_as_in_progress_and_retrieve called.')
+    try:
+        _curs.execute(
+            'update export_tracker set export_status = %s where export_status = %s',
+            [EXPORT_STATUS_TODO, EXPORT_STATUS_IN_PROGRESS])
+        log.debug('db update ran ok.')
+        _curs.execute(
+            'select distinct(entity_id) from export_tracker where export_status = %s',
+            [EXPORT_STATUS_IN_PROGESS])
+        out = list(map(lambda x: x[0], _curs.fetchall()))
+        log.debug('db select distinct ran ok.')
+        _conn.commit()
+        log.debug('db commit ran ok.')
+        return out
+    except Exception as e:
+        _conn.rollback()
+        log.error(fmterr(e))
 
 def tag_in_progress_as_done(export_id):
     '''For all rows with status of EXPORT_STATUS_IN_PROGRESS, updates them

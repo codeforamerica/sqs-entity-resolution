@@ -1,7 +1,9 @@
-# Usage:
+# Basic usage:
 #   docker compose run tools python dev/check_export_tracker.py
-# To dump contents of export_tracker to stdout, run:
+# To dump contents of export_tracker to stdout:
 #   docker compose run tools python dev/check_export_tracker.py dump
+# Choose which export_status (1, 2, or 3) to dump (default is 1):
+#   docker compose run tools python dev/check_export_tracker.py dump 2
 
 import os
 import sys
@@ -44,6 +46,12 @@ except Exception as e:
 
 print('==================================================')
 
-if len(sys.argv) == 2 and sys.argv[1] == 'dump':
+if len(sys.argv) > 1 and sys.argv[1] == 'dump':
     print(rslt)
     print(f'Total: {len(rslt)}')
+    export_status = sys.argv[2] if len(sys.argv) > 2 else 1 # 1 == EXPORT_STATUS_TODO
+    curs.execute('select distinct(entity_id) from export_tracker where export_status = %s',
+        export_status)
+    out = list(map(lambda x: x[0], curs.fetchall()))
+    print(type(out))
+    print(out)
