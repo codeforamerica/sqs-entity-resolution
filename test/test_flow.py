@@ -74,4 +74,4 @@ class TestFlow(unittest.TestCase):
         s.docker_down()
        
 if __name__ == '__main__':
-    unittest.main()    
+    unittest.main()

@@ -261,7 +261,7 @@ container):
 
 ```bash
 docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
---env LOG_LEVEL=DEBUG exporter
+--env LOG_LEVEL=DEBUG --env EXPORT_MODE=delta exporter
 ```
 
 - `AWS_PROFILE`
@@ -275,6 +275,9 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `EXPORT_MODE`
+  - Required
+  - Possible values: `delta` or `full`
 
 _Mounts in docker-compose.yaml:_
 

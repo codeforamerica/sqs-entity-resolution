@@ -11,6 +11,7 @@ from loglib import *
 log = retrieve_logger()
 
 import otel
+import db
 
 try:
     log.info('Importing senzing_core library . . .')
@@ -34,7 +35,12 @@ RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 EXPORT_FLAGS = sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
-FULL_EXPORT_MODE = 'TODO' # grab from env var
+EXPORT_MODE = os.environ['EXPORT_MODE'].lower()
+DELTA_MODE = None
+if EXPORT_MODE == 'delta':
+    DELTA_MODE = True
+else:
+    DELTA_MODE = False
 
 # The output file is accumulated chunk by chunk from Senzing; this is how
 # many bytes we put together before sending those combined chunks as a 'part'
@@ -64,6 +70,7 @@ def build_output_filename(tag='exporter-output', kind='json'):
     return (
         datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S-UTC")
         + '-' + tag
+        + '-' + EXPORT_MODE
         + '.' + kind)
 
 def go():
@@ -119,9 +126,21 @@ def go():
 
     key = FOLDER_NAME + '/' + build_output_filename()
     upload_id = None
+
+    # Specific to delta mode:
+    db_has_in_progress_rows = False
+    entity_ids = []
+    entity_ids_idx = -1
     try:
-        export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
-        log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
+
+        if DELTA_MODE:
+            entity_ids = db.shift_todo_to_in_progress_and_retrieve()
+            db_has_in_progress_rows = True
+            log.info('Successfully called db.shift_todo_to_in_progress_and_retrieve(); '
+                     + f'Total count of entity IDs in progress: {len(entity_ids)}')
+        else:
+            export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
+            log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
 
         mup_resp = s3.create_multipart_upload(
             Bucket=S3_BUCKET_NAME,
@@ -130,7 +149,7 @@ def go():
 
         upload_id = mup_resp['UploadId']
         log.debug(f'Initialized a multipart S3 upload. UploadId: {upload_id}')
-        print(mup_resp)
+        #print(mup_resp)
 
         part_id = 0
 
@@ -143,14 +162,28 @@ def go():
             # Inner loop lets us accumulate up to BYTES_PER_PART before
             # sending off to S3.
             while 1:
-                log.debug(SZ_TAG + 'Fetching chunk...')
-                chunk = sz_eng.fetch_next(export_handle)
-                if not chunk:
-                    FETCH_COMPLETE = True
-                    log.debug('Fetch from Senzing complete.')
+                chunk = ''
+                if DELTA_MODE:
+                    entity_ids_idx += 1
+                    if entity_ids_idx == len(entity_ids):
+                        FETCH_COMPLETE = True
+                        log.info('All entities have been fetched.')
+                    else:
+                        current_entity_id = entity_ids[entity_ids_idx]
+                        log.debug(f'Fetching info for entity ID {current_entity_id} ...')
+                        chunk = sz_eng.get_entity_by_entity_id(current_entity_id)
+                        buff.write(chunk.encode('utf-8'))
+                        buff.write("\n".encode('utf-8'))
+                        log.debug('Wrote chunk to buffer.')
                 else:
-                    buff.write(chunk.encode('utf-8'))
-                    log.debug('Wrote chunk to buffer.')
+                    log.debug(SZ_TAG + 'Fetching chunk...')
+                    chunk = sz_eng.fetch_next(export_handle)
+                    if not chunk:
+                        FETCH_COMPLETE = True
+                        log.info('Fetch from Senzing complete.')
+                    else:
+                        buff.write(chunk.encode('utf-8'))
+                        log.debug('Wrote chunk to buffer.')
                 # Send this part to S3, and save the etag it gives us back.
                 if buff.getbuffer().nbytes >= BYTES_PER_PART or FETCH_COMPLETE:
                     log.debug(f'Preparing and uploading part {part_id} to S3.')
@@ -175,8 +208,11 @@ def go():
                 break
         # end outer while
 
-        sz_eng.close_export_report(export_handle)
-        log.info(SZ_TAG + 'Closed Senzing export handle.')
+        if DELTA_MODE:
+            pass
+        else:
+            sz_eng.close_export_report(export_handle)
+            log.info(SZ_TAG + 'Closed Senzing export handle.')
         # Wrap up the S3 upload via complete_multipart_upload
         rslt = s3.complete_multipart_upload(
             Bucket=S3_BUCKET_NAME,
@@ -186,6 +222,9 @@ def go():
         log.info('Finished uploading all parts to S3. All done.')
         log.info(f'Full path in S3: {key}')
 
+        if DELTA_MODE:
+            db.shift_in_progress_to_done(export_id=key)
+
     except sz.SzError as err:
         log.error(SZ_TAG + fmterr(err))
         if upload_id:
@@ -193,6 +232,8 @@ def go():
                 Bucket=S3_BUCKET_NAME,
                 Key=key,
                 UploadId=upload_id)
+        if db_has_in_progress_rows:
+            db.rewind_in_progress_to_todo()
     except Exception as e:
         log.error(fmterr(e))
         if upload_id:
@@ -200,6 +241,8 @@ def go():
                 Bucket=S3_BUCKET_NAME,
                 Key=key,
                 UploadId=upload_id)
+        if db_has_in_progress_rows:
+            db.rewind_in_progress_to_todo()
 
     finish = time.perf_counter()
     otel_exp_counter.add(1,

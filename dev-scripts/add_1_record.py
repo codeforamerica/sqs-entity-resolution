@@ -8,7 +8,8 @@ from senzing_core import SzAbstractFactoryCore
 
 senzing_engine_configuration_json = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
-record = '{ "NAME_FULL": "ROBERT SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV" }'
+#record = '{ "NAME_FULL": "ROBERT SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV" }'
+record = '{"NAME_FIRST": "ERNEST", "NAME_LAST": "HEMINGWAY", "ADDR_FULL": "453 Orange Blossom Path, Key West FL"}'
 
 try:
   # Create a Senzing engine
@@ -25,7 +26,8 @@ try:
   print(response)
 
   # Search for entities
-  response = sz_engine.search_by_attributes('{"NAME_FIRST": "ROBERT", "NAME_LAST": "SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV"}')
+  #response = sz_engine.search_by_attributes('{"NAME_FIRST": "ROBERT", "NAME_LAST": "SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV"}')
+  response = sz_engine.search_by_attributes('{"NAME_FIRST": "ERNEST", "NAME_LAST": "HEMINGWAY"}')
 
   # Display result JSON
   print(response)

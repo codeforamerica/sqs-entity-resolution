@@ -24,7 +24,7 @@ _curs = _conn.cursor()
 
 def add_entity_id(entity_id):
     '''Inserts an entity_id into export_tracker with initial status of
-    EXPORT_STATUS_TODO.'''
+    EXPORT_STATUS_TODO. (Each row also gets a timestamp, added automatically by the db.)'''
     if type(entity_id) is not int: raise TypeError
     log.debug(f'Entity ID: {entity_id}')
     try:
@@ -36,22 +36,23 @@ def add_entity_id(entity_id):
         _conn.rollback()
         log.error(fmterr(e))
 
-def tag_todo_as_in_progress_and_retrieve():
+def shift_todo_to_in_progress_and_retrieve():
     '''This function does two things:
     1. For all rows with status of EXPORT_STATUS_TODO, updates them
        to be EXPORT_STATUS_IN_PROGRESS.
     2. Returns a *distinct* (no duplicates) list of those entity IDs.'''
     out = []
-    log.debug('tag_todo_as_in_progress_and_retrieve called.')
+    log.debug('shift_todo_to_in_progress_and_retrieve called.')
     try:
         _curs.execute(
             'update export_tracker set export_status = %s where export_status = %s',
-            [EXPORT_STATUS_TODO, EXPORT_STATUS_IN_PROGRESS])
+            [EXPORT_STATUS_IN_PROGRESS, EXPORT_STATUS_TODO])
         log.debug('db update ran ok.')
         _curs.execute(
             'select distinct(entity_id) from export_tracker where export_status = %s',
-            [EXPORT_STATUS_IN_PROGESS])
+            [EXPORT_STATUS_IN_PROGRESS])
         out = list(map(lambda x: x[0], _curs.fetchall()))
+        #print(out)
         log.debug('db select distinct ran ok.')
         _conn.commit()
         log.debug('db commit ran ok.')
@@ -60,17 +61,17 @@ def tag_todo_as_in_progress_and_retrieve():
         _conn.rollback()
         log.error(fmterr(e))
 
-def tag_in_progress_as_done(export_id=None):
+def shift_in_progress_to_done(export_id=None):
     '''For all rows with status of EXPORT_STATUS_IN_PROGRESS, updates them
     to be EXPORT_STATUS_DONE (and, optionally, updates their export_id value).
     Suggestion: export_id can be used to save the name of the output file that
     was exported.'''
-    log.debug('tag_in_progress_as_done called.')
+    log.debug('shift_in_progress_to_done called.')
     if export_id and type(export_id) is not str: raise TypeError
     try:
         _curs.execute(
             'update export_tracker set export_status = %s where export_status = %s',
-            [EXPORT_STATUS_IN_PROGRESS, EXPORT_STATUS_DONE])
+            [EXPORT_STATUS_DONE, EXPORT_STATUS_IN_PROGRESS])
         log.debug('db update export_status ran ok.')
         if export_id:
             _curs.execute('update export_tracker set export_id = %s', [export_id])
