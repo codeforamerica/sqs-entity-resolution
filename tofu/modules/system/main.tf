@@ -26,7 +26,7 @@ module "sqs" {
   create_dlq                        = true
 
   # Convert retention from days to seconds,
-  message_retention_seconds = message_expiration * 86400
+  message_retention_seconds = var.message_expiration * 86400
 
   tags = var.tags
 }
