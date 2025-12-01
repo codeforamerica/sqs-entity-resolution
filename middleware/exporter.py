@@ -35,7 +35,8 @@ RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 EXPORT_FLAGS = sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
 
-EXPORT_MODE = os.environ['EXPORT_MODE'].lower()
+EXPORT_MODE = os.environ.get('EXPORT_MODE', 'delta').lower()
+log.info(f"Export mode is: {EXPORT_MODE}")
 DELTA_MODE = None
 if EXPORT_MODE == 'delta':
     DELTA_MODE = True
