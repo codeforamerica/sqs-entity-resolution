@@ -27,6 +27,7 @@ module "system" {
   log_level              = var.log_level
   tags                   = local.tags
   vpc_id                 = module.inputs.values["vpc/id"]
+  message_expiration     = var.message_expiration
   queue_empty_threshold  = var.queue_empty_threshold
   senzing_license_base64 = var.senzing_license_base64
 

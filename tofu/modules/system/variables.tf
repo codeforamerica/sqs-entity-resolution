@@ -148,11 +148,6 @@ variable "key_recovery_period" {
   }
 }
 
-variable "logging_bucket" {
-  type        = string
-  description = "S3 bucket to use for log collection."
-}
-
 variable "log_level" {
   type        = string
   description = "Log level for all containers."
@@ -164,9 +159,25 @@ variable "log_level" {
   }
 }
 
+variable "logging_bucket" {
+  type        = string
+  description = "S3 bucket to use for log collection."
+}
+
 variable "logging_key_arn" {
   type        = string
   description = "ARN of the KMS key to use for log encryption."
+}
+
+variable "message_expiration" {
+  type        = number
+  description = "Number of days before messages in the SQS queues expire."
+  default     = 14
+
+  validation {
+    condition     = var.message_expiration > 0 && var.message_expiration < 15
+    error_message = "Message expiration must be between 1 and 14 days."
+  }
 }
 
 variable "otel_version" {
