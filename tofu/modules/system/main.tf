@@ -25,6 +25,9 @@ module "sqs" {
   kms_data_key_reuse_period_seconds = 3600
   create_dlq                        = true
 
+  # Convert retention from days to seconds,
+  message_retention_seconds = message_expiration * 86400
+
   tags = var.tags
 }
 

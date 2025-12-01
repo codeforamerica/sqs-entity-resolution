@@ -62,6 +62,7 @@ jobs:
           TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
           TF_VAR_KEY_RECOVERY_PERIOD: ${{ secrets.TF_VAR_KEY_RECOVERY_PERIOD }}
           TF_VAR_LOG_LEVEL: ${{ secrets.TF_VAR_LOG_LEVEL }}
+          TF_VAR_MESSAGE_EXPIRATION: ${{ secrets.TF_VAR_MESSAGE_EXPIRATION }}
           TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
           TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
           TF_VAR_QUEUE_EMPTY_THRESHOLD: ${{ secrets.TF_VAR_QUEUE_EMPTY_THRESHOLD }}
