@@ -22,7 +22,7 @@ COPY docker/motd-banner.sh /etc/profile.d/motd-banner.sh
 RUN echo "/etc/profile.d/motd-banner.sh" >> /root/.bashrc
 
 # Right now, this just copies create-export-tracker-table.sql
-COPY sql/* /
+COPY docker/sql/* /
 
 # Add a new user and switch to it.
 RUN useradd -m -u 1001 senzing && \

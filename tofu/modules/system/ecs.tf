@@ -96,11 +96,14 @@ module "consumer" {
     LOG_LEVEL : var.log_level
     OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
+    PGHOST : module.database.cluster_endpoint
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
   }
 
   environment_secrets = {
+    PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
+    PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
     SENZING_ENGINE_CONFIGURATION_JSON = aws_ssm_parameter.senzing_config.arn
   }
 
@@ -141,11 +144,14 @@ module "redoer" {
     LOG_LEVEL : var.log_level
     OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
+    PGHOST : module.database.cluster_endpoint
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
   }
 
   environment_secrets = {
+    PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
+    PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
     SENZING_ENGINE_CONFIGURATION_JSON = aws_ssm_parameter.senzing_config.arn
   }
 
@@ -177,12 +183,15 @@ module "exporter" {
     LOG_LEVEL : var.log_level
     OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
+    PGHOST : module.database.cluster_endpoint
     Q_URL : module.sqs.queue_url
     RUNTIME_ENV : var.environment
     S3_BUCKET_NAME : module.s3.bucket
   }
 
   environment_secrets = {
+    PGPASSWORD : "${module.database.cluster_master_user_secret[0].secret_arn}:password::"
+    PGUSER : "${module.database.cluster_master_user_secret[0].secret_arn}:username::"
     SENZING_ENGINE_CONFIGURATION_JSON = aws_ssm_parameter.senzing_config.arn
   }
 
