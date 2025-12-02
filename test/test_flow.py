@@ -12,6 +12,10 @@ S3_BUCKET_NAME = 'sqs-senzing-local-export'
 CUSTOMERS_FILENAME = 'test/fixtures/customers.jsonl'
 EXPECTED_OUTPUT_FILENAME = 'test/fixtures/flow-output.json'
 
+# After loading SQS, duration in seconds to wait for consumer/redoer/expoter
+# to fully process data
+PROCESSING_DURATION = 40
+
 def slurp_jsonl_data(fname):
     with open(fname) as f:
         return list(map(json.loads, f.readlines())) 
@@ -27,7 +31,7 @@ class TestFlow(unittest.TestCase):
         s.assertEqual(ret, 0)    
         ret = subprocess.run(['docker', 'compose', 'rm', '-v', '-f']).returncode
         s.assertEqual(ret, 0)    
-        ret = subprocess.run(['docker', 'compose', 'build']).returncode
+        ret = subprocess.run(['docker', 'compose', '--profile', "'*'", 'build']).returncode
         s.assertEqual(ret, 0)    
         ret = subprocess.run(['docker', 'compose', 'up', '-d']).returncode
         s.assertEqual(ret, 0)    
@@ -56,7 +60,7 @@ class TestFlow(unittest.TestCase):
         sess = boto3.Session(profile_name=AWS_PROFILE)
         s3 = sess.client('s3')
         info = s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix='exporter-outputs/')
-        s.assertEqual(info['KeyCount'], 1)
+        s.assertEqual(info['KeyCount'], 1) # Check that one file made it into S3.
         key = info['Contents'][0]['Key'] 
         output = json.loads(s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read())
         expected = slurp_json_data(EXPECTED_OUTPUT_FILENAME)
@@ -68,7 +72,7 @@ class TestFlow(unittest.TestCase):
         print('Loading data into SQS ...')
         s.load_data_into_sqs()
         print('Pausing to allow consumer / redoer / exporter to process...')
-        time.sleep(15)
+        time.sleep(PROCESSING_DURATION)
         print('Comparing actual with expected ...')
         s.verify_output()
         s.docker_down()

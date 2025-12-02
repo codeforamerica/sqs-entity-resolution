@@ -21,6 +21,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      tools:
+        condition: service_completed_successfully
     environment:
       SENZING_TOOLS_DATASOURCES: PEOPLE
       SENZING_TOOLS_ENGINE_CONFIGURATION_JSON: >-
@@ -56,7 +58,8 @@ services:
       context: .
       dockerfile: Dockerfile.tools
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       AWS_ENDPOINT_URL: http://localstack:4566
       PGHOST: db
@@ -93,6 +96,8 @@ services:
         condition: service_healthy
       localstack:
         condition: service_healthy
+      tools:
+        condition: service_completed_successfully
     environment:
       AWS_PROFILE: localstack
       AWS_ENDPOINT_URL: http://localstack:4566
@@ -124,7 +129,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      tools:
+        condition: service_completed_successfully
     environment:
+      LOG_LEVEL: DEBUG
+      ENABLE_OTEL_EMITS: 0
       PGHOST: db
       PGUSER: ${POSTGRES_USERNAME:-senzing}
       PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
@@ -147,8 +156,12 @@ services:
       context: .
       dockerfile: Dockerfile.exporter
     depends_on:
-      - db
-      - localstack
+      db:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      tools:
+        condition: service_completed_successfully
     environment:
       AWS_PROFILE: localstack
       AWS_ENDPOINT_URL: http://localstack:4566
@@ -169,6 +182,7 @@ services:
             "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
           }
         }
+    profiles: [exporter]
     volumes:
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.

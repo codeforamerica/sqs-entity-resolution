@@ -30,10 +30,14 @@ RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 # How long to wait before attempting next Senzing op.
 WAIT_SECONDS = int(os.environ.get('WAIT_SECONDS', 10))
+log.info(f'WAIT_SECONDS is: {WAIT_SECONDS}')
 
 # How many times to attempt process_redo_record before giving up and moving on
 # (see README).
 MAX_REDO_ATTEMPTS = int(os.environ.get('MAX_REDO_ATTEMPTS', 20))
+
+ENABLE_OTEL_EMITS = int(os.environ.get('ENABLE_OTEL_EMITS', 1))
+log.info(f'ENABLE_OTEL_EMITS is: {ENABLE_OTEL_EMITS}')
 
 #-------------------------------------------------------------------------------
 
@@ -55,30 +59,31 @@ def go():
         log.error(fmterr(e))
 
     # OTel setup #
-    log.info('Starting OTel setup.')
-    meter = otel.init('redoer')
-    otel_msgs_counter = meter.create_counter('redoer.messages.count')
-    otel_durations = meter.create_histogram('redoer.messages.duration')
+    if ENABLE_OTEL_EMITS:
+        log.info('Starting OTel setup.')
+        meter = otel.init('redoer')
+        otel_msgs_counter = meter.create_counter('redoer.messages.count')
+        otel_durations = meter.create_histogram('redoer.messages.duration')
 
-    def _otel_queue_count_steward(tally):
-        '''Coroutine function; this lets us both:
-            - 1) easily pass in updated tally values via `send`
-            - 2) accommodate OTel's spec of a "a generator that yields
-                 iterables of Observation"
-         Ref: https://opentelemetry-python.readthedocs.io/en/latest/api/metrics.html#opentelemetry.metrics.Meter.create_observable_gauge
-        '''
-        while 1:
-            newtally = yield [metrics.Observation(tally)]
-            # We check the type b/c OTel internals will send in a
-            # CallbackOptions object that we'll want to ignore;
-            # meanwhile type `int` means we sent in an updated tally value
-            # ourselves.
-            if newtally is not None and type(newtally) is int: tally = newtally
-    otel_queue_count_steward = _otel_queue_count_steward(-1)
-    next(otel_queue_count_steward) # prime it.
-    meter.create_observable_gauge('redoer.queue.count', [otel_queue_count_steward])
+        def _otel_queue_count_steward(tally):
+            '''Coroutine function; this lets us both:
+                - 1) easily pass in updated tally values via `send`
+                - 2) accommodate OTel's spec of a "a generator that yields
+                     iterables of Observation"
+             Ref: https://opentelemetry-python.readthedocs.io/en/latest/api/metrics.html#opentelemetry.metrics.Meter.create_observable_gauge
+            '''
+            while 1:
+                newtally = yield [metrics.Observation(tally)]
+                # We check the type b/c OTel internals will send in a
+                # CallbackOptions object that we'll want to ignore;
+                # meanwhile type `int` means we sent in an updated tally value
+                # ourselves.
+                if newtally is not None and type(newtally) is int: tally = newtally
+        otel_queue_count_steward = _otel_queue_count_steward(-1)
+        next(otel_queue_count_steward) # prime it.
+        meter.create_observable_gauge('redoer.queue.count', [otel_queue_count_steward])
 
-    log.info('Finished OTel setup.')
+        log.info('Finished OTel setup.')
     # end OTel setup #
 
     log.info('Starting primary loop.')
@@ -103,7 +108,9 @@ def go():
                 success_status = otel.FAILURE # initial default value
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
+                    log.debug('Calling process_redo_record ...')
                     resp = sz_eng.process_redo_record(rcd, sz.SzEngineFlags.SZ_WITH_INFO)
+                    log.debug('Successfully called process_redo_record.')
                     cancel_alarm_timer()
                     success_status = otel.SUCCESS
                     have_rcd = 0
@@ -139,19 +146,22 @@ def go():
 
                 finally:
                     finish = time.perf_counter()
-                    otel_msgs_counter.add(1,
-                        {'status': success_status,
-                        'service': 'redoer',
-                        'environment': RUNTIME_ENV})
-                    otel_durations.record(finish - start,
-                        {'status':  success_status,
-                         'service': 'redoer',
-                         'environment': RUNTIME_ENV})
+                    if ENABLE_OTEL_EMITS:
+                        otel_msgs_counter.add(1,
+                            {'status': success_status,
+                            'service': 'redoer',
+                            'environment': RUNTIME_ENV})
+                        otel_durations.record(finish - start,
+                            {'status':  success_status,
+                             'service': 'redoer',
+                             'environment': RUNTIME_ENV})
 
             else:
                 try:
+                    log.debug('Calling count_redo_records ...')
                     tally = sz_eng.count_redo_records()
-                    otel_queue_count_steward.send(tally)
+                    if ENABLE_OTEL_EMITS:
+                        otel_queue_count_steward.send(tally)
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + fmterr(sz_ret_err))
@@ -163,6 +173,7 @@ def go():
                 if tally:
 
                     try:
+                        log.debug('Calling get_redo_record ...')
                         rcd = sz_eng.get_redo_record()
                         if rcd:
                             have_rcd = 1
