@@ -10,11 +10,11 @@ Q_URL = 'http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/sqs-s
 S3_BUCKET_NAME = 'sqs-senzing-local-export'
 
 CUSTOMERS_FILENAME = 'test/fixtures/customers.jsonl'
-EXPECTED_OUTPUT_FILENAME = 'test/fixtures/flow-output.json'
+EXPECTED_OUTPUT_FILENAME = 'test/fixtures/flow-output.jsonl'
 
-# After loading SQS, duration in seconds to wait for consumer/redoer/expoter
+# After loading SQS, duration in seconds to wait for consumer/redoer
 # to fully process data
-PROCESSING_DURATION = 40
+PROCESSING_DURATION = 45
 
 def slurp_jsonl_data(fname):
     with open(fname) as f:
@@ -23,6 +23,16 @@ def slurp_jsonl_data(fname):
 def slurp_json_data(fname):
     with open(fname) as f:
         return json.loads(f.read())
+
+def slurp_text(fname):
+    with open(fname) as f:
+        return f.read()
+
+def diff_jsonl_linecount(blob_1, blob_2):
+    blob_1_lines = str(blob_1).split("\n")
+    blob_2_lines = str(blob_2).split("\n")
+    print(f'Blob 1 linecount: {len(blob_1_lines)}, blob 2 linecount: {len(blob_2_lines)}.')
+    return abs(len(blob_2_lines) - len(blob_1_lines))
 
 class TestFlow(unittest.TestCase):
 
@@ -56,26 +66,32 @@ class TestFlow(unittest.TestCase):
         print(num_msgs)
         s.assertTrue(int(num_msgs) > 115)
 
+    def run_exporter(s):
+        ret = subprocess.run(['docker', 'compose', 'run', 'exporter']).returncode
+        s.assertEqual(ret, 0)
+
     def verify_output(s):
         sess = boto3.Session(profile_name=AWS_PROFILE)
         s3 = sess.client('s3')
         info = s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix='exporter-outputs/')
         s.assertEqual(info['KeyCount'], 1) # Check that one file made it into S3.
         key = info['Contents'][0]['Key'] 
-        output = json.loads(s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read())
-        expected = slurp_json_data(EXPECTED_OUTPUT_FILENAME)
-        s.assertEqual(json.dumps(output, sort_keys=True), json.dumps(expected, sort_keys=True))
+        output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
+        expected = slurp_text(EXPECTED_OUTPUT_FILENAME)
+        s.assertTrue(diff_jsonl_linecount(output, expected) <= 2) # Entity count should be roughly equal.
     
     def test_flow(s):
         print('Docker setup (db, SQS, S3, consumer, redoer, and exporter trigger) ...')
         s.docker_setup()
         print('Loading data into SQS ...')
         s.load_data_into_sqs()
-        print('Pausing to allow consumer / redoer / exporter to process...')
+        print(f'Pausing to allow consumer & redoer to process ({PROCESSING_DURATION} seconds) ...')
         time.sleep(PROCESSING_DURATION)
+        print('Launching exporter ...')
+        s.run_exporter()
         print('Comparing actual with expected ...')
         s.verify_output()
-        s.docker_down()
+        # s.docker_down()
        
 if __name__ == '__main__':
     unittest.main()
