@@ -64,9 +64,9 @@ def make_s3_client():
     except Exception as e:
         log.error(AWS_TAG + fmterr(e))
 
-def build_output_filename(tag='exporter-output', kind='json'):
+def build_output_filename(tag='exporter-output', kind='jsonl'):
     '''Returns a str, e.g.,
-        '2025-10-07T23:15:54-UTC-exporter-output.json'
+        '2025-10-07T23:15:54-UTC-exporter-output.jsonl'
     '''
     return (
         datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S-UTC")

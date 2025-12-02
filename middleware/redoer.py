@@ -45,6 +45,7 @@ def go():
     '''Starts the Redoer process; runs indefinitely.'''
 
     sz_eng = None
+    sz_factory = None
     try:
         sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
 
@@ -133,6 +134,17 @@ def go():
                                   + ' for this record; dropping on the floor and moving on.')
                     time.sleep(WAIT_SECONDS)
                     continue
+                except sz.SzUnknownDataSourceError as sz_ds_err:
+                    # I'm not sure why this error could ever happen here, but it can.
+                    # The solution is to re-init the Sz config.
+                    log.error(SZ_TAG + fmterr(sz_ds_err))
+                    sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
+                    sz_config_mgr = sz_factory.create_configmanager()
+                    default_config_id = sz_config_mgr.get_default_config_id()
+                    sz_factory.reinitialize(default_config_id)
+                    log.info(SZ_TAG + 'Re-initialized Senzing config to address SzUnknownDataSourceError.')
+                    time.sleep(1)
+                    continue
                 except LongRunningCallTimeoutEx as lrex:
                     # Abandon and move on.
                     have_rcd = 0
@@ -141,8 +153,10 @@ def go():
                         type(lrex).__qualname__,
                         SZ_CALL_TIMEOUT_SECONDS,
                         receipt_handle))
+                    time.sleep(1)
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
+                    time.sleep(1)
 
                 finally:
                     finish = time.perf_counter()
@@ -169,6 +183,7 @@ def go():
                     continue
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
+                    time.sleep(1)
 
                 if tally:
 
@@ -187,8 +202,10 @@ def go():
                     except sz.SzRetryableError as sz_ret_err:
                         # No additional action needed; we'll just try getting again.
                         log.error(SZ_TAG + fmterr(sz_ret_err))
+                        time.sleep(1)
                     except sz.SzError as sz_err:
                         log.error(SZ_TAG + fmterr(sz_err))
+                        time.sleep(1)
 
                 else:
                     log.debug('No redo records. Will wait ' + str(WAIT_SECONDS) + ' seconds.')
@@ -196,6 +213,7 @@ def go():
 
         except Exception as e:
             log.error(fmterr(e))
+            time.sleep(1)
 
 #-------------------------------------------------------------------------------
 
