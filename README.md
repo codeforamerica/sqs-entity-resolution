@@ -208,6 +208,9 @@ _Environment variables (see docker-compose.yaml):_
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 _Mounts in docker-compose.yaml:_
 
@@ -253,6 +256,9 @@ _Environment variables:_
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 ### Exporter
 
@@ -278,6 +284,9 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
 - `EXPORT_MODE`
   - Default is `delta`
   - Possible values: `delta` or `full`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 _Mounts in docker-compose.yaml:_
 
