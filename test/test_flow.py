@@ -41,7 +41,9 @@ class TestFlow(unittest.TestCase):
         s.assertEqual(ret, 0)    
         ret = subprocess.run(['docker', 'compose', 'rm', '-v', '-f']).returncode
         s.assertEqual(ret, 0)    
-        ret = subprocess.run(['docker', 'compose', '--profile', "'*'", 'build']).returncode
+        ret = subprocess.run(['docker', 'compose', 'build']).returncode
+        s.assertEqual(ret, 0)
+        ret = subprocess.run(['docker', 'compose', '--profile', 'exporter', 'build']).returncode
         s.assertEqual(ret, 0)    
         ret = subprocess.run(['docker', 'compose', 'up', '-d']).returncode
         s.assertEqual(ret, 0)    
@@ -79,6 +81,14 @@ class TestFlow(unittest.TestCase):
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
         expected = slurp_text(EXPECTED_OUTPUT_FILENAME)
         s.assertTrue(diff_jsonl_linecount(output, expected) <= 2) # Entity count should be roughly equal.
+        s.assertTrue(74 <= len(str(output).split("\n")) <= 76) # Testing entity count another way.
+
+    def verify_delta_export(s):
+        # Add a record
+        # Run delta, confirm 1 entity.
+        # Run again, confirm export file is empty.
+        # Run a full export, confirm has all entities.
+        ...
     
     def test_flow(s):
         print('Docker setup (db, SQS, S3, consumer, redoer, and exporter trigger) ...')

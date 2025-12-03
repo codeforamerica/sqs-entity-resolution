@@ -74,6 +74,7 @@ services, e.g.:
 
    ```bash
    docker compose build
+   docker compose --profile exporter build
    ```
 
 1. Start the services:
@@ -229,7 +230,7 @@ _Required record keys:_
 Similar to the consumer, the redoer is also a continually-running process.
 
 ```bash
-docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
+docker compose run redoer
 ```
 
 _Environment variables:_
@@ -266,8 +267,7 @@ Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
 
 ```bash
-docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
---env LOG_LEVEL=DEBUG --env EXPORT_MODE=delta exporter
+docker compose run exporter
 ```
 
 - `AWS_PROFILE`
@@ -309,13 +309,17 @@ this URL:
 Tests are located in the `test/` folder. The overall flow is tested using
 LocalStack components.
 
-Create a virtualenv and install dependencies:
+One-time setup -- create a virtualenv and install dependencies:
 
     mkdir venv
     # Use the Python runtime of your choice
     ~/pythons/python-3.12.6/bin/python3.12 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
+
+Before each run, activate the virtualenv:
+
+    source venv/bin/activate
 
 Run tests:
 

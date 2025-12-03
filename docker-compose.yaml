@@ -99,6 +99,7 @@ services:
       tools:
         condition: service_completed_successfully
     environment:
+      LOG_LEVEL: DEBUG
       AWS_PROFILE: localstack
       AWS_ENDPOINT_URL: http://localstack:4566
       PGHOST: db

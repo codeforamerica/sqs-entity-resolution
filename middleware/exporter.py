@@ -226,6 +226,8 @@ def go():
         if DELTA_MODE:
             db.shift_in_progress_to_done(export_id=key)
 
+        success_status = otel.SUCCESS
+
     except sz.SzError as err:
         log.error(SZ_TAG + fmterr(err))
         if upload_id:
@@ -245,15 +247,16 @@ def go():
         if db_has_in_progress_rows:
             db.rewind_in_progress_to_todo()
 
-    finish = time.perf_counter()
-    otel_exp_counter.add(1,
-        {'status': success_status,
-        'service': 'exporter',
-        'environment': RUNTIME_ENV})
-    otel_duration.record(finish - start,
-        {'status':  success_status,
-         'service': 'exporter',
-         'environment': RUNTIME_ENV})
+    finally:
+        finish = time.perf_counter()
+        otel_exp_counter.add(1,
+            {'status': success_status,
+            'service': 'exporter',
+            'environment': RUNTIME_ENV})
+        otel_duration.record(finish - start,
+            {'status':  success_status,
+             'service': 'exporter',
+             'environment': RUNTIME_ENV})
 
 #-------------------------------------------------------------------------------
 
