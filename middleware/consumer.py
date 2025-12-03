@@ -222,6 +222,9 @@ def go():
                 # config to move out-of-order messages into the DLQ at some point.
                 make_msg_visible(sqs, Q_URL, receipt_handle)
                 success_status = otel.FAILURE
+            except Exception as e:
+                log.error(fmterr(e))
+                success_status = otel.FAILURE
 
             # Lastly, delete msg if no errors.
             else:
