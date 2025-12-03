@@ -172,10 +172,13 @@ def go():
                     else:
                         current_entity_id = entity_ids[entity_ids_idx]
                         log.debug(f'Fetching info for entity ID {current_entity_id} ...')
-                        chunk = sz_eng.get_entity_by_entity_id(current_entity_id)
-                        buff.write(chunk.encode('utf-8'))
-                        buff.write("\n".encode('utf-8'))
-                        log.debug('Wrote chunk to buffer.')
+                        try:
+                            chunk = sz_eng.get_entity_by_entity_id(current_entity_id)
+                            buff.write(chunk.encode('utf-8'))
+                            buff.write("\n".encode('utf-8'))
+                            log.debug('Wrote chunk to buffer.')
+                        except SzNotFoundError as sz_not_found_err:
+                            log.debug(f'Entity {current_entity_id} has been deleted. Skipping.')
                 else:
                     log.debug(SZ_TAG + 'Fetching chunk...')
                     chunk = sz_eng.fetch_next(export_handle)
