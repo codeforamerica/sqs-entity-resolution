@@ -177,7 +177,7 @@ def go():
                             buff.write(chunk.encode('utf-8'))
                             buff.write("\n".encode('utf-8'))
                             log.debug('Wrote chunk to buffer.')
-                        except SzNotFoundError as sz_not_found_err:
+                        except sz.SzNotFoundError as sz_not_found_err:
                             log.debug(f'Entity {current_entity_id} has been deleted. Skipping.')
                 else:
                     log.debug(SZ_TAG + 'Fetching chunk...')
