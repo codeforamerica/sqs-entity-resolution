@@ -23,10 +23,12 @@ try:
   response = sz_engine.get_entity_by_record_id("TEST", "1")
 
   # Display entity JSON
+  print('Output for get_entity_by_record_id:')
   print(response)
 
   # Search for entities
   #response = sz_engine.search_by_attributes('{"NAME_FIRST": "ROBERT", "NAME_LAST": "SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV"}')
+  print('Output for search_by_attributes:')
   response = sz_engine.search_by_attributes('{"NAME_FIRST": "ERNEST", "NAME_LAST": "HEMINGWAY"}')
 
   # Display result JSON

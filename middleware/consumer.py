@@ -180,7 +180,7 @@ def go():
             rcd = json.loads(body)
 
             start = time.perf_counter()
-            success_status = otel.FAILURE # initial default value
+            success_status = otel.UNKNOWN # if this shows up in the logs, there's a logic error
 
             try:
                 # Process and send to Senzing.
@@ -188,7 +188,6 @@ def go():
                 resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
                                          sz.SzEngineFlags.SZ_WITH_INFO)
                 cancel_alarm_timer()
-                success_status = otel.SUCCESS
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '
                          + receipt_handle)
 
@@ -197,40 +196,47 @@ def go():
                 log.debug(SZ_TAG + 'Affected entities: ' + str(affected))
                 for entity_id in affected: db.add_entity_id(entity_id)
 
+                success_status = otel.SUCCESS
+
             except KeyError as ke:
                 log.error(fmterr(ke))
                 make_msg_visible(sqs, Q_URL, receipt_handle)
+                success_status = otel.FAILURE
             except sz.SzUnknownDataSourceError as sz_uds_err:
-                log.info(SZ_TAG + str(sz_uds_err))
+                log.error(SZ_TAG + fmterr(sz_uds_err))
                 # Encountered a new data source name; register it.
                 register_data_source(rcd['DATA_SOURCE'])
                 # Toss back message for now.
                 make_msg_visible(sqs, Q_URL, receipt_handle)
+                success_status = otel.FAILURE
             except LongRunningCallTimeoutEx as lrex:
                 log.error(build_sz_timeout_msg(
                     type(lrex).__module__,
                     type(lrex).__qualname__,
                     SZ_CALL_TIMEOUT_SECONDS,
                     receipt_handle))
+                success_status = otel.FAILURE
             except sz.SzError as sz_err:
                 log.error(SZ_TAG + DLQ_TAG + fmterr(sz_err))
                 # "Toss back" this message to be re-consumed; we rely on AWS
                 # config to move out-of-order messages into the DLQ at some point.
                 make_msg_visible(sqs, Q_URL, receipt_handle)
+                success_status = otel.FAILURE
 
             # Lastly, delete msg if no errors.
             else:
                 del_msg(sqs, Q_URL, receipt_handle)
 
-            finish = time.perf_counter()
-            otel_msgs_counter.add(1,
-                {'status': success_status,
-                'service': 'consumer',
-                'environment': RUNTIME_ENV})
-            otel_durations.record(finish - start,
-                {'status':  success_status,
-                 'service': 'consumer',
-                 'environment': RUNTIME_ENV})
+            finally:
+                finish = time.perf_counter()
+                otel_msgs_counter.add(1,
+                    {'status': success_status,
+                    'service': 'consumer',
+                    'environment': RUNTIME_ENV})
+                otel_durations.record(finish - start,
+                    {'status':  success_status,
+                     'service': 'consumer',
+                     'environment': RUNTIME_ENV})
 
         except Exception as e:
             log.error(fmterr(e))
