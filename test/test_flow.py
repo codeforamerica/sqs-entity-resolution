@@ -16,6 +16,9 @@ EXPECTED_OUTPUT_FILENAME = 'test/fixtures/flow-output.jsonl'
 # to fully process data
 PROCESSING_DURATION = 45
 
+FULL = 'full'
+DELTA = 'delta'
+
 def slurp_jsonl_data(fname):
     with open(fname) as f:
         return list(map(json.loads, f.readlines())) 
@@ -68,8 +71,12 @@ class TestFlow(unittest.TestCase):
         print(num_msgs)
         s.assertTrue(int(num_msgs) > 115)
 
-    def run_exporter(s):
-        ret = subprocess.run(['docker', 'compose', 'run', 'exporter']).returncode
+    def run_exporter(s, mode=None):
+        ret = None
+        if mode: 
+            ret = subprocess.run(['docker', 'compose', 'run', '--env', f'EXPORT_MODE={mode}', 'exporter']).returncode
+        else:
+            ret = subprocess.run(['docker', 'compose', 'run', 'exporter']).returncode
         s.assertEqual(ret, 0)
 
     def verify_output(s):
@@ -85,10 +92,18 @@ class TestFlow(unittest.TestCase):
 
     def verify_delta_export(s):
         # Add a record
+        # docker compose run tools python dev/add_1_record.py
+        ret = subprocess.run(['docker', 'compose', 'run', 'tools', 'python', 'dev/add_1_record.py']).returncode
+        s.assertEqual(ret, 0)
         # Run delta, confirm 1 entity.
+        s.run_exporter(DELTA)
+        s.assertEqual(ret, 0)
+        sess = boto3.Session(profile_name=AWS_PROFILE)
+        s3 = sess.client('s3')
+        info = s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix='exporter-outputs/')
+        s.assertEqual(info['KeyCount'], 2) # Should be 2 files in S3 now.
         # Run again, confirm export file is empty.
         # Run a full export, confirm has all entities.
-        ...
     
     def test_flow(s):
         print('Docker setup (db, SQS, S3, consumer, redoer, and exporter trigger) ...')
@@ -101,6 +116,8 @@ class TestFlow(unittest.TestCase):
         s.run_exporter()
         print('Comparing actual with expected ...')
         s.verify_output()
+        print('Exercise delta export functionality ...')
+        s.verify_delta_export()
         # s.docker_down()
        
 if __name__ == '__main__':
