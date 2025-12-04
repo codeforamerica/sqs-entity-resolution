@@ -257,6 +257,9 @@ _Environment variables:_
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `ENABLE_OTEL_EMITS`
+  - Optional, defaults to `1`
+  - Values can be either `0` or `1`
 - `PGUSER`
 - `PGPASSWORD`
 - `PGHOST`

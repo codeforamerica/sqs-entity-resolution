@@ -1,6 +1,4 @@
 CREATE DATABASE sqs_entity_resolution;
-    --WITH
-    --OWNER = senzing;
 
 \connect sqs_entity_resolution
 
