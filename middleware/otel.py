@@ -13,7 +13,7 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader)
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
-INTERVAL_MS = 5000
+INTERVAL_MS = 30000
 
 def init(service_name):
     '''Perform general OTel setup and return meter obj.'''
@@ -33,3 +33,4 @@ def init(service_name):
 
 SUCCESS = 'success'
 FAILURE = 'failure'
+UNKNOWN = 'unknown'
