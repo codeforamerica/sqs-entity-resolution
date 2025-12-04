@@ -35,6 +35,7 @@ def add_entity_id(entity_id):
     except Exception as e:
         _conn.rollback()
         log.error(fmterr(e))
+        raise e
 
 def shift_todo_to_in_progress_and_retrieve():
     '''This function does two things:
@@ -60,6 +61,7 @@ def shift_todo_to_in_progress_and_retrieve():
     except Exception as e:
         _conn.rollback()
         log.error(fmterr(e))
+        raise e
 
 def shift_in_progress_to_done(export_id=None):
     '''For all rows with status of EXPORT_STATUS_IN_PROGRESS, updates them
@@ -81,6 +83,7 @@ def shift_in_progress_to_done(export_id=None):
     except Exception as e:
         _conn.rollback()
         log.error(fmterr(e))
+        raise e
 
 def rewind_in_progress_to_todo():
     log.debug('rewind_in_progress_to_todo called.')
@@ -94,3 +97,4 @@ def rewind_in_progress_to_todo():
     except Exception as e:
         _conn.rollback()
         log.error(fmterr(e))
+        raise e
