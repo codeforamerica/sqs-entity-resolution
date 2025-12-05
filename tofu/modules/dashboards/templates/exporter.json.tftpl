@@ -9,7 +9,7 @@
       "properties": {
         "metrics": [
           [ { "expression": "FILL(m2, 0)", "label": "Failed", "id": "e2", "color": "#d62728" } ],
-          [ { "expression": "FILL(m1, 0)", "label": "Sucedded", "id": "e1", "color": "#2ca02c" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "Succeeded", "id": "e1", "color": "#2ca02c" } ],
           [ "${project}/${environment}", "exporter.export.duration", "environment", "${environment}", "service", "exporter", "OTelLib", "exporter.meter", "status", "success", { "region": "${region}", "label": "success", "color": "#2ca02c", "id": "m1", "stat": "Maximum", "visible": false } ],
           [ "...", "failure", { "region": "${region}", "label": "failure", "id": "m2", "stat": "Maximum", "visible": false } ]
         ],
@@ -175,7 +175,7 @@
         "region": "${region}",
         "stat": "Average",
         "period": 60,
-        "title": "Avergage CPU %",
+        "title": "Average CPU %",
         "yAxis": {
           "left": {
             "label": "%",
@@ -299,7 +299,7 @@
       "height": 4,
       "properties": {
         "metrics": [
-          [ { "expression": "FILL(m1, 0)", "label": "Exports", "id": "e1", "color": "#2ca02c" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "Exports", "id": "e1", "color": "#2ca02c", "region": "${region}" } ],
           [ "${project}/${environment}", "exporter.export.duration", "environment", "${environment}", "service", "exporter", "OTelLib", "exporter.meter", "status", "success", { "region": "${region}", "label": "success", "color": "#2ca02c", "id": "m1", "visible": false } ]
         ],
         "view": "singleValue",
@@ -308,7 +308,7 @@
         "title": "Successful exports",
         "stat": "SampleCount",
         "period": 60,
-        "setPeriodToTimeRange": false,
+        "setPeriodToTimeRange": true,
         "sparkline": false,
         "singleValueFullPrecision": false
       }

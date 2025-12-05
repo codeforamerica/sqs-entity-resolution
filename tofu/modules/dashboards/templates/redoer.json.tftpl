@@ -183,7 +183,7 @@
         "region": "${region}",
         "stat": "Average",
         "period": 60,
-        "title": "Avergage CPU %",
+        "title": "Average CPU %",
         "yAxis": {
           "left": {
             "label": "%",
@@ -211,7 +211,7 @@
         "region": "${region}",
         "stat": "Average",
         "period": 60,
-        "title": "Avergage CPU %",
+        "title": "Average CPU %",
         "yAxis": {
           "left": {
             "label": "%",
@@ -343,9 +343,9 @@
       "height": 6,
       "properties": {
         "metrics": [
-          [ { "expression": "FILL(m2, 0)", "label": "Failed", "id": "e2", "region": "${region}", "color": "#d62728" } ],
-          [ { "expression": "FILL(m1, 0)", "label": "Sucessful", "id": "e3", "region": "${region}", "color": "#2ca02c" } ],
           [ { "expression": "FILL(m1, 0)", "label": "Total", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "Failed", "id": "e2", "region": "${region}", "color": "#d62728" } ],
+          [ { "expression": "FILL(m3, 0)", "label": "Successful", "id": "e3", "region": "${region}", "color": "#2ca02c" } ],
           [ "${project}/${environment}", "redoer.messages.count", "OTelLib", "redoer.meter", { "region": "${region}", "id": "m1", "visible": false, "label": "Count" } ],
           [ ".", ".", "environment", "${environment}", "service", "redoer", "OTelLib", "redoer.meter", "status", "failure", { "id": "m2", "label": "Failure", "visible": false, "region": "${region}" } ],
           [ "...", "success", { "id": "m3", "label": "Success", "visible": false, "region": "${region}" } ]
@@ -375,9 +375,9 @@
       "height": 10,
       "properties": {
         "metrics": [
-          [ { "expression": "FILL(m3, 0)", "label": "Failed records", "id": "e3", "region": "${region}", "color": "#d62728" } ],
-          [ { "expression": "FILL(m2, 0)", "label": "Successful records", "id": "e2", "region": "${region}", "color": "#2ca02c" } ],
-          [ { "expression": "FILL(m1, 0)", "label": "All records", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ { "expression": "FILL(m1, 0)", "label": "All", "id": "e1", "region": "${region}", "color": "#1f77b4" } ],
+          [ { "expression": "FILL(m3, 0)", "label": "Failed", "id": "e3", "region": "${region}", "color": "#d62728" } ],
+          [ { "expression": "FILL(m2, 0)", "label": "Successful", "id": "e2", "region": "${region}", "color": "#2ca02c" } ],
           [ "${project}/${environment}", "redoer.messages.duration", "OTelLib", "redoer.meter", { "region": "${region}", "id": "m1", "visible": false, "label": "All" } ],
           [ ".", ".", "environment", "${environment}", "service", "redoer", "OTelLib", "redoer.meter", "status", "success", { "id": "m2", "region": "${region}", "label": "Success", "visible": false } ],
           [ "...", "failure", { "id": "m3", "region": "${region}", "label": "Failure", "visible": false } ]
