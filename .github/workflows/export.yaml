@@ -8,6 +8,14 @@ on:
         default: development
         required: true
         type: environment
+      mode:
+        description: Export mode to use.
+        default: full
+        required: true
+        type: choice
+        options:
+          - delta
+          - full
 
 permissions:
   contents: read
@@ -94,6 +102,8 @@ jobs:
           task-wait-until-stopped: true
           # The block style indicator (|) is necessary to tell YAML to preserve
           # newlines.
+          override-container-environment: |
+            EXPORT_MODE=${{ inputs.mode }}
           subnet-ids: |
             ${{ steps.subnets.outputs.subnets }}
           security-group-ids: |
