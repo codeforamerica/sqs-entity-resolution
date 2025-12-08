@@ -185,7 +185,7 @@ def go():
             try:
                 # Process and send to Senzing.
                 start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                resp = sz_eng.add_record(str(rcd['DATA_SOURCE']), str(rcd['RECORD_ID']), body,
+                resp = sz_eng.add_record(rcd['DATA_SOURCE'], rcd['RECORD_ID'], body,
                                          sz.SzEngineFlags.SZ_WITH_INFO)
                 cancel_alarm_timer()
                 log.debug(SZ_TAG + 'Successful add_record having ReceiptHandle: '

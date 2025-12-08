@@ -88,7 +88,7 @@ class TestFlow(unittest.TestCase):
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
         expected = slurp_text(EXPECTED_OUTPUT_FILENAME)
         s.assertTrue(diff_jsonl_linecount(output, expected) == 0) # Entity count should be equal.
-        s.assertTrue(len(str(output).strip().split("\n")) == 74) # Testing entity count another way.
+        s.assertEqual(len(str(output).strip().split("\n")), 74) # Testing entity count another way.
 
     def verify_delta_export(s):
         sess = boto3.Session(profile_name=AWS_PROFILE)
@@ -103,21 +103,23 @@ class TestFlow(unittest.TestCase):
         s.assertEqual(info['KeyCount'], 2) # Should be 2 files in S3 now.
         key = info['Contents'][1]['Key']
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
-        s.assertTrue(len(str(output).strip().split("\n")) == 1) # Only 1 row in the delta
+        s.assertTrue(len(str(output).strip()) > 0)  # Should *not* be empty string.
+        s.assertEqual(len(str(output).strip().split("\n")), 1) # Only 1 row in the delta -- test is only worthwhile
+                                                               # once we know is non-empty (prior test above).
         # Run again, confirm export file is empty.
         s.run_exporter(DELTA)
         info = s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix='exporter-outputs/')
         s.assertEqual(info['KeyCount'], 3) # Should be 3 files in S3 now.
         key = info['Contents'][2]['Key']
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
-        s.assertTrue(len(str(output).strip()) == 0) # latest delta should be empty
+        s.assertEqual(len(str(output).strip()), 0) # latest delta should be empty string
         # Run a full export, confirm has all entities.
         s.run_exporter(FULL)
         info = s3.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix='exporter-outputs/')
         s.assertEqual(info['KeyCount'], 4) # Should be 4 files in S3 now.
         key = info['Contents'][3]['Key']
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
-        s.assertTrue(len(str(output).strip().split("\n")) == 75)
+        s.assertEqual(len(str(output).strip().split("\n")), 75)
 
     def test_flow(s):
         print('Docker setup (db, SQS, S3, consumer, redoer, and exporter trigger) ...')

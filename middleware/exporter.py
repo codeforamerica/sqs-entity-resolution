@@ -33,7 +33,9 @@ S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 FOLDER_NAME = os.environ.get('FOLDER_NAME', 'exporter-outputs')
 RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
-EXPORT_FLAGS = sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
+#EXPORT_FLAGS = sz.SzEngineFlags.SZ_EXPORT_DEFAULT_FLAGS
+FULL_EXPORT_FLAGS = sz.SzEngineFlags.SZ_ENTITY_BRIEF_DEFAULT_FLAGS | sz.SzEngineFlags.SZ_EXPORT_INCLUDE_ALL_ENTITIES
+DELTA_EXPORT_FLAGS = sz.SzEngineFlags.SZ_ENTITY_BRIEF_DEFAULT_FLAGS
 
 EXPORT_MODE = os.environ.get('EXPORT_MODE', 'delta').lower()
 log.info(f"Export mode is: {EXPORT_MODE}")
@@ -140,7 +142,7 @@ def go():
             log.info('Successfully called db.shift_todo_to_in_progress_and_retrieve(); '
                      + f'Total count of entity IDs in progress: {len(entity_ids)}')
         else:
-            export_handle = sz_eng.export_json_entity_report(EXPORT_FLAGS)
+            export_handle = sz_eng.export_json_entity_report(FULL_EXPORT_FLAGS)
             log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
 
         mup_resp = s3.create_multipart_upload(
@@ -173,7 +175,9 @@ def go():
                         current_entity_id = entity_ids[entity_ids_idx]
                         log.debug(f'Fetching info for entity ID {current_entity_id} ...')
                         try:
-                            chunk = sz_eng.get_entity_by_entity_id(current_entity_id)
+                            # Ref: https://garage.senzing.com/sz-sdk-python/senzing.html#senzing.szengine.SzEngine.get_entity_by_entity_id
+                            #chunk = sz_eng.get_entity_by_entity_id(current_entity_id)
+                            chunk = sz_eng.get_entity_by_entity_id(current_entity_id, DELTA_EXPORT_FLAGS)
                             buff.write(chunk.encode('utf-8'))
                             buff.write("\n".encode('utf-8'))
                             log.debug('Wrote chunk to buffer.')

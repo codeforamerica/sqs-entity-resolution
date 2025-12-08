@@ -43,5 +43,6 @@ WORKDIR /home/senzing
 
 RUN mkdir -p dev
 COPY dev-scripts/* dev
+COPY middleware/* dev
 
 ENTRYPOINT ["/entrypoint.sh"]
