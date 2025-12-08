@@ -6,6 +6,10 @@ import sys
 from senzing import SzEngine, SzError
 from senzing_core import SzAbstractFactoryCore
 
+import senzing as sz
+import db
+import util
+
 senzing_engine_configuration_json = json.loads(os.environ['SENZING_ENGINE_CONFIGURATION_JSON'])
 
 #record = '{ "NAME_FULL": "ROBERT SMITH", "ADDR_FULL": "123 Main St, Las Vegas NV" }'
@@ -17,7 +21,11 @@ try:
   sz_engine = sz_factory.create_engine()
 
   # Entity resolve a record
-  sz_engine.add_record("TEST", "1", record)
+  resp = sz_engine.add_record("TEST", "1", record, sz.SzEngineFlags.SZ_WITH_INFO)
+
+  # Save affected entity IDs into export tracker table
+  affected = util.parse_affected_entities_resp(resp)
+  for entity_id in affected: db.add_entity_id(entity_id)
 
   # Get the entity it resolved to
   response = sz_engine.get_entity_by_record_id("TEST", "1")
