@@ -4,11 +4,15 @@
 #   docker compose run tools python dev/check_export_tracker.py dump
 # Choose which export_status (1, 2, or 3) to dump (default is 1):
 #   docker compose run tools python dev/check_export_tracker.py dump 2
+# Get metrics about rows:
+#   docker compose run tools python dev/check_export_tracker.py metrics
 
 import os
 import sys
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+import db
 
 params = {
     'dbname': 'sqs_entity_resolution',
@@ -55,3 +59,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'dump':
     out = list(map(lambda x: x[0], curs.fetchall()))
     print(type(out))
     print(out)
+elif len(sys.argv) > 1 and sys.argv[1] == 'metrics': 
+    metrics = db.get_tallies()
+    print(metrics)

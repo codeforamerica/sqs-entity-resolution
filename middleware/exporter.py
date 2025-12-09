@@ -137,10 +137,13 @@ def go():
     try:
 
         if DELTA_MODE:
+            log.info('Export tracker table before doing anything: ' + str(db.get_tallies()))
+            log.info('Shifting export-tracker entity IDs from TODO to IN PROGRESS ...')
             entity_ids = db.shift_todo_to_in_progress_and_retrieve()
             db_has_in_progress_rows = True
             log.info('Successfully called db.shift_todo_to_in_progress_and_retrieve(); '
                      + f'Total count of entity IDs in progress: {len(entity_ids)}')
+            log.info('Export tracker table AFTER shift to IN PROGRESS: ' + str(db.get_tallies()))
         else:
             export_handle = sz_eng.export_json_entity_report(FULL_EXPORT_FLAGS)
             log.info(SZ_TAG + 'Obtained export_json_entity_report handle.')
@@ -180,7 +183,7 @@ def go():
                             chunk = sz_eng.get_entity_by_entity_id(current_entity_id, DELTA_EXPORT_FLAGS)
                             buff.write(chunk.encode('utf-8'))
                             buff.write("\n".encode('utf-8'))
-                            log.debug('Wrote chunk to buffer.')
+                            log.debug(f'Wrote data for entity {current_entity_id} to buffer.')
                         except sz.SzNotFoundError as sz_not_found_err:
                             log.debug(f'Entity {current_entity_id} has been deleted. Skipping.')
                 else:
@@ -231,7 +234,10 @@ def go():
         log.info(f'Full path in S3: {key}')
 
         if DELTA_MODE:
+            log.info('Current export tracker table state: ' + str(db.get_tallies()))
+            log.info('Shifting export-tracker entity IDs from IN PROGRESS to DONE ...')
             db.shift_in_progress_to_done(export_id=key)
+            log.info('Export tracker table AFTER shift to DONE: ' + str(db.get_tallies()))
 
         success_status = otel.SUCCESS
 
