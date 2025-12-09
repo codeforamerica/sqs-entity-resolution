@@ -98,3 +98,19 @@ def rewind_in_progress_to_todo():
         _conn.rollback()
         log.error(fmterr(e))
         raise e
+
+def get_tallies():
+    log.debug('get_tallies called.')
+    try:
+        _curs.execute('''select count(case when export_status=1 then 1 end) as todo_count,
+            count(case when export_status=2 then 1 end) as in_progress_count,
+            count(case when export_status=3 then 1 end) as done_count
+            from export_tracker''')
+        out = _curs.fetchall()[0]
+        _conn.commit()
+        log.debug('db commit ran ok.')
+        return {'TODO': out[0], 'IN PROGRESS': out[1], 'DONE': out[2]}
+    except Exception as e:
+        _conn.rollback()
+        log.error(fmterr(e))
+        raise e
