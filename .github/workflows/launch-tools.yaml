@@ -1,4 +1,4 @@
-name: Launch tools container
+name: Run tools container command
 
 on:
   workflow_dispatch:
@@ -9,12 +9,29 @@ on:
         required: true
         type: environment
       command:
-        description: |
-          Command to run in the tools container in the CMD format: executable,
-          param1, param2, ...
-        default: "echo,hello world"
+        description: Command to send to the tools container
         required: true
+        type: choice
+        options:
+          - "Hello World"
+          - "CSV Export"
+          - "Generate Snapshot"
+          - "Initialize Database"
+          - "JSON Export"
+          - "Keep Running"
+          - "Custom (specify below)"
+      custom:
+        description: |
+          Custom command to run in the container, in the CMD format: executable,
+          param1, param2, ...
         type: string
+      wait_timeout:
+        description: |
+          Maximum time to wait for the task to stop once started, in minutes.
+          Set to "0" to disable waiting.
+        default: 15
+        required: false
+        type: number
 
 permissions:
   contents: read
@@ -35,6 +52,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Get command to run
+        id: command
+        uses: ./.github/actions/tools-command
+        with:
+          command: ${{ inputs.command }}
+          custom: ${{ inputs.custom }}
+          wait_timeout: ${{ inputs.wait_timeout }}
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -90,16 +114,6 @@ jobs:
           echo "subnets<<EOF" >> $GITHUB_OUTPUT
           echo "$SUBNET_STRING" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - name: Parse command
-        id: command
-        env:
-          COMMAND: ${{ inputs.command }}
-        run: |
-          IFS=',' read -ra parts <<< "$COMMAND"
-          COMMAND_STRING=$(printf "%s\n" "${parts[@]}")
-          echo "command<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMAND_STRING" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
       - name: Launch container
         id: run-task
         # TODO: Replace with `geekcell/github-action-aws-ecs-run-task` once
@@ -113,7 +127,9 @@ jobs:
           override-container: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
           assign-public-ip: DISABLED
           tail-logs: true
-          task-wait-until-stopped: true
+          task-wait-until-stopped: ${{ steps.command.outputs.wait }}
+          task-start-max-wait-time: 300
+          task-stop-max-wait-time: ${{ steps.command.outputs.wait_timeout }}
           # The block style indicator (|) is necessary to tell YAML to preserve
           # newlines.
           override-container-command: |
