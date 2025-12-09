@@ -305,8 +305,8 @@ this URL:
 ## Running Tests
 
 > [!CAUTION]
-> Running these tests will delete all named and unnamed Docker volumes. The 
-> primary reason is to ensure a fresh database. To change this behavior, take a 
+> Running these tests will delete all named and unnamed Docker volumes. The
+> primary reason is to ensure a fresh database. To change this behavior, take a
 > look at `docker_setup()` and modify as desired.
 
 Tests are located in the `test/` folder. The overall flow is tested using
