@@ -11,7 +11,8 @@ Statement:
     Effect: Allow
     Action:
       - s3:GetObject
-      - s3:HeadObject
+      - s3:ListBucket
       - s3:PutObject
     Resource:
+      - "${bucket_arn}"
       - "${bucket_arn}/*"
