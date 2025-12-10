@@ -10,6 +10,7 @@ Statement:
   - Sid: S3Access
     Effect: Allow
     Action:
+      - s3:GetObject
       - s3:PutObject
     Resource:
       - "${bucket_arn}/*"
