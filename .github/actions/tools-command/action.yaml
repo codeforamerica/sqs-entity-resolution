@@ -1,0 +1,94 @@
+name: Determine tools command
+description: Determines the appropriate command to run in the tools container
+inputs:
+  command:
+    description: Command to send to the tools container
+    required: true
+  custom:
+    description: |
+      Custom command to run in the container, in the CMD format: executable,
+      param1, param2, ...
+  wait_timeout:
+    description: |
+      Maximum time to wait for the task to stop once started, in minutes.
+      Set to "0" to disable waiting.
+    default: 15
+outputs:
+  command:
+    description: The properly formatted command to run in the tools container
+    value: ${{ steps.parse-command.outputs.command }}
+  wait:
+    description: Whether to wait for the task to stop
+    value: ${{ steps.waiter-options.outputs.wait }}
+  wait_timeout:
+    description: The wait timeout in seconds
+    value: ${{ steps.waiter-options.outputs.wait_timeout }}
+runs:
+  using: composite
+  steps:
+    - name: Custom command validation
+      if: ${{ inputs.command == 'Custom (specify below)' && ! inputs.custom }}
+      shell: bash
+      run: |
+        echo "::error::Custom command selected but no command provided"
+        exit 1
+    - name: Determine the command to run
+      id: final-command
+      shell: bash
+      run: |
+        case "${{ inputs.command }}" in
+            "Hello World")
+              echo 'command=echo,Hello world!' >> $GITHUB_OUTPUT
+              ;;
+            "CSV Export")
+              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-export.csv\"; sz_export -F CSV -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-export" >> $GITHUB_OUTPUT
+              ;;
+            "Generate Snapshot")
+              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-snapshot.json\"; sz_snapshot -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-snapshot" >> $GITHUB_OUTPUT
+              ;;
+            "Initialize Database")
+                echo 'command=echo,Bootstrap complete' >> $GITHUB_OUTPUT
+                ;;
+            "JSON Export")
+              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-export.json\"; sz_export -F JSON -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-export" >> $GITHUB_OUTPUT
+              ;;
+            "Keep Running")
+                echo 'command=tail,-F,/dev/null' >> $GITHUB_OUTPUT
+              ;;
+            "Custom (specify below)")
+              echo 'command=${{ inputs.custom }}' >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "Invalid command option selected"
+              exit 1
+              ;;
+          esac
+    - name: Set waiter options
+      id: waiter-options
+      shell: bash
+      run: |
+        if [ "${{ inputs.wait_timeout }}" -eq "0" ] || [ "${{ inputs.command }}" == "Keep Running" ]; then
+            echo "Waiter disabled"
+            echo 'wait=false' >> $GITHUB_OUTPUT
+            echo 'wait_timeout=0' >> $GITHUB_OUTPUT
+        else
+            timeout=$(( ${{ inputs.wait_timeout }} * 60 ))
+            echo "Waiter enabled with timeout of $timeout seconds"
+            echo 'wait=true' >> $GITHUB_OUTPUT
+            echo 'wait_timeout=$timeout' >> $GITHUB_OUTPUT
+        fi
+    - name: Display determined command
+      shell: bash
+      run: |
+        echo "Command to run on tools container: ${{ steps.final-command.outputs.command }}"
+    - name: Parse command
+      id: parse-command
+      env:
+        COMMAND: ${{ steps.final-command.outputs.command }}
+      shell: bash
+      run: |
+        IFS=',' read -ra parts <<< "$COMMAND"
+        COMMAND_STRING=$(printf "%s\n" "${parts[@]}")
+        echo "command<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMAND_STRING" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
