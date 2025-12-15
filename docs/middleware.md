@@ -140,6 +140,9 @@ It has two modes (configurable via the `EXPORT_MDOE` environment variable):
 - Full
 
 More info on S3 multipard uploads:
+- https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
+- https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html
+- https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
 - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/create_multipart_upload.html
 - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/upload_part.html
 - https://boto3.amazonaws.com/v1/documentation/api/1.35.9/reference/services/s3/client/complete_multipart_upload.html
