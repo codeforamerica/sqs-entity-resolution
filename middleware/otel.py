@@ -13,15 +13,27 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader)
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
+from opentelemetry.sdk.metrics import Histogram
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+# See: https://docs.datadoghq.com/opentelemetry/guide/otlp_delta_temporality/?tab=python
+
 INTERVAL_MS = 30000
+
+TEMPORALITY = {
+    Histogram: AggregationTemporality.DELTA
+}
 
 def init(service_name):
     '''Perform general OTel setup and return meter obj.'''
     resource = Resource.create(attributes={SERVICE_NAME: service_name})
     if os.getenv('OTEL_USE_OTLP_EXPORTER', 'false').lower() == 'true':
-        metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=INTERVAL_MS)
+        metric_reader = PeriodicExportingMetricReader(
+            OTLPMetricExporter(preferred_temporality=TEMPORALITY),
+            export_interval_millis=INTERVAL_MS)
     else:
-        metric_reader = PeriodicExportingMetricReader(ConsoleMetricExporter(), export_interval_millis=INTERVAL_MS)
+        metric_reader = PeriodicExportingMetricReader(
+            ConsoleMetricExporter(preferred_temporality=TEMPORALITY),
+            export_interval_millis=INTERVAL_MS)
     meter_provider = MeterProvider(resource=resource,
                                    metric_readers=[metric_reader])
 

@@ -65,7 +65,7 @@ services:
       PGHOST: db
       PGUSER: ${POSTGRES_USERNAME:-senzing}
       PGPASSWORD: ${POSTGRES_PASSWORD:-senzing}
-      SENZING_DATASOURCES: PEOPLE CUSTOMERS
+      SENZING_DATASOURCES: PEOPLE
       SENZING_ENGINE_CONFIGURATION_JSON: >-
         {
           "PIPELINE": {
@@ -184,7 +184,7 @@ services:
             "CONNECTION": "postgresql://${POSTGRES_USERNAME:-senzing}:${POSTGRES_PASSWORD:-senzing}@db:5432:${POSTGRES_DB:-G2}/?sslmode=disable"
           }
         }
-    profiles: [exporter]
+    profiles: [exporter] # We don't want exporter to start automatically, so it gets its own profile.
     volumes:
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.

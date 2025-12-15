@@ -297,10 +297,10 @@ _Mounts in docker-compose.yaml:_
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.
 
-You can view information about files in the LocalStack S3 bucket by visiting
-this URL:
+_Viewing S3 contents:_ You can view information about files in the LocalStack S3
+bucket by visiting this URL:
 
-  http://localhost:4566/sqs-senzing-local-export
+    http://localhost:4566/sqs-senzing-local-export
 
 ## Running Tests
 
