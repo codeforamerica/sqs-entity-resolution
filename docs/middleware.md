@@ -373,7 +373,9 @@ More info:
 
 See the section "Running Tests" in the README.
 
-# Maintenance of external libs
+# Maintenance
+
+## External libs
 
 The Dockerfiles generally pull in the dependent libs; they will pull in the 
 proper versions at build time.
@@ -381,3 +383,9 @@ proper versions at build time.
 The test suite, however, uses a `requirements.txt` file. This file defines 
 specific lib versions. At some point in the future, the versions defined in this 
 file might need to be upgraded.
+
+## Export tracker table
+
+The export_tracker table will continue to grow (old rows will have a status of
+DONE or SKIPPED). This shouldn't affect performance but, at some point, it could
+be worthwhile to create a tool to empty/truncate the table.
