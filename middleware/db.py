@@ -6,6 +6,7 @@ log = retrieve_logger()
 EXPORT_STATUS_TODO = 1
 EXPORT_STATUS_IN_PROGRESS = 2
 EXPORT_STATUS_DONE = 3
+EXPORT_STATUS_SKIPPED = 4
 
 _params = {
     'dbname': 'sqs_entity_resolution',
@@ -71,13 +72,14 @@ def shift_in_progress_to_done(export_id=None):
     log.debug('shift_in_progress_to_done called.')
     if export_id and type(export_id) is not str: raise TypeError
     try:
+        if export_id:
+            _curs.execute('update export_tracker set export_id = %s where export_status = %s',
+                [export_id, EXPORT_STATUS_IN_PROGRESS])
+            log.debug('db update export_id ran ok.')
         _curs.execute(
             'update export_tracker set export_status = %s where export_status = %s',
             [EXPORT_STATUS_DONE, EXPORT_STATUS_IN_PROGRESS])
         log.debug('db update export_status ran ok.')
-        if export_id:
-            _curs.execute('update export_tracker set export_id = %s', [export_id])
-            log.debug('db update export_id ran ok.')
         _conn.commit()
         log.debug('db commit ran ok.')
     except Exception as e:
@@ -104,12 +106,29 @@ def get_tallies():
     try:
         _curs.execute('''select count(case when export_status=1 then 1 end) as todo_count,
             count(case when export_status=2 then 1 end) as in_progress_count,
-            count(case when export_status=3 then 1 end) as done_count
+            count(case when export_status=3 then 1 end) as done_count,
+            count(case when export_status=4 then 1 end) as skipped_count
             from export_tracker''')
         out = _curs.fetchall()[0]
         _conn.commit()
         log.debug('db commit ran ok.')
-        return {'TODO': out[0], 'IN PROGRESS': out[1], 'DONE': out[2]}
+        return {'TODO': out[0], 'IN PROGRESS': out[1], 'DONE': out[2], 'SKIPPED': out[3]}
+    except Exception as e:
+        _conn.rollback()
+        log.error(fmterr(e))
+        raise e
+
+def shift_todo_to_skipped():
+    '''Set all TODO rows to have a status of SKIPPED.
+    This, in essence, zeroes out the table.'''
+    log.debug('shift_todo_to_skipped called.')
+    try:
+        _curs.execute(
+            'update export_tracker set export_status = %s where export_status = %s',
+            [EXPORT_STATUS_SKIPPED, EXPORT_STATUS_TODO])
+        log.debug('db update export_status ran ok.')
+        _conn.commit()
+        log.debug('db commit ran ok.')
     except Exception as e:
         _conn.rollback()
         log.error(fmterr(e))
