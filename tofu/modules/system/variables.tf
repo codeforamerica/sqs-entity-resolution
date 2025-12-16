@@ -100,7 +100,7 @@ variable "export_expiration" {
 variable "export_mode" {
   type        = string
   description = "Export mode used for the automated export. Valid options are 'delta' or 'full'."
-  default     = "delta"
+  default     = "full"
 
   validation {
     condition     = contains(["delta", "full"], var.export_mode)
