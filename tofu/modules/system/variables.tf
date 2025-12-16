@@ -97,6 +97,17 @@ variable "export_expiration" {
   description = "Number of days before export files expire."
 }
 
+variable "export_mode" {
+  type        = string
+  description = "Export mode used for the automated export. Valid options are 'delta' or 'full'."
+  default     = "delta"
+
+  validation {
+    condition     = contains(["delta", "full"], var.export_mode)
+    error_message = "Export mode must be either 'delta' or 'full'."
+  }
+}
+
 variable "export_lock_age" {
   type        = number
   description = "Age (based on the lock period) of an object before the lock is removed."

@@ -180,6 +180,7 @@ module "exporter" {
   otel_image               = docker_registry_image.otel.name
 
   environment_variables = {
+    EXPORT_MODE : var.export_mode
     LOG_LEVEL : var.log_level
     OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4318"
     OTEL_USE_OTLP_EXPORTER : true
