@@ -139,7 +139,7 @@ It has two modes (configurable via the `EXPORT_MDOE` environment variable):
 - Delta
 - Full
 
-More info on S3 multipard uploads:
+More info on S3 multipart uploads:
 - https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
 - https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html
 - https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
