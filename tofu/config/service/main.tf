@@ -20,7 +20,6 @@ module "system" {
 
   environment            = var.environment
   project                = var.project
-  export_expiration      = var.export_expiration
   key_recovery_period    = var.key_recovery_period
   logging_bucket         = module.inputs.values["logging/bucket"]
   logging_key_arn        = module.inputs.values["logging/key"]
@@ -52,4 +51,7 @@ module "system" {
   redoer_container_count     = var.redoer_container_count
   redoer_cpu                 = var.redoer_cpu
   redoer_memory              = var.redoer_memory
+
+  export_expiration = var.export_expiration
+  export_mode       = var.export_mode
 }

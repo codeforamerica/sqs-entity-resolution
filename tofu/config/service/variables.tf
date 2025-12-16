@@ -87,6 +87,17 @@ variable "export_expiration" {
   description = "Number of days before export files expire."
 }
 
+variable "export_mode" {
+  type        = string
+  description = "Export mode used for the automated export. Valid options are 'delta' or 'full'."
+  default     = "full"
+
+  validation {
+    condition     = contains(["delta", "full"], var.export_mode)
+    error_message = "Export mode must be either 'delta' or 'full'."
+  }
+}
+
 variable "image_tag" {
   type        = string
   description = "Tag for the docker images, will be used for all images. Leave empty to have a new tag generated on each run."
