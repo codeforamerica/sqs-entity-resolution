@@ -87,7 +87,7 @@ class TestFlow(unittest.TestCase):
         key = info['Contents'][0]['Key']
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
         expected = slurp_text(EXPECTED_OUTPUT_FILENAME)
-        s.assertTrue(diff_jsonl_linecount(output, expected) == 0) # Entity count should be equal.
+        s.assertEqual(diff_jsonl_linecount(output, expected), 0) # Entity count should be equal.
         s.assertEqual(len(str(output).strip().split("\n")), 74) # Testing entity count another way.
 
     def verify_delta_export(s):
@@ -103,7 +103,7 @@ class TestFlow(unittest.TestCase):
         s.assertEqual(info['KeyCount'], 2) # Should be 2 files in S3 now.
         key = info['Contents'][1]['Key']
         output = s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)['Body'].read().decode('utf-8')
-        s.assertTrue(len(str(output).strip()) > 0)  # Should *not* be empty string.
+        s.assertGreater(len(str(output).strip()), 0)  # Should *not* be empty string.
         s.assertEqual(len(str(output).strip().split("\n")), 1) # Only 1 row in the delta -- test is only worthwhile
                                                                # once we know is non-empty (prior test above).
         # Run again, confirm export file is empty.

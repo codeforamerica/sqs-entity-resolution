@@ -66,10 +66,11 @@ def make_s3_client():
     except Exception as e:
         log.error(AWS_TAG + fmterr(e))
 
-def build_output_filename(tag='exporter-output', kind='jsonl'):
+def build_output_filename(tag='exporter-output'):
     '''Returns a str, e.g.,
-        '2025-10-07T23:15:54-UTC-exporter-output.jsonl'
+        '2025-10-07T23:15:54-UTC-exporter-output.json'
     '''
+    kind = 'json' # Technically JSONL, but we're attempting to follow precedent here.
     return (
         datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S-UTC")
         + '-' + tag
@@ -211,7 +212,7 @@ def go():
                     part_ids_and_tags.append({
                         'PartNumber': part_id,
                         'ETag': resp['ETag']})
-                    # We start wtih a new buff obj at next iteration.
+                    # We start with a new buff obj at next iteration.
                     buff.close()
                     break
             # end inner while
