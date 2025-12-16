@@ -74,6 +74,7 @@ services, e.g.:
 
    ```bash
    docker compose build
+   docker compose --profile exporter build
    ```
 
 1. Start the services:
@@ -208,6 +209,9 @@ _Environment variables (see docker-compose.yaml):_
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 _Mounts in docker-compose.yaml:_
 
@@ -226,7 +230,7 @@ _Required record keys:_
 Similar to the consumer, the redoer is also a continually-running process.
 
 ```bash
-docker compose run --env AWS_PROFILE=localstack --env LOG_LEVEL=DEBUG redoer
+docker compose run redoer
 ```
 
 _Environment variables:_
@@ -253,6 +257,12 @@ _Environment variables:_
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `ENABLE_OTEL_EMITS`
+  - Optional, defaults to `1`
+  - Values can be either `0` or `1`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 ### Exporter
 
@@ -260,8 +270,7 @@ Spinning up the exporter middleware (this is intended to be an ephemeral
 container):
 
 ```bash
-docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing-local-export \
---env LOG_LEVEL=DEBUG exporter
+docker compose run exporter
 ```
 
 - `AWS_PROFILE`
@@ -275,6 +284,12 @@ docker compose run --env AWS_PROFILE=localstack --env S3_BUCKET_NAME=sqs-senzing
   - Optional; defaults to "unknown".
 - `OTEL_USE_OTLP_EXPORTER` -- 'true' or 'false' (default is false)
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `EXPORT_MODE`
+  - Default is `delta`
+  - Possible values: `delta` or `full`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGHOST`
 
 _Mounts in docker-compose.yaml:_
 
@@ -282,28 +297,32 @@ _Mounts in docker-compose.yaml:_
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.
 
-You can view information about files in the LocalStack S3 bucket by visiting
-this URL:
+_Viewing S3 contents:_ You can view information about files in the LocalStack S3
+bucket by visiting this URL:
 
-  http://localhost:4566/sqs-senzing-local-export
+    http://localhost:4566/sqs-senzing-local-export
 
 ## Running Tests
 
 > [!CAUTION]
-> Running these tests will delete all named and unnamed Docker volumes. The 
-> primary reason is to ensure a fresh database. To change this behavior, take a 
+> Running these tests will delete all named and unnamed Docker volumes. The
+> primary reason is to ensure a fresh database. To change this behavior, take a
 > look at `docker_setup()` and modify as desired.
 
 Tests are located in the `test/` folder. The overall flow is tested using
 LocalStack components.
 
-Create a virtualenv and install dependencies:
+One-time setup -- create a virtualenv and install dependencies:
 
     mkdir venv
     # Use the Python runtime of your choice
     ~/pythons/python-3.12.6/bin/python3.12 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
+
+Before each run, activate the virtualenv:
+
+    source venv/bin/activate
 
 Run tests:
 

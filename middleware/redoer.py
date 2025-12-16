@@ -13,6 +13,9 @@ from timeout_handling import *
 import otel
 from opentelemetry import metrics
 
+import util
+import db
+
 try:
     log.info('Importing senzing_core library . . .')
     import senzing_core as sz_core
@@ -27,10 +30,14 @@ RUNTIME_ENV = os.environ.get('RUNTIME_ENV', 'unknown') # For OTel
 
 # How long to wait before attempting next Senzing op.
 WAIT_SECONDS = int(os.environ.get('WAIT_SECONDS', 10))
+log.info(f'WAIT_SECONDS is: {WAIT_SECONDS}')
 
 # How many times to attempt process_redo_record before giving up and moving on
 # (see README).
 MAX_REDO_ATTEMPTS = int(os.environ.get('MAX_REDO_ATTEMPTS', 20))
+
+ENABLE_OTEL_EMITS = int(os.environ.get('ENABLE_OTEL_EMITS', 1))
+log.info(f'ENABLE_OTEL_EMITS is: {ENABLE_OTEL_EMITS}')
 
 #-------------------------------------------------------------------------------
 
@@ -38,6 +45,7 @@ def go():
     '''Starts the Redoer process; runs indefinitely.'''
 
     sz_eng = None
+    sz_factory = None
     try:
         sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
 
@@ -52,30 +60,31 @@ def go():
         log.error(fmterr(e))
 
     # OTel setup #
-    log.info('Starting OTel setup.')
-    meter = otel.init('redoer')
-    otel_msgs_counter = meter.create_counter('redoer.messages.count')
-    otel_durations = meter.create_histogram('redoer.messages.duration')
+    if ENABLE_OTEL_EMITS:
+        log.info('Starting OTel setup.')
+        meter = otel.init('redoer')
+        otel_msgs_counter = meter.create_counter('redoer.messages.count')
+        otel_durations = meter.create_histogram('redoer.messages.duration')
 
-    def _otel_queue_count_steward(tally):
-        '''Coroutine function; this lets us both:
-            - 1) easily pass in updated tally values via `send`
-            - 2) accommodate OTel's spec of a "a generator that yields
-                 iterables of Observation"
-         Ref: https://opentelemetry-python.readthedocs.io/en/latest/api/metrics.html#opentelemetry.metrics.Meter.create_observable_gauge
-        '''
-        while 1:
-            newtally = yield [metrics.Observation(tally)]
-            # We check the type b/c OTel internals will send in a
-            # CallbackOptions object that we'll want to ignore;
-            # meanwhile type `int` means we sent in an updated tally value
-            # ourselves.
-            if newtally is not None and type(newtally) is int: tally = newtally
-    otel_queue_count_steward = _otel_queue_count_steward(-1)
-    next(otel_queue_count_steward) # prime it.
-    meter.create_observable_gauge('redoer.queue.count', [otel_queue_count_steward])
+        def _otel_queue_count_steward(tally):
+            '''Coroutine function; this lets us both:
+                - 1) easily pass in updated tally values via `send`
+                - 2) accommodate OTel's spec of a "a generator that yields
+                     iterables of Observation"
+             Ref: https://opentelemetry-python.readthedocs.io/en/latest/api/metrics.html#opentelemetry.metrics.Meter.create_observable_gauge
+            '''
+            while 1:
+                newtally = yield [metrics.Observation(tally)]
+                # We check the type b/c OTel internals will send in a
+                # CallbackOptions object that we'll want to ignore;
+                # meanwhile type `int` means we sent in an updated tally value
+                # ourselves.
+                if newtally is not None and type(newtally) is int: tally = newtally
+        otel_queue_count_steward = _otel_queue_count_steward(-1)
+        next(otel_queue_count_steward) # prime it.
+        meter.create_observable_gauge('redoer.queue.count', [otel_queue_count_steward])
 
-    log.info('Finished OTel setup.')
+        log.info('Finished OTel setup.')
     # end OTel setup #
 
     log.info('Starting primary loop.')
@@ -100,12 +109,20 @@ def go():
                 success_status = otel.FAILURE # initial default value
                 try:
                     start_alarm_timer(SZ_CALL_TIMEOUT_SECONDS)
-                    sz_eng.process_redo_record(rcd)
+                    log.debug('Calling process_redo_record ...')
+                    resp = sz_eng.process_redo_record(rcd, sz.SzEngineFlags.SZ_WITH_INFO)
+                    log.debug('Successfully called process_redo_record.')
                     cancel_alarm_timer()
                     success_status = otel.SUCCESS
                     have_rcd = 0
                     log.debug(SZ_TAG + 'Successfully redid one record via process_redo_record().')
+
+                    # Save affected entity IDs to tracker table for exporting later.
+                    affected = util.parse_affected_entities_resp(resp)
+                    for entity_id in affected: db.add_entity_id(entity_id)
+
                     continue
+
                 except sz.SzRetryableError as sz_ret_err:
                     # We'll try to process this record again.
                     log.error(SZ_TAG + fmterr(sz_ret_err))
@@ -117,6 +134,17 @@ def go():
                                   + ' for this record; dropping on the floor and moving on.')
                     time.sleep(WAIT_SECONDS)
                     continue
+                except sz.SzUnknownDataSourceError as sz_ds_err:
+                    # I'm not sure why this error could ever happen here, but it can.
+                    # The solution is to re-init the Sz config.
+                    log.error(SZ_TAG + fmterr(sz_ds_err))
+                    sz_factory = sz_core.SzAbstractFactoryCore("ERS", SZ_CONFIG)
+                    sz_config_mgr = sz_factory.create_configmanager()
+                    default_config_id = sz_config_mgr.get_default_config_id()
+                    sz_factory.reinitialize(default_config_id)
+                    log.info(SZ_TAG + 'Re-initialized Senzing config to address SzUnknownDataSourceError.')
+                    time.sleep(1)
+                    continue
                 except LongRunningCallTimeoutEx as lrex:
                     # Abandon and move on.
                     have_rcd = 0
@@ -125,24 +153,29 @@ def go():
                         type(lrex).__qualname__,
                         SZ_CALL_TIMEOUT_SECONDS,
                         receipt_handle))
+                    time.sleep(1)
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
+                    time.sleep(1)
 
                 finally:
                     finish = time.perf_counter()
-                    otel_msgs_counter.add(1,
-                        {'status': success_status,
-                        'service': 'redoer',
-                        'environment': RUNTIME_ENV})
-                    otel_durations.record(finish - start,
-                        {'status':  success_status,
-                         'service': 'redoer',
-                         'environment': RUNTIME_ENV})
+                    if ENABLE_OTEL_EMITS:
+                        otel_msgs_counter.add(1,
+                            {'status': success_status,
+                            'service': 'redoer',
+                            'environment': RUNTIME_ENV})
+                        otel_durations.record(finish - start,
+                            {'status':  success_status,
+                             'service': 'redoer',
+                             'environment': RUNTIME_ENV})
 
             else:
                 try:
+                    log.debug('Calling count_redo_records ...')
                     tally = sz_eng.count_redo_records()
-                    otel_queue_count_steward.send(tally)
+                    if ENABLE_OTEL_EMITS:
+                        otel_queue_count_steward.send(tally)
                     log.debug(SZ_TAG + 'Current redo count: ' + str(tally))
                 except sz.SzRetryableError as sz_ret_err:
                     log.error(SZ_TAG + fmterr(sz_ret_err))
@@ -150,10 +183,12 @@ def go():
                     continue
                 except sz.SzError as sz_err:
                     log.error(SZ_TAG + fmterr(sz_err))
+                    time.sleep(1)
 
                 if tally:
 
                     try:
+                        log.debug('Calling get_redo_record ...')
                         rcd = sz_eng.get_redo_record()
                         if rcd:
                             have_rcd = 1
@@ -167,8 +202,10 @@ def go():
                     except sz.SzRetryableError as sz_ret_err:
                         # No additional action needed; we'll just try getting again.
                         log.error(SZ_TAG + fmterr(sz_ret_err))
+                        time.sleep(1)
                     except sz.SzError as sz_err:
                         log.error(SZ_TAG + fmterr(sz_err))
+                        time.sleep(1)
 
                 else:
                     log.debug('No redo records. Will wait ' + str(WAIT_SECONDS) + ' seconds.')
@@ -176,6 +213,7 @@ def go():
 
         except Exception as e:
             log.error(fmterr(e))
+            time.sleep(1)
 
 #-------------------------------------------------------------------------------
 
