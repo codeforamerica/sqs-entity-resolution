@@ -88,6 +88,8 @@ jobs:
       TF_VAR_vpc_private_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
       TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
     steps:
+      - name: Clean runner for Docker builds
+        uses: sctg-development/clean-image-for-docker@v2
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Set up AWS credentials
