@@ -266,9 +266,10 @@ will change all "TODO" rows to have the status of "SKIPPED":
 
     docker compose run tools python3 dev/reset_export_tracker.py
 
-Note that the Senzing repository and the export_tracker table are two separate
-things. Purging the Senzing repository will not affect the export_tracker table 
-(and vice versa).
+> [!NOTE]
+> The Senzing repository and the `export_tracker` table are separate. Purging
+> the Senzing repository will not affect the `export_tracker` table (and vice
+> versa).
 
 ## Supporting modules
 
