@@ -41,7 +41,7 @@ runs:
               echo 'command=echo,Hello world!' >> $GITHUB_OUTPUT
               ;;
             "CSV Export")
-              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-export.csv\"; sz_export -F CSV -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-export" >> $GITHUB_OUTPUT
+              echo "command=/bin/bash,-c,FILENAME=\"$(date -u -Iseconds)-export.csv\"; sz_export -F CSV -o >(aws s3 cp - s3://\$S3_BUCKET_NAME/sz-export/\$FILENAME) && wait && echo \"Upload completed for sz-exports/\$FILENAME\"" >> $GITHUB_OUTPUT
               ;;
             "Generate Snapshot")
               echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-snapshot.json\"; sz_snapshot -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-snapshot" >> $GITHUB_OUTPUT
@@ -50,7 +50,7 @@ runs:
                 echo 'command=echo,Bootstrap complete' >> $GITHUB_OUTPUT
                 ;;
             "JSON Export")
-              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-export.json\"; sz_export -F JSON -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-export" >> $GITHUB_OUTPUT
+              echo "command=/bin/bash,-c,FILENAME=\"$(date -u -Iseconds)-export.json\"; sz_export -F JSON -o >(aws s3 cp - s3://\$S3_BUCKET_NAME/sz-export/\$FILENAME) && wait && echo \"Upload completed for sz-exports/\$FILENAME\"" >> $GITHUB_OUTPUT
               ;;
             "Keep Running")
                 echo 'command=tail,-F,/dev/null' >> $GITHUB_OUTPUT
@@ -80,7 +80,7 @@ runs:
     - name: Display determined command
       shell: bash
       run: |
-        echo "Command to run on tools container: ${{ steps.final-command.outputs.command }}"
+        echo 'Command to run on tools container: ${{ steps.final-command.outputs.command }}'
     - name: Parse command
       id: parse-command
       env:
