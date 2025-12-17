@@ -143,6 +143,12 @@ def go():
         log.info('***************************')
         log.info('SIGINT or SIGTERM received.')
         log.info('***************************')
+        try:
+            log.info('Flushing OTel metric reader ...')
+            otel.force_flush()
+            log.info('Flushed OTel metric reader.')
+        except Exception as e:
+            log.error(fmterr(e))
         sys.exit(0)
     signal.signal(signal.SIGINT, clean_up)
     signal.signal(signal.SIGTERM, clean_up)

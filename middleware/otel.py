@@ -23,8 +23,11 @@ TEMPORALITY = {
     Histogram: AggregationTemporality.DELTA
 }
 
+metric_reader = None
+
 def init(service_name):
     '''Perform general OTel setup and return meter obj.'''
+    global metric_reader
     resource = Resource.create(attributes={SERVICE_NAME: service_name})
     if os.getenv('OTEL_USE_OTLP_EXPORTER', 'false').lower() == 'true':
         metric_reader = PeriodicExportingMetricReader(
@@ -42,6 +45,10 @@ def init(service_name):
 
     # Create a meter from the global meter provider:
     return metrics.get_meter(service_name+'.meter')
+
+def force_flush():
+    if metric_reader:
+        metric_reader.force_flush()
 
 SUCCESS = 'success'
 FAILURE = 'failure'
