@@ -1,11 +1,19 @@
+resource "docker_buildx_builder" "this" {
+  name   = "${local.prefix}-builder"
+  driver = "docker-container"
+}
+
 resource "docker_image" "container" {
   name = "${module.ecr.repository_url}:${var.image_tag}"
 
   build {
-    builder    = "default"
+    builder    = docker_buildx_builder.this.name
     context    = var.docker_context
     dockerfile = "${var.docker_context}/${var.dockerfile}"
     platform   = "linux/amd64"
+
+    cache_from = ["type=registry,ref=${module.ecr.repository_url}"]
+    cache_to   = ["type=registry,ref=${module.ecr.repository_url},mode=max,image-manifest=true"]
 
     tag = [
       "${local.prefix}:${var.image_tag}",
