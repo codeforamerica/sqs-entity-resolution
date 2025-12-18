@@ -44,7 +44,7 @@ runs:
               echo "command=/bin/bash,-c,FILENAME=\"$(date -u -Iseconds)-export.csv\"; sz_export -F CSV -o >(aws s3 cp - s3://\$S3_BUCKET_NAME/sz-export/\$FILENAME) && wait && echo \"Upload completed for sz-exports/\$FILENAME\"" >> $GITHUB_OUTPUT
               ;;
             "Generate Snapshot")
-              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-snapshot.json\"; sz_snapshot -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-snapshot" >> $GITHUB_OUTPUT
+              echo "command=sh,-c,FILENAME=\"$(date -u -Iseconds)-snapshot.json\"; sz_snapshot -o \$FILENAME && aws s3 cp \$FILENAME s3://\$S3_BUCKET_NAME/sz-snapshot/\$FILENAME" >> $GITHUB_OUTPUT
               ;;
             "Initialize Database")
                 echo 'command=echo,Bootstrap complete' >> $GITHUB_OUTPUT
