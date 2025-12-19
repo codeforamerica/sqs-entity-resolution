@@ -151,9 +151,10 @@ Load a single record as a simple test:
 
     docker compose run tools python dev/add_1_record.py
 
-Purge the database:
+Purge the Senzing data repository (this does not affect the export_tracker
+table):
 
-    docker compose run tools python dev/db_purge.py
+    docker compose run tools python dev/sz_purge.py
 
 ##### S3
 
