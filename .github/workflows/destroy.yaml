@@ -1,49 +1,46 @@
-name: Run tools container command
+name: "[DANGER] Destroy infrastructure"
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: Environment to launch into.
-        default: development
-        required: true
-        type: environment
-      command:
-        description: Command to send to the tools container
+      config:
+        description: OpenTofu configuration to destroy.
+        default: service
         required: true
         type: choice
         options:
-          - "Hello World"
-          - "CSV Export"
-          - "Generate Snapshot"
-          - "Initialize Database"
-          - "JSON Export"
-          - "Keep Running"
-          - "Custom (specify below)"
-      custom:
+          - dashboards
+          - foundation
+          - networking
+          - service
+      environment:
+        description: Environment to destroy.
+        default: development
+        required: true
+        type: environment
+      confirmation:
         description: |
-          Custom command to run in the container, in the CMD format: executable,
-          param1, param2, ...
-        type: string
-      wait_timeout:
-        description: |
-          Maximum time to wait for the task to stop once started, in minutes.
-          Set to "0" to disable waiting.
-        default: 15
-        required: false
-        type: number
+          Are you sure you wish to destroy all resources for this configuration
+          in this environment?
+
+          Deletion protection must be disabled and applied before you can
+          proceed. This process is irreversible.
+        default: false
+        required: true
+        type: boolean
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  launch:
-    name: Launch tools container in ${{ inputs.environment }}
+  destroy:
+    name: Destroy infrastrucure for ${{ inputs.environment }}
     runs-on: ubuntu-latest
+    if: ${{ inputs.confirmation }}
     environment: ${{ inputs.environment }}
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+      TF_VAR_image_tag: ${{ inputs.image_tag || github.sha }}
       # Set required variables.
       TF_VAR_repo_oidc_arn: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
       TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_VPC_CIDR }}
@@ -52,13 +49,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      - name: Get command to run
-        id: command
-        uses: ./.github/actions/tools-command
-        with:
-          command: ${{ inputs.command }}
-          custom: ${{ inputs.custom }}
-          wait_timeout: ${{ inputs.wait_timeout }}
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
@@ -81,7 +71,7 @@ jobs:
           TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT: ${{ secrets.TF_VAR_DATABASE_SKIP_FINAL_SNAPSHOT }}
           TF_VAR_DELETION_PROTECTION: ${{ secrets.TF_VAR_DELETION_PROTECTION }}
           TF_VAR_DEPLOYMENT_ENVIRONMENTS: ${{ secrets.TF_VAR_DEPLOYMENT_ENVIRONMENTS }}
-          TF_VAR_ENVIRONMENT: ${{ secrets.TF_VAR_ENVIRONMENT }}
+          TF_VAR_ENVIRONMENT: ${{ inputs.environment }}
           TF_VAR_EXPORT_EXPIRATION: ${{ secrets.TF_VAR_EXPORT_EXPIRATION }}
           TF_VAR_EXPORT_MODE: ${{ secrets.TF_VAR_EXPORT_MODE }}
           TF_VAR_IMAGE_TAGS_MUTABLE: ${{ secrets.TF_VAR_IMAGE_TAGS_MUTABLE }}
@@ -91,6 +81,9 @@ jobs:
           TF_VAR_PROJECT: ${{ secrets.TF_VAR_PROJECT }}
           TF_VAR_PROGRAM: ${{ secrets.TF_VAR_PROGRAM }}
           TF_VAR_QUEUE_EMPTY_THRESHOLD: ${{ secrets.TF_VAR_QUEUE_EMPTY_THRESHOLD }}
+          TF_VAR_REDOER_CONTAINER_COUNT: ${{ secrets.TF_VAR_REDOER_CONTAINER_COUNT }}
+          TF_VAR_REDOER_CPU: ${{ secrets.TF_VAR_REDOER_CPU }}
+          TF_VAR_REDOER_MEMORY: ${{ secrets.TF_VAR_REDOER_MEMORY }}
           TF_VAR_REPO_OIDC_ARN: ${{ secrets.TF_VAR_REPO_OIDC_ARN }}
           TF_VAR_REPOSITORY: ${{ secrets.TF_VAR_REPOSITORY }}
           TF_VAR_SENZING_LICENSE_BASE64: ${{ secrets.TF_VAR_SENZING_LICENSE_BASE64 }}
@@ -98,44 +91,7 @@ jobs:
           TF_VAR_VPC_PRIVATE_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PRIVATE_SUBNET_CIDRS }}
           TF_VAR_VPC_PUBLIC_SUBNET_CIDRS: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
         with:
-          config: service
-      - name: Get OpenTofu outputs
-        id: outputs
-        working-directory: ./tofu/config/service
-        run: |
-          OUTPUTS=$(tofu output -json | jq -c)
-          echo "OUTPUTS=$OUTPUTS"
-          echo "outputs=$OUTPUTS" >> $GITHUB_OUTPUT
-      - name: Parse subnets
-        id: subnets
-        env:
-          SUBNETS: ${{ toJson(fromJson(steps.outputs.outputs.outputs).container_subnets.value) }}
-        run: |
-          SUBNET_STRING=$(echo "$SUBNETS" | jq -r '.[]')
-          echo "subnets<<EOF" >> $GITHUB_OUTPUT
-          echo "$SUBNET_STRING" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      - name: Launch container
-        id: run-task
-        # TODO: Replace with `geekcell/github-action-aws-ecs-run-task` once
-        # https://github.com/geekcell/github-action-aws-ecs-run-task/pull/37 is
-        # merged.
-        uses: jamesiarmes/github-action-aws-ecs-run-task@ecs-exec
-        with:
-          cluster: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}
-          enable-execute-command: true
-          task-definition: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
-          override-container: ${{ secrets.TF_VAR_PROJECT }}-${{ secrets.TF_VAR_ENVIRONMENT }}-tools
-          assign-public-ip: DISABLED
-          tail-logs: true
-          task-wait-until-stopped: ${{ steps.command.outputs.wait }}
-          task-start-max-wait-time: 300
-          task-stop-max-wait-time: ${{ steps.command.outputs.wait_timeout }}
-          # The block style indicator (|) is necessary to tell YAML to preserve
-          # newlines.
-          override-container-command: |
-            ${{ steps.command.outputs.command }}
-          subnet-ids: |
-            ${{ steps.subnets.outputs.subnets }}
-          security-group-ids: |
-            ${{ fromJson(steps.outputs.outputs.outputs).task_security_group_id.value }}
+          config: ${{ inputs.config }}
+      - name: Destroy infrastructure
+        working-directory: ./tofu/config/${{ inputs.config }}
+        run: tofu destroy -concise -auto-approve

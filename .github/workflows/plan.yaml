@@ -122,9 +122,9 @@ jobs:
       TF_VAR_vpc_public_subnet_cidrs: ${{ secrets.TF_VAR_VPC_PUBLIC_SUBNET_CIDRS }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-region: ${{ secrets.AWS_REGION || 'us-west-1' }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
