@@ -9,7 +9,7 @@ runs:
   using: composite
   steps:
     - name: Cache OpenTofu
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ./tofu/config/${{ inputs.config }}/.terraform
         key: ${{ runner.os }}-tofu-${{ hashFiles('./tofu/config/${{ inputs.config }}/.terraform.lock.hcl') }}
@@ -38,8 +38,8 @@ runs:
           "database_skip_final_snapshot" "database_admin_username"
           "deletion_protection" "deployment_environments" "environment"
           "export_expiration" "export_mode" "image_tags_mutable"
-          "key_recovery_period" "log_level" "message_expiration" "program"
-          "project" "queue_empty_threshold" "redoer_container_count"
+          "key_recovery_period" "log_level" "message_expiration" "otel_version"
+          "program" "project" "queue_empty_threshold" "redoer_container_count"
           "redoer_cpu" "redoer_memory" "region" "repository"
           "senzing_license_base64"
         )
