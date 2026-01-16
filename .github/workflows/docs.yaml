@@ -1,0 +1,58 @@
+name: Deploy documentation
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy to.
+        default: development
+        required: true
+        type: environment
+  push:
+    paths:
+      # Only trigger on changes to documentation files.
+      - 'docs/**'
+      - 'mkdocs.yaml'
+      - '.github/workflows/docs.yaml'
+      - '*.md'
+    branches:
+      - docs # TEMP
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy Documentation to ${{ inputs.environment || 'development'}}
+    environment: ${{ inputs.environment || 'development'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-session-name: github-${{ github.event.repository.name }}-${{ github.run_id }}
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v5
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+      - name: Install python dependencies
+        run: |
+          pip install \
+            mkdocs-material \
+            markdown-callouts \
+            mdx_truly_sane_lists \
+            mkdocs-nav-weight \
+            pymdown-extensions
+      - run: mkdocs build
+      - run: aws s3 sync ./site "s3://${{ vars.DOCS_BUCKET }}/${{ vars.DOCS_PREFIX }}"
