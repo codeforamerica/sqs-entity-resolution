@@ -16,7 +16,6 @@ on:
       - '.github/workflows/docs.yaml'
       - '*.md'
     branches:
-      - docs # TEMP
       - main
 
 permissions:
