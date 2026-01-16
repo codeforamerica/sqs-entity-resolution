@@ -1,0 +1,1 @@
+--8<-- "tofu/config/foundation/README.md"

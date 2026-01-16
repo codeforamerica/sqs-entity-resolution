@@ -2,5 +2,6 @@ misconfigurations:
   # Dockerfiles for ephemeral containers don't need a healthcheck.
   - id: AVD-DS-0026
     paths:
+      - Dockerfile.docs
       - Dockerfile.exporter
       - Dockerfile.tools

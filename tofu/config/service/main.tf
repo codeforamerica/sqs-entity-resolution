@@ -38,11 +38,13 @@ module "system" {
   database_password_rotation_frequency = var.database_password_rotation_frequency
   database_skip_final_snapshot         = var.database_skip_final_snapshot
   deletion_protection                  = var.deletion_protection
-  image_tag                            = local.image_tag
-  image_tags_mutable                   = var.image_tags_mutable
+  postgres_version                     = var.postgres_version
 
-  container_subnets          = split(",", module.inputs.values["vpc/private_subnets"])
-  otel_version               = var.otel_version
+  container_subnets  = split(",", module.inputs.values["vpc/private_subnets"])
+  image_tag          = local.image_tag
+  image_tags_mutable = var.image_tags_mutable
+  otel_version       = var.otel_version
+
   consumer_container_count   = var.consumer_container_count
   consumer_container_max     = var.consumer_container_max
   consumer_cpu               = var.consumer_cpu

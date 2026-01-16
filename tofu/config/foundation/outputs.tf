@@ -10,7 +10,7 @@ output "deployment_role_arn" {
 
 output "environment_deployment_roles" {
   value       = { for env, mod in module.deployment_environments : env => mod.role_arn }
-  description = "The ARN of the deployment role for the dev-cdii environment."
+  description = "ARN of any deployment roles for additional deployment environments."
 }
 
 output "logging_bucket" {

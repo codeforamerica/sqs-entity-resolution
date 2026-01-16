@@ -1,0 +1,69 @@
+site_name: SQS Entity Resolution Using Senzing
+repo_url: https://github.com/codeforamerica/shared-services-infra
+edit_uri: edit/main/docs/
+
+plugins:
+  - mkdocs-nav-weight
+  - mermaid2
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - github-callouts
+  - footnotes
+  - mdx_truly_sane_lists
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - pymdownx.tabbed:
+      alternate_style: true
+
+theme:
+  name: material
+  icon:
+    logo: fontawesome/solid/reorder
+  palette:
+    scheme: slate
+  features:
+    - content.code.copy
+    - content.code.select
+    - content.action.edit
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - toc.integrate
+    - search.highlight
+    - search.suggest
+
+extra_javascript:
+  - assets/javascript/mermaid.mjs
+
+extra:
+  generator: false
+  social:
+    - icon: material/web
+      link: https://codeforamerica.org/
+      name: Code for America website
+    - icon: fontawesome/brands/github
+      link: https://github.com/codeforamerica
+      name: Code for America on GitHub
+    - icon: fontawesome/brands/threads
+      link: https://www.threads.net/@codeforamerica
+      name: Code for America on Threads
+    - icon: fontawesome/brands/bluesky
+      link: https://bsky.app/profile/codeforamerica.org
+      name: Code for America Bluesky
+
+copyright: Produced by Code for America under the MIT license.

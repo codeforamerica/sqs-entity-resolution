@@ -189,6 +189,18 @@ services:
       - ~/.aws:/home/senzing/.aws
       - ~/tmp:/tmp # Should you wish to write files to host.
 
+  docs:
+    profiles:
+      - docs
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/docs
+
+
 volumes:
   localstack:
   postgres:
