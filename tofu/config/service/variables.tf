@@ -149,6 +149,12 @@ variable "otel_version" {
   default     = "v0.45.1"
 }
 
+variable "postgres_version" {
+  type        = string
+  description = "Version of PostgreSQL to use for the database cluster."
+  default     = "17"
+}
+
 variable "program" {
   type        = string
   description = "Program the application belongs to."

@@ -18,6 +18,6 @@ variable "project" {
 
 variable "region" {
   type        = string
-  description = "AWS region where resources should be deployed."
+  description = "AWS region where resources are deployed."
   default     = "us-west-1"
 }

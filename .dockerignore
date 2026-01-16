@@ -1,0 +1,6 @@
+.env
+*.env
+.github
+.idea
+tofu
+Dockerfile.*

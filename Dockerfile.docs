@@ -1,0 +1,6 @@
+FROM squidfunk/mkdocs-material:9.7
+
+# Install additional plugins for MkDocs.
+RUN pip install markdown-callouts mdx_truly_sane_lists mkdocs-mermaid2-plugin mkdocs-nav-weight
+
+USER guest
