@@ -12,7 +12,9 @@ on:
     paths:
       # Only trigger on changes to documentation files.
       - 'docs/**'
-      - 'mkdocs.yaml'
+      - 'zensical.toml'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - '.github/workflows/docs.yaml'
       - '*.md'
     branches:
@@ -22,37 +24,16 @@ permissions:
   contents: read
   id-token: write
 
+run-name: Deploy documentation to ${{ inputs.environment || 'development' }}
+
 jobs:
+  build:
+    uses: codeforamerica/github-actions/.github/workflows/zensical-build.yaml@main
+
   deploy:
-    name: Deploy Documentation to ${{ inputs.environment || 'development'}}
-    environment: ${{ inputs.environment || 'development'}}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
-          role-session-name: github-${{ github.event.repository.name }}-${{ github.run_id }}
-          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
-      - uses: actions/setup-python@v6
-        with:
-          python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-      - uses: actions/cache@v5
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - name: Install python dependencies
-        run: |
-          pip install \
-            markdown-callouts \
-            mdx_truly_sane_lists \
-            mkdocs-material \
-            mkdocs-mermaid2-plugin \
-            mkdocs-nav-weight \
-            pymdown-extensions
-      - run: mkdocs build
-      - run: aws s3 sync ./site "s3://${{ vars.DOCS_BUCKET }}/${{ vars.DOCS_PREFIX }}"
+    needs: build
+    uses: codeforamerica/github-actions/.github/workflows/shared-services-documentation-deploy.yaml@main
+    with:
+      artifact-ids: ${{ needs.build.outputs.artifact-id }}
+      environment: ${{ inputs.environment || 'development' }}
+    secrets: inherit
